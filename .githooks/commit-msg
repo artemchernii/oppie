@@ -1,0 +1,6 @@
+#!/bin/sh
+# Enforces Conventional Commits on every commit message.
+# Installed by `git config core.hooksPath .githooks`, which `pnpm install` sets up.
+root=$(git rev-parse --show-toplevel) || exit 0
+command -v node >/dev/null 2>&1 || exit 0
+exec node "$root/scripts/check-commits.js" --file "$1"

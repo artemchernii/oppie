@@ -1,0 +1,23 @@
+#!/bin/sh
+# Refuses to push directly to a protected branch. All changes land via pull request.
+# Bypassable with `git push --no-verify`, but server-side branch protection on master
+# is the real gate — this hook only fails fast and loudly.
+protected='refs/heads/master refs/heads/main'
+
+while read -r local_ref local_sha remote_ref remote_sha; do
+  for branch in $protected; do
+    if [ "$remote_ref" = "$branch" ]; then
+      echo "" >&2
+      echo "refusing to push to $remote_ref" >&2
+      echo "" >&2
+      echo "master is protected. Work happens on a branch and lands via pull request:" >&2
+      echo "  git switch -c feat/short-description" >&2
+      echo "  git push -u origin HEAD" >&2
+      echo "  gh pr create --fill" >&2
+      echo "" >&2
+      exit 1
+    fi
+  done
+done
+
+exit 0

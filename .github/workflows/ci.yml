@@ -6,14 +6,36 @@ on:
   pull_request:
 
 jobs:
+  commits:
+    name: commits
+    # Only meaningful on a PR. A direct push to master is blocked by branch protection,
+    # and squash merges mean the PR title becomes the commit that lands.
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Conventional Commits
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+        run: |
+          git fetch --no-tags origin "$BASE_REF"
+          node scripts/check-commits.js --range "origin/$BASE_REF..HEAD" --title "$PR_TITLE"
+
   build:
+    name: build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
       - uses: pnpm/action-setup@v4
-        with:
-          version: 9
 
       - uses: actions/setup-node@v4
         with:

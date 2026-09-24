@@ -2,11 +2,14 @@
   "name": "oppie-lab",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "pnpm@10.12.4",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "test": "tsc lib/persistence.ts --rootDir lib --outDir .tmp-test --module commonjs --target es2020 --moduleResolution node --skipLibCheck --esModuleInterop && node scripts/persistence.test.js"
+    "test": "tsc lib/persistence.ts --rootDir lib --outDir .tmp-test --module commonjs --target es2020 --moduleResolution node --skipLibCheck --esModuleInterop && node scripts/persistence.test.js",
+    "check:commits": "node scripts/check-commits.js",
+    "prepare": "git config core.hooksPath .githooks 2>/dev/null || true"
   },
   "dependencies": { "next": "14.2.31", "react": "18.3.1", "react-dom": "18.3.1" },
   "devDependencies": { "@types/node": "^20.14.12", "@types/react": "^18.3.3", "@types/react-dom": "^18.3.0", "typescript": "^5.5.4" }

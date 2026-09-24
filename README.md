@@ -41,3 +41,13 @@ pnpm build   # production build, includes typechecking
 
 `pnpm test` needs no test framework — it compiles `lib/persistence.ts` to `.tmp-test/` and runs
 plain Node assertions against it. CI runs both checks on every pull request.
+
+## Workflow
+
+`master` is protected: nothing is committed or pushed to it directly. Every change goes through a
+feature branch and a pull request, squash-merged after CI passes. Commit messages and PR titles
+follow [Conventional Commits](https://www.conventionalcommits.org/), enforced by a `commit-msg`
+hook locally and a CI check on the server.
+
+See `AGENTS.md` for the full working agreement — branch naming, commit format, product
+invariants, and what must be true before a PR is ready.
