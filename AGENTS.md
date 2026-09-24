@@ -16,14 +16,36 @@ gh pr create --fill
 
 Then squash-merge once CI is green.
 
-- `master` requires a pull request and a passing CI run, and admin enforcement is on.
+- `master` requires a pull request and a passing CI run. Nobody bypasses this, admins included.
   `git push origin master` is rejected by the server, not just by convention.
 - If you find yourself on `master` with changes, move them: `git switch -c <branch>` carries
   uncommitted work across with you.
-- Force pushes and deletions on `master` are blocked. Linear history is required, so no merge
-  commits reach `master`.
 - A local `.githooks/pre-push` refuses `master` pushes as a fast trap. It is a convenience, not
-  the gate — `--no-verify` skips it, the server does not.
+  the gate — `--no-verify` skips it, the server does not. Do not reach for `--no-verify` against
+  `master`; if you think you need it, ask first.
+
+### How it is enforced
+
+A **repository ruleset** named `protect default branch` targets the default branch, with
+`bypass_actors` empty so it binds admins too:
+
+| Rule | Effect |
+|---|---|
+| `pull_request` | a PR is required, 0 approvals, and **squash is the only allowed merge method** |
+| `required_status_checks` | `build` and `commits` must pass; the branch must be up to date |
+| `required_linear_history` | no merge commits reach `master` |
+| `non_fast_forward` | no force pushes |
+| `deletion` | `master` cannot be deleted |
+
+Settings live at <https://github.com/artemchernii/oppie/rules>. Repo settings also disable merge
+commits and rebase merges, enable auto-merge, and delete the branch on merge.
+
+**One nuance worth knowing.** GitHub evaluates the pull-request rule against the commits being
+pushed, so pushing the exact head commit of an *open PR that targets `master`* is accepted. That
+means an open PR's branch can be fast-forwarded onto `master`, skipping the squash step. It
+gate-keeps *new* work correctly — an orphan commit and a force push are both refused with
+`GH013: Changes must be made through a pull request` — but do not read an open PR as permission to
+push. Land work with `gh pr merge --squash`.
 
 ## 2. Branch names
 
@@ -107,7 +129,10 @@ These are not style preferences; a PR that breaks one should be rejected.
 
 ## 7. Reviews and merging
 
-- Squash merge only, and **the PR title must be a valid Conventional Commit**.
+- Squash merge only, enforced by the ruleset (`allowed_merge_methods: [squash]`). Land a PR with
+  `gh pr merge --squash`.
+- **The PR title must be a valid Conventional Commit** — it becomes the commit on `master`,
+  because the squash commit title is set to the PR title.
 - Do not merge with a red or pending check.
 - Delete the branch after merge.
 - If a decision in a PR needs a human call — a data-model change, a new field, anything that
