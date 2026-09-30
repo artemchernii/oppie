@@ -18,7 +18,7 @@ export type Confidence = "direct" | "reported" | "inferred";
  * claim with nothing behind it.
  */
 export type LinkStatus = "checked" | "dead" | "unverified";
-export type EvidenceType = "job" | "price" | "community" | "report" | "personal";
+export type EvidenceType = "job" | "price" | "procurement" | "community" | "report" | "personal";
 
 /** null means NOT CHECKED. It is never the same as 0, which means checked and zero. */
 export type Score = 0 | 1 | 2 | 3 | null;
@@ -27,7 +27,7 @@ export const gates: Gate[] = ["G1-signal", "G2-paid", "G3-repeated", "G4-buyer",
 export const actions: Action[] = ["idle", "researching", "interviewing", "hand-running", "building"];
 export const verdicts: Verdict[] = ["open", "parked", "killed"];
 export const confidences: Confidence[] = ["direct", "reported", "inferred"];
-export const evidenceTypes: EvidenceType[] = ["job", "price", "community", "report", "personal"];
+export const evidenceTypes: EvidenceType[] = ["job", "price", "procurement", "community", "report", "personal"];
 
 /** Plain-English names, because the user should not have to hold a legend in their head. */
 export const gateCopy: Record<Gate, { short: string; label: string; ask: string }> = {
@@ -226,6 +226,42 @@ export function passedGates(problem: Problem): Gate[] {
 
 export const seedCompanies: Company[] = [
   {
+    id: "c-duco",
+    name: "Duco",
+    kind: "vendor",
+    where: "London / global",
+    role: "Cloud reconciliation for financial markets — no-code, AI-assisted exception handling, specifically positioned at structured and unstructured data",
+    number: "$80,000/yr",
+    numberLabel: "third-party report for a capacity package of 100k daily records / 50 process inputs, with reported $40k per additional 100k records — a sizing reference, not a quote",
+    url: "https://idp-software.com/vendors/duco/",
+    confidence: "reported",
+    linkStatus: "unverified"
+  },
+  {
+    id: "c-reconart",
+    name: "ReconArt",
+    kind: "vendor",
+    where: "US / global",
+    role: "Reconciliation and financial close — securities, positions, trades and custody, with private-cloud and on-premises options",
+    number: "$300/user/month",
+    numberLabel: "published by Capterra and Software Advice as a starting price; Essentials tier is 25M transactions/year. Enterprise is fixed-licence with no transaction pricing",
+    url: "https://www.reconart.com/plans/",
+    confidence: "reported",
+    linkStatus: "unverified"
+  },
+  {
+    id: "c-advisor-stack",
+    name: "The advisor platform stack (Orion, Tamarac, Black Diamond)",
+    kind: "vendor",
+    where: "US (sells to RIAs)",
+    role: "Portfolio management and performance reporting — the software category that also performs custodian reconciliation",
+    number: "$8,000–$25,000/yr",
+    numberLabel: "reported range for this category; the same source puts CRM at $2,400–18,000 and financial planning at $2,400–9,600, and says portfolio accounting is the most expensive category advisors buy",
+    url: "https://www.techvera.com/resources/blog/what-it-costs-to-run-compliant-ria-technology-stack-in-2026",
+    confidence: "reported",
+    linkStatus: "unverified"
+  },
+  {
     id: "c-jjsearch",
     name: "JJ Search Ltd (agency, for a City firm)",
     kind: "employer",
@@ -337,11 +373,23 @@ export const seedCompanies: Company[] = [
     id: "c-dodgecox",
     name: "Dodge & Cox",
     kind: "employer",
-    where: "US",
-    role: "Reconciliation Analyst / Investment Operations Process Analyst — custodian reconciliation **plus** engineering automation across portfolio ops workflows",
-    number: "",
+    where: "San Francisco, US",
+    role: "Reconciliation Analyst / Investment Operations Process Analyst — custodian reconciliation **and** building Python, SQL and AI-enabled automation for the same workflows. This is a firm paying six figures for the person who removes the manual step",
+    number: "$125,000–$170,000/yr",
     numberLabel: "budget restated as a role, salary not published",
-    url: "https://dodgeandcox.wd5.myworkdayjobs.com/en-US/Dodgecox/job/Reconciliation-Analyst---Investment-Operations-Process-Analyst_R0000667",
+    url: "https://builtin.com/job/reconciliation-analyst-investment-operations-process-analyst/11290458",
+    confidence: "reported",
+    linkStatus: "unverified"
+  },
+  {
+    id: "c-ares",
+    name: "Ares Management",
+    kind: "employer",
+    where: "New York, US",
+    role: "Senior Associate, Investment Operations — Reconciliations. “Proactively research, resolve and prevent all cash and par breaks with custodian banks and third-party administrators”",
+    number: "$130,000–$150,000/yr",
+    numberLabel: "advertised salary range, on the posting",
+    url: "https://hiring.camp/job/dg2p1X",
     confidence: "reported",
     linkStatus: "unverified"
   },
@@ -436,13 +484,13 @@ const RECON_SIGNALS = (): Signal[] => [
     key: "pain",
     question: signalDefs[0].question,
     value: 3,
-    note: "Daily cut-offs and exception queues. Postings name settlement investigation, cash/stock breaks and regulatory reporting as the job."
+    note: "A daily legal obligation, not a preference: FCA CASS 7.15.12 R requires an internal client money reconciliation every business day, and CASS 6.6.11 R requires internal custody reconciliation. Failure carries regulatory penalty."
   },
   {
     key: "pay",
     question: signalDefs[1].question,
     value: 3,
-    note: "Paid three ways: salaries advertised live at £35–50k and £80–100k in London, a licence (Panoramix $5–7k/yr), and bespoke custom work."
+    note: "Paid four ways now: advertised salaries of £35–50k and £80–100k in London and $125–170k in San Francisco, software licences (Panoramix $5–7k, advisor platforms $8–25k, Duco $80k), bespoke custom builds, and public procurement contracts for exactly this work."
   },
   {
     key: "moat",
@@ -468,7 +516,7 @@ export const seedProblems: Problem[] = [
   {
     id: "P-001",
     title: "Broker files from several sources do not fit together",
-    gate: "G2-paid",
+    gate: "G3-repeated",
     action: "researching",
     verdict: "open",
     domain: "Portfolio operations",
@@ -481,7 +529,7 @@ export const seedProblems: Problem[] = [
     consequence: "Staff hours, delayed reports, and errors that reach the client",
     whyTheyPay: "The licence is paid for already. The import step is the part that still costs staff time.",
     paidToday: "Yes — a salaried reconciliation role, plus a software licence at $5–7k/yr, plus a separate charge for data import",
-    competition: "Orion, Black Diamond, Addepar, Panoramix. All are US-custodian-integrated (Schwab, Fidelity, Pershing).",
+    competition: "Served at both ends and not in the middle. Enterprise reconciliation is priced at $80k/yr (Duco) or $300/user/month (ReconArt). Advisor platforms are $8–25k/yr and reconcile directly with US custodians (Schwab, Fidelity, Pershing). Europe’s fragmented broker and custodian files fit neither.",
     path: "product",
     signals: RECON_SIGNALS(),
     nextQuestion: "Does anyone sell statement ingestion on its own, and what does one import cost in staff hours?",
@@ -514,9 +562,45 @@ export const seedProblems: Problem[] = [
         date: "2026-10-01",
         confidence: "reported",
         linkStatus: "unverified"
+      },
+      {
+        id: "P-001-e4",
+        type: "procurement",
+        observation: "A public pension fund RFP buys “portfolio verification and shadow accounting services for independent, automated reconciliations with the Custodian bank and external managers’ records”. A named buyer, writing down exactly this workflow as something it contracts for.",
+        url: "https://www.sib.wa.gov/docs/searches/2505.pdf",
+        date: "2026-10-01",
+        confidence: "reported",
+        linkStatus: "unverified"
+      },
+      {
+        id: "P-001-e5",
+        type: "procurement",
+        observation: "A second custody RFP specifies the mechanics: “Custodian provides outside Investment Manager with a file of custodial data to which the reconciliation at the account level of cash, holdings, income, receivables/payables and market value is performed”. The file handover is a contract requirement.",
+        url: "https://www.sbcers.org/wp-content/uploads/01_2023-SBCERS-Custody-RFP-CONSOLIDATED-Final-Updated.pdf",
+        date: "2026-10-01",
+        confidence: "reported",
+        linkStatus: "unverified"
+      },
+      {
+        id: "P-001-e6",
+        type: "report",
+        observation: "F2 Strategy, surveying 29 firms representing $6tn: about 67% of firms run more than one custodian, 71% of advisors name lack of integration between tools as a top technology problem, and custodian satisfaction fell to 3.4 out of 5 in 2025 from 3.6 in 2023.",
+        url: "https://www.wealthsolutionsreport.com/custody-is-getting-a-second-act-most-rias-are-stuck-in-the-first/",
+        date: "2026-10-01",
+        confidence: "reported",
+        linkStatus: "unverified"
+      },
+      {
+        id: "P-001-e7",
+        type: "price",
+        observation: "Enterprise reconciliation is already a priced category at the top: a third-party report puts Duco at $80,000/yr for a 100k-daily-record capacity package, with $40,000 increments per additional 100k records. ReconArt’s published starting price is $300/user/month.",
+        url: "https://idp-software.com/vendors/duco/",
+        date: "2026-10-01",
+        confidence: "reported",
+        linkStatus: "unverified"
       }
     ],
-    companyIds: ["c-panoramix", "c-panoramix-import", "c-orion", "c-bespoke-dev"],
+    companyIds: ["c-duco", "c-reconart", "c-advisor-stack", "c-panoramix", "c-panoramix-import", "c-orion", "c-bespoke-dev"],
     createdAt: SEED_TIMESTAMP,
     updatedAt: SEED_TIMESTAMP
   },
@@ -536,7 +620,7 @@ export const seedProblems: Problem[] = [
     consequence: "Fails to settle, breaks, and regulatory reports that cannot be signed off",
     whyTheyPay: "They already pay for exactly this — the job description is the workflow.",
     paidToday: "Yes — multiple live postings in Lisbon, Dublin, London and Budapest. Lisbon band €30–45k/yr; London collateral £45–60k/yr.",
-    competition: "Not checked.",
+    competition: "Served at the top by Duco ($80k/yr) and ReconArt ($300/user/month), both priced well above a mid-size firm. Below that: spreadsheets and email. The gap is the middle.",
     path: "service",
     signals: RECON_SIGNALS(),
     nextQuestion: "Does a team this size buy tooling, or only hire people?",
@@ -569,9 +653,36 @@ export const seedProblems: Problem[] = [
         date: "2026-10-01",
         confidence: "reported",
         linkStatus: "unverified"
+      },
+      {
+        id: "P-006-e4",
+        type: "report",
+        observation: "FCA CASS 7.15.12 R requires a firm to carry out an internal client money reconciliation every business day, and CASS 6.6.11 R requires internal custody reconciliation. Not a preference — a daily legal obligation with a penalty attached.",
+        url: "https://handbook.fca.org.uk/handbook/cass7/cass7s22",
+        date: "2026-10-01",
+        confidence: "reported",
+        linkStatus: "unverified"
+      },
+      {
+        id: "P-006-e5",
+        type: "job",
+        observation: "Dodge & Cox advertises $125,000–$170,000 for a reconciliation analyst who also builds Python, SQL and AI-enabled automation for the same workflows — a firm paying six figures for the person who removes the manual step.",
+        url: "https://builtin.com/job/reconciliation-analyst-investment-operations-process-analyst/11290458",
+        date: "2026-10-01",
+        confidence: "reported",
+        linkStatus: "unverified"
+      },
+      {
+        id: "P-006-e6",
+        type: "job",
+        observation: "Ares Management advertises $130,000–$150,000 for a senior associate to “proactively research, resolve and prevent all cash and par breaks with custodian banks and third-party administrators”.",
+        url: "https://hiring.camp/job/dg2p1X",
+        date: "2026-10-01",
+        confidence: "reported",
+        linkStatus: "unverified"
       }
     ],
-    companyIds: ["c-jjsearch", "c-lgt", "c-optio", "c-rbc", "c-janus", "c-exalt", "c-nordea", "c-mediolanum", "c-simcorp", "c-blackboard", "c-citi", "c-clearstream"],
+    companyIds: ["c-jjsearch", "c-lgt", "c-optio", "c-rbc", "c-ares", "c-janus", "c-exalt", "c-nordea", "c-mediolanum", "c-simcorp", "c-dodgecox", "c-blackboard", "c-citi", "c-clearstream"],
     createdAt: SEED_TIMESTAMP,
     updatedAt: SEED_TIMESTAMP
   },
@@ -608,7 +719,7 @@ export const seedProblems: Problem[] = [
         linkStatus: "unverified"
       }
     ],
-    companyIds: ["c-exalt", "c-panoramix"],
+    companyIds: ["c-exalt", "c-panoramix", "c-duco", "c-reconart"],
     createdAt: SEED_TIMESTAMP,
     updatedAt: SEED_TIMESTAMP
   },

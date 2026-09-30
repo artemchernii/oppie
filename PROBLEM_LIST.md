@@ -73,6 +73,46 @@ other roles — before any more depth is added to this cluster.
 
 Collected 2026-10-01. Confidence per `RULES.md` §1.
 
+### Direct — a legal forcing function (the strongest kind of pain)
+
+**FCA CASS 7.15.12 R requires a firm to carry out an internal client money reconciliation every
+business day.** CASS 6.6.11 R requires internal custody reconciliation. This is not a preference or
+a nice-to-have: it is a daily legal obligation with a regulatory penalty attached. A problem with a
+deadline and a penalty cannot be deprioritised by the buyer.
+
+### Direct — buyers writing down what they will pay for (procurement documents)
+
+A new source class, and the most useful one found so far. Public pension and treasury RFPs state the
+workflow as a contract requirement, in the buyer's own words:
+
+- A public pension fund seeks **"portfolio verification and shadow accounting services for
+  independent, automated reconciliations with the Custodian bank and external managers' records."**
+- A second custody RFP specifies the mechanics: **"Custodian provides outside Investment Manager with
+  a file of custodial data to which the reconciliation at the account level of cash, holdings,
+  income, receivables/payables and market value is performed."** The file handover is a contract
+  requirement, which is the data-format problem stated as procurement language.
+- Others require **daily position files** with a published format specification.
+
+**Read:** these are buyers describing the exact workflow and filing it as a requirement. Nothing
+proves willingness to pay more clearly than a tender.
+
+### Reported — market structure and enterprise price points
+
+- F2 Strategy, surveying 29 firms representing $6tn: **~67% of firms run more than one custodian** ·
+  **71% of advisors name lack of integration between tools as a top technology problem** · custodian
+  satisfaction fell to **3.4/5 in 2025 from 3.6 in 2023**.
+- **Duco: $80,000/year** for a 100k-daily-record capacity package, per a third-party report, with
+  reported $40,000 increments per additional 100k records. **ReconArt: from $300/user/month**
+  published; Essentials tier is 25M transactions/year.
+- The advisor platform category — Orion, Tamarac, Black Diamond — is **$8,000–$25,000/year**
+  reported, and is the most expensive software category advisors buy.
+- Independent advisors spend **4–6% of annual revenue** on technology (Kitces, reported).
+
+**Read, and this refines the thesis:** reconciliation is served at the top (Duco, ReconArt at
+enterprise prices) and at the advisor end (platforms integrated with US custodians). The middle — a
+firm too big for a spreadsheet and far too small for an $80k licence, handling European broker files
+— is not served by either.
+
 ### Direct — the workflow is a paid job
 
 **Link status matters here.** Job postings are deleted once the role is filled, so a dead link is
@@ -85,6 +125,8 @@ Live postings whose description *is* multi-custodian position and cash reconcili
 
 | Employer | Location | Advertised pay | Link |
 |---|---|---|---|
+| Dodge & Cox | San Francisco | **$125,000–$170,000** — and the role builds Python, SQL and AI-enabled automation for the same workflows | not opened |
+| Ares Management | New York | **$130,000–$150,000** — "research, resolve and prevent all cash and par breaks with custodian banks" | not opened |
 | JJ Search Ltd (City firm) | London | **£35,000–£50,000** | not opened |
 | LGT Wealth Management UK | London | **£80,000–£100,000** | not opened |
 | Optio Incentives | London | **£80,000–£100,000** | not opened |
@@ -103,6 +145,11 @@ Live postings whose description *is* multi-custodian position and cash reconcili
 and £80,000–£100,000 for a senior one, both advertised on the posting. Optio Incentives states it is
 *establishing* a dedicated Reconciliation & Operations function — which is a firm deciding to spend
 money on this now, rather than a job that has always existed.
+
+The US figures are higher still, and more revealing. Dodge & Cox pays $125,000–$170,000 for an
+analyst who **also builds the automation that removes the manual step** — a firm funding its own
+displacement. That is the strongest single signal that the manual work is recognised internally as
+worth eliminating.
 
 Older, thinner evidence recorded earlier: Lisbon trade-settlement analyst **€30–45k** · Dublin
 middle office **€40–55k** · London trade support **£40–55k** (average £49k) · London collateral
