@@ -1,6 +1,6 @@
 # oppie.lab — current state and next steps
 
-Last updated: 2026-09-25 · master `655cd3c`
+Last updated: 2026-10-01 · master `ce255e2`
 
 ## Where it is
 
@@ -20,9 +20,14 @@ Runs at <http://localhost:3000> via `pnpm dev`.
 - Empty fields stay visible as "Not added yet". Nothing is scored or generated.
 - Stage is tracked separately from evidence status.
 - Specs and research rules are documented; repository workflow is enforced.
+- Pain funnel designed: five gates, three axes (`gate` / `action` / `verdict`), the G2 paid-today
+  test, and an ordering rule instead of a scoring rule.
 
 ## Not built yet
 
+- **The pain funnel itself.** The app still opens on the opportunity board; `Problem` is not a
+  record type yet. See `HANDOFF_PAIN_FUNNEL.md`.
+- No problem has cleared G2, so the ordering table in `PROBLEM_LIST.md` is deliberately empty.
 - Deleting or archiving an opportunity.
 - Any browser-level automated test. Click → edit → reload is verified at the logic and SSR
   layers only, so the one interaction that matters most is still checked by hand.
@@ -44,18 +49,30 @@ deletion.
 
 ## Next steps
 
-1. **Test the MVP by hand**: open an opportunity → edit a field → save → reload → confirm the
-   change survived → add a new opportunity.
-2. **Then pick one**: works → define the next improvement; broken → fix that first; confusing →
-   simplify the UI before adding features.
-3. **Likely next slice**: delete or archive an opportunity, then source-confidence editing.
-4. **Decisions still open**: confirm the inferred seed `stage` values (five `investigate`, one
-   `discovery`), and whether `statusNote` earns its place as an eleventh field.
+1. **Twenty conversations, one week, €0, no code.** Behaviour questions only: how many accounts,
+   when they last totalled them, what they used, where it broke. See `PAIN_FUNNEL.md` § The next
+   action is not in this repo. Write the kill criterion before the first conversation.
+2. **Fix the buyer on P-002 and P-004** — each names a retail investor or two buyers, and the
+   company-buyer set requires exactly one. See `PROBLEM_LIST.md` § Buyer must be fixed.
+3. **Find G2 evidence** — job postings are the highest-yield source, because the salary is the price
+   already being paid. Until a record clears G2, nothing is ranked.
+4. **Widen the signal set** — the ten problems are roughly four problems restated. The next pass
+   should add raw signals from outside finance operations.
+5. **Then, and only then**, build the funnel UI.
+
+## Decisions still open
+
+- Whether `statusNote` earns its place as an eleventh field on `Opportunity`.
+- Whether the legacy opportunity view is migrated into `Problem` records or retired.
+- Whether the inferred seed `stage` values (five `investigate`, one `discovery`) are correct.
 
 ## Important files
 
+- `PAIN_FUNNEL.md` — the gates, the ordering rule, and the problem record shape
+- `PROBLEM_LIST.md` — the current research queue
 - `MVP_SPEC.md` — product scope and acceptance criteria
 - `RULES.md` — research methodology
+- `HANDOFF_PAIN_FUNNEL.md` — the pending funnel implementation brief
 - `RESEARCH_CONTEXT.md` — lessons from the Business Idea Session
 - `AGENTS.md` — branch, commit, review, and product-invariant rules
 - `HANDOFF_EDITING_PERSISTENCE.md` — completed implementation handoff
