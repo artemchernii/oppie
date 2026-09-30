@@ -12,6 +12,12 @@ export type Gate = "G1-signal" | "G2-paid" | "G3-repeated" | "G4-buyer" | "G5-te
 export type Action = "idle" | "researching" | "interviewing" | "hand-running" | "building";
 export type Verdict = "open" | "parked" | "killed";
 export type Confidence = "direct" | "reported" | "inferred";
+/**
+ * Whether the link itself still resolves. Job postings are deleted once filled, so a
+ * dead source is normal — but it has to be visible, or the record quietly becomes a
+ * claim with nothing behind it.
+ */
+export type LinkStatus = "checked" | "dead" | "unverified";
 export type EvidenceType = "job" | "price" | "community" | "report" | "personal";
 
 /** null means NOT CHECKED. It is never the same as 0, which means checked and zero. */
@@ -109,6 +115,7 @@ export type Company = {
   numberLabel: string;
   url: string;
   confidence: Confidence;
+  linkStatus: LinkStatus;
 };
 
 export type Evidence = {
@@ -118,6 +125,7 @@ export type Evidence = {
   url: string;
   date: string;
   confidence: Confidence;
+  linkStatus?: LinkStatus;
 };
 
 export type Problem = {
@@ -218,37 +226,52 @@ export function passedGates(problem: Problem): Gate[] {
 
 export const seedCompanies: Company[] = [
   {
-    id: "c-exalt",
-    name: "eXalt-Fi",
+    id: "c-jjsearch",
+    name: "JJ Search Ltd (agency, for a City firm)",
     kind: "employer",
-    where: "Lisbon, PT",
-    role: "Funds Reconciliation Specialist",
-    number: "€30–45k/yr",
-    numberLabel: "typical Lisbon band for this role",
-    url: "https://pt.linkedin.com/jobs/view/4444368636",
-    confidence: "reported"
+    where: "City of London, UK",
+    role: "Reconciliations Analyst, Custody Services, CASS 6 & 7 — daily and periodic cash and asset reconciliations, including Unit Trust reconciliations",
+    number: "£35,000–£50,000/yr",
+    numberLabel: "advertised salary, on the posting",
+    url: "https://www.totaljobs.com/job/jj-search-ltd-job107248594",
+    confidence: "reported",
+    linkStatus: "unverified"
   },
   {
-    id: "c-blackboard",
-    name: "European private bank (via Blackboardjob)",
+    id: "c-lgt",
+    name: "LGT Wealth Management UK",
     kind: "employer",
-    where: "Lisbon, PT",
-    role: "Senior Fund Reconciliation Analyst — trade settlement matching, cash and stock breaks vs external custodians",
-    number: "€30–45k/yr",
-    numberLabel: "typical Lisbon band for this role",
-    url: "https://pt.blackboardjob.com/detail/a/senior-fund-reconciliation-analyst-advanced-asset-servicing_lisboa_21301896",
-    confidence: "reported"
+    where: "London, UK",
+    role: "Reconciliations & Custody Control Analyst — daily and periodic cash and asset reconciliations",
+    number: "£80,000–£100,000/yr",
+    numberLabel: "advertised salary, on the posting",
+    url: "https://gb.trabajo.org/job-3364-d6f10d7b6557f6788bdd8641149b4c3c",
+    confidence: "reported",
+    linkStatus: "unverified"
   },
   {
-    id: "c-nordea",
-    name: "Nordea Investment Banking",
+    id: "c-optio",
+    name: "Optio Incentives",
     kind: "employer",
-    where: "Portugal",
-    role: "Operational Analyst, Backoffice Reconciliation",
-    number: "€30–45k/yr",
-    numberLabel: "typical Lisbon band for this role",
-    url: "https://www.canarywharfian.co.uk/jobs/nordea-investment-banking/operational-analyst-in-reconciliation-nam-portugal/3476c9ca-97ae-48e1-a285-0d2f7f013e7b",
-    confidence: "reported"
+    where: "London, UK",
+    role: "Senior Reconciliation Analyst — the firm says it is *establishing* a dedicated Reconciliation & Operations function, which is someone deciding to spend money on this now",
+    number: "£80,000–£100,000/yr",
+    numberLabel: "advertised salary, on the posting",
+    url: "https://gb.trabajo.org/job-3364-5e2016724caaf455c1d02404a1d58039",
+    confidence: "reported",
+    linkStatus: "unverified"
+  },
+  {
+    id: "c-rbc",
+    name: "RBC Global Asset Management UK",
+    kind: "employer",
+    where: "London, UK",
+    role: "Reconciliations Analyst — cash balances, transactions, positions (stock and listed derivatives) and intra-system reconciliations",
+    number: "",
+    numberLabel: "budget restated as a role, salary not published",
+    url: "https://www.sercanto.co.uk/detail/a/reconciliations-analyst_london_442139932",
+    confidence: "reported",
+    linkStatus: "unverified"
   },
   {
     id: "c-janus",
@@ -257,31 +280,34 @@ export const seedCompanies: Company[] = [
     where: "Budapest, HU",
     role: "Reconciliation Analyst — custody (IBOR), performance (PBOR), ABOR vs IBOR, client market value",
     number: "",
-    numberLabel: "budget restated as a role, salary not found",
+    numberLabel: "budget restated as a role, salary not published",
     url: "https://jobs.janushenderson.com/job/Budapest-Reconciliation-Analyst-1133/1392859800/",
-    confidence: "direct"
+    confidence: "reported",
+    linkStatus: "checked"
   },
   {
-    id: "c-citi",
-    name: "Citi",
+    id: "c-exalt",
+    name: "eXalt-Fi",
     kind: "employer",
-    where: "Bogotá, CO",
-    role: "Custody Portfolio Reconciliation Analyst — client and fiduciary balances across local and international custodians",
+    where: "Lisbon, PT",
+    role: "Funds Reconciliation Specialist",
+    number: "€30–45k/yr",
+    numberLabel: "typical Lisbon band, not stated on the posting",
+    url: "https://pt.linkedin.com/jobs/view/4444368636",
+    confidence: "inferred",
+    linkStatus: "unverified"
+  },
+  {
+    id: "c-nordea",
+    name: "Nordea Investment Banking",
+    kind: "employer",
+    where: "Portugal",
+    role: "Operational Analyst, Backoffice Reconciliation",
     number: "",
-    numberLabel: "budget restated as a role, salary not found",
-    url: "https://jobs.citi.com/job/bogota/custody-portfolio-reconciliation-analyst/287/98742239840",
-    confidence: "direct"
-  },
-  {
-    id: "c-clearstream",
-    name: "Deutsche Börse / Clearstream",
-    kind: "employer",
-    where: "Cork, IE",
-    role: "Analyst, Securities Reconciliations — positions held vs external custodians",
-    number: "€40–55k/yr",
-    numberLabel: "Dublin middle-office band",
-    url: "https://careers.deutsche-boerse.com/offer/analyst-securities-reconciliations/0fc7b8c9-f5f4-4ec2-a906-7410eb534435",
-    confidence: "reported"
+    numberLabel: "budget restated as a role, salary not published",
+    url: "https://www.canarywharfian.co.uk/jobs/nordea-investment-banking/operational-analyst-in-reconciliation-nam-portugal/3476c9ca-97ae-48e1-a285-0d2f7f013e7b",
+    confidence: "reported",
+    linkStatus: "unverified"
   },
   {
     id: "c-mediolanum",
@@ -289,10 +315,11 @@ export const seedCompanies: Company[] = [
     kind: "employer",
     where: "Dublin, IE",
     role: "Senior Portfolio Operations Analyst — reconciliation and transaction exceptions across asset classes",
-    number: "€40–55k/yr",
-    numberLabel: "Dublin middle-office band",
+    number: "",
+    numberLabel: "budget restated as a role, salary not published",
     url: "https://workfinder.ie/senior-portfolio_dublin-c275009/2026-09-mediolanum-international-ireland_i4189872755",
-    confidence: "reported"
+    confidence: "reported",
+    linkStatus: "unverified"
   },
   {
     id: "c-simcorp",
@@ -300,10 +327,11 @@ export const seedCompanies: Company[] = [
     kind: "employer",
     where: "Europe",
     role: "Senior Operations Analyst (Reconciliations) — middle office and investment accounting",
-    number: "€40–55k/yr",
-    numberLabel: "Dublin middle-office band",
+    number: "",
+    numberLabel: "budget restated as a role, salary not published",
     url: "https://simcorp.wd3.myworkdayjobs.com/en-US/SimCorp_Jobs/job/Senior-Operations-Analyst--Reconciliations-_R-211490",
-    confidence: "reported"
+    confidence: "reported",
+    linkStatus: "unverified"
   },
   {
     id: "c-dodgecox",
@@ -312,20 +340,46 @@ export const seedCompanies: Company[] = [
     where: "US",
     role: "Reconciliation Analyst / Investment Operations Process Analyst — custodian reconciliation **plus** engineering automation across portfolio ops workflows",
     number: "",
-    numberLabel: "budget restated as a role, salary not found",
+    numberLabel: "budget restated as a role, salary not published",
     url: "https://dodgeandcox.wd5.myworkdayjobs.com/en-US/Dodgecox/job/Reconciliation-Analyst---Investment-Operations-Process-Analyst_R0000667",
-    confidence: "direct"
+    confidence: "reported",
+    linkStatus: "unverified"
   },
   {
-    id: "c-sercanto",
-    name: "Boutique investment manager (via Sercanto)",
+    id: "c-blackboard",
+    name: "European private bank (via Blackboardjob)",
     kind: "employer",
-    where: "London, UK",
-    role: "Investment Operations Associate, Data & Reconciliations, Custodian & Securities",
-    number: "£40–55k/yr",
-    numberLabel: "London trade support band, average £49k",
-    url: "https://www.sercanto.co.uk/detail/a/investment-operations-associate-data-reconciliations-custodian-securities_greater-london_442417485",
-    confidence: "reported"
+    where: "Lisbon, PT",
+    role: "Senior Fund Reconciliation Analyst — trade settlement matching, cash and stock breaks against external custodians",
+    number: "€30–45k/yr",
+    numberLabel: "typical Lisbon band, not stated on the posting",
+    url: "https://pt.blackboardjob.com/detail/a/senior-fund-reconciliation-analyst-advanced-asset-servicing_lisboa_21301896",
+    confidence: "inferred",
+    linkStatus: "dead"
+  },
+  {
+    id: "c-citi",
+    name: "Citi",
+    kind: "employer",
+    where: "Bogotá, CO",
+    role: "Custody Portfolio Reconciliation Analyst — client and fiduciary balances across local and international custodians",
+    number: "",
+    numberLabel: "budget restated as a role, salary not published",
+    url: "https://jobs.citi.com/job/bogota/custody-portfolio-reconciliation-analyst/287/98742239840",
+    confidence: "reported",
+    linkStatus: "dead"
+  },
+  {
+    id: "c-clearstream",
+    name: "Deutsche Börse / Clearstream",
+    kind: "employer",
+    where: "Cork, IE",
+    role: "Analyst, Securities Reconciliations — positions held against external custodians",
+    number: "",
+    numberLabel: "budget restated as a role, salary not published",
+    url: "https://careers.deutsche-boerse.com/offer/analyst-securities-reconciliations/0fc7b8c9-f5f4-4ec2-a906-7410eb534435",
+    confidence: "reported",
+    linkStatus: "dead"
   },
   {
     id: "c-panoramix",
@@ -334,9 +388,10 @@ export const seedCompanies: Company[] = [
     where: "US (sells to RIAs)",
     role: "Portfolio management, performance reporting and billing",
     number: "$5,000–$7,000/yr",
-    numberLabel: "published firm licence, priced by AUM: $5k under $25M · $6k at $25–100M · $7k at $100–200M",
+    numberLabel: "published firm licence: $7,000/yr at $175M AUM is visible on the page; the lower tiers come from the same price list",
     url: "https://www.panoramixfinancial.com/account/pricing/",
-    confidence: "direct"
+    confidence: "direct",
+    linkStatus: "checked"
   },
   {
     id: "c-panoramix-import",
@@ -347,7 +402,8 @@ export const seedCompanies: Company[] = [
     number: "up to tens of thousands",
     numberLabel: "charged by effort — the step the licence does NOT cover",
     url: "https://www.panoramixfinancial.com/account/pricing/",
-    confidence: "direct"
+    confidence: "direct",
+    linkStatus: "checked"
   },
   {
     id: "c-orion",
@@ -358,7 +414,8 @@ export const seedCompanies: Company[] = [
     number: "",
     numberLabel: "price not published; competitors cite 0.05–0.15% of AUM per year",
     url: "https://orion.com/advisor-tech/portfolio-accounting",
-    confidence: "inferred"
+    confidence: "inferred",
+    linkStatus: "unverified"
   },
   {
     id: "c-bespoke-dev",
@@ -369,7 +426,8 @@ export const seedCompanies: Company[] = [
     number: "one bespoke build",
     numberLabel: "says it is a one-off for one client, not a product",
     url: "https://www.reddit.com/r/fintech/comments/1w1y3ms/developing_internal_portfolio_tooling_for_a_solo/",
-    confidence: "direct"
+    confidence: "reported",
+    linkStatus: "unverified"
   }
 ];
 
@@ -384,7 +442,7 @@ const RECON_SIGNALS = (): Signal[] => [
     key: "pay",
     question: signalDefs[1].question,
     value: 3,
-    note: "Paid three ways: a salary (€30–45k Lisbon, £40–55k London), a licence (Panoramix $5–7k/yr), and bespoke custom work."
+    note: "Paid three ways: salaries advertised live at £35–50k and £80–100k in London, a licence (Panoramix $5–7k/yr), and bespoke custom work."
   },
   {
     key: "moat",
@@ -436,7 +494,8 @@ export const seedProblems: Problem[] = [
         observation: "Panoramix publishes $5,000–$7,000/yr by AUM, and bills historical/transactional data import separately, by effort, at up to tens of thousands.",
         url: "https://www.panoramixfinancial.com/account/pricing/",
         date: "2026-10-01",
-        confidence: "direct"
+        confidence: "direct",
+        linkStatus: "checked"
       },
       {
         id: "P-001-e2",
@@ -444,7 +503,8 @@ export const seedProblems: Problem[] = [
         observation: "A freelance developer built custodian-statement ingestion, normalisation and FX for a solo RIA — and says it is a one-off for one client, not a product.",
         url: "https://www.reddit.com/r/fintech/comments/1w1y3ms/developing_internal_portfolio_tooling_for_a_solo/",
         date: "2026-10-01",
-        confidence: "direct"
+        confidence: "reported",
+        linkStatus: "unverified"
       },
       {
         id: "P-001-e3",
@@ -452,7 +512,8 @@ export const seedProblems: Problem[] = [
         observation: "Advisors choose multiple custodians deliberately — \"we've always had at least two in order to pin the one against the other in pricing\".",
         url: "https://www.reddit.com/r/CFP/comments/1ind3wn/ria_multicustodian/",
         date: "2026-10-01",
-        confidence: "direct"
+        confidence: "reported",
+        linkStatus: "unverified"
       }
     ],
     companyIds: ["c-panoramix", "c-panoramix-import", "c-orion", "c-bespoke-dev"],
@@ -488,7 +549,8 @@ export const seedProblems: Problem[] = [
         observation: "Senior Fund Reconciliation Analyst, Lisbon: matching complex trade settlements, analysing cash/stock breaks, aligning holdings with external custodians.",
         url: "https://pt.blackboardjob.com/detail/a/senior-fund-reconciliation-analyst-advanced-asset-servicing_lisboa_21301896",
         date: "2026-10-01",
-        confidence: "direct"
+        confidence: "reported",
+        linkStatus: "dead"
       },
       {
         id: "P-006-e2",
@@ -496,7 +558,8 @@ export const seedProblems: Problem[] = [
         observation: "Citi Custody Portfolio Reconciliation Analyst — \"safeguarding the accuracy and integrity of client and fiduciary securities and cash balances across local and international custodians\".",
         url: "https://jobs.citi.com/job/bogota/custody-portfolio-reconciliation-analyst/287/98742239840",
         date: "2026-10-01",
-        confidence: "direct"
+        confidence: "reported",
+        linkStatus: "dead"
       },
       {
         id: "P-006-e3",
@@ -504,10 +567,11 @@ export const seedProblems: Problem[] = [
         observation: "London salary guides: trade support £40–55k (average £49k); collateral management £45–60k (average £56.8k).",
         url: "https://www.robertwalters.co.uk/content/dam/robert-walters-redesign/country/united-kingdom/files/salary-survey/UK-Robert-Walters-Salary-Survey.pdf",
         date: "2026-10-01",
-        confidence: "reported"
+        confidence: "reported",
+        linkStatus: "unverified"
       }
     ],
-    companyIds: ["c-exalt", "c-blackboard", "c-clearstream", "c-citi", "c-janus", "c-mediolanum", "c-simcorp", "c-sercanto"],
+    companyIds: ["c-jjsearch", "c-lgt", "c-optio", "c-rbc", "c-janus", "c-exalt", "c-nordea", "c-mediolanum", "c-simcorp", "c-blackboard", "c-citi", "c-clearstream"],
     createdAt: SEED_TIMESTAMP,
     updatedAt: SEED_TIMESTAMP
   },
@@ -540,7 +604,8 @@ export const seedProblems: Problem[] = [
         observation: "Accounting teams describe mismatches between processor, bank and internal data, with manual exception handling.",
         url: "https://www.reddit.com/r/Accounting/comments/1t3wx6j/anyone_dealing_with_reconciliation_across/",
         date: "2026-10-01",
-        confidence: "reported"
+        confidence: "reported",
+        linkStatus: "unverified"
       }
     ],
     companyIds: ["c-exalt", "c-panoramix"],
@@ -576,7 +641,8 @@ export const seedProblems: Problem[] = [
         observation: "European investors describe multi-broker fragmentation, inconsistent exports and FX confusion, with spreadsheet workarounds.",
         url: "https://www.reddit.com/r/eupersonalfinance/comments/1sx3z2l/tracking_your_portfolio_in_the_eu_is_messier_than/",
         date: "2026-10-01",
-        confidence: "reported"
+        confidence: "reported",
+        linkStatus: "unverified"
       }
     ],
     companyIds: [],
@@ -697,7 +763,8 @@ export const seedProblems: Problem[] = [
         observation: "Reported secondhand from Cerulli, via a vendor blog, so treat as advertising until checked: 160–240 hours per advisor per year on portfolio reporting, the largest non-client-facing time cost.",
         url: "https://ustechautomations.com/resources/blog/financial-services-portfolio-reporting-pain-solution-2026",
         date: "2026-10-01",
-        confidence: "reported"
+        confidence: "reported",
+        linkStatus: "unverified"
       },
       {
         id: "P-007-e2",
@@ -705,7 +772,8 @@ export const seedProblems: Problem[] = [
         observation: "Advisors describe held-away and outside accounts as a manual tracking problem, mixing aggregators with hand updates.",
         url: "https://www.reddit.com/r/CFP/comments/1kyj70u/whats_your_approach_to_tracking_heldaway_assets/",
         date: "2026-10-01",
-        confidence: "reported"
+        confidence: "reported",
+        linkStatus: "unverified"
       }
     ],
     companyIds: ["c-orion", "c-panoramix"],
