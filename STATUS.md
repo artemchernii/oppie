@@ -27,13 +27,14 @@ Runs at <http://localhost:3000> via `pnpm dev`.
   `PROBLEM_LIST.md` § G2 evidence. The sharpest finding: vendors bill data import separately, by
   effort, at up to tens of thousands, so messy statement ingestion is the part nobody has
   productised.
+- **The Problems screen is built and is the default view.** Funnel by stage, ranked list, editable
+detail, evidence rows, and a Companies & numbers tab. Stored under `oppie.lab.problems`.
 
 ## Not built yet
 
-- **The pain funnel itself.** The app still opens on the opportunity board; `Problem` is not a
-  record type yet. See `HANDOFF_PAIN_FUNNEL.md`.
-- Nothing is built for the reconciliation cluster. No problem has been hand-run for a buyer (G5).
-- Deleting or archiving an opportunity.
+- Nothing has been hand-run for a buyer, so no record has reached G5.
+- Deleting or archiving a record.
+- The legacy opportunity board is not migrated into problem records.
 - Any browser-level automated test. Click → edit → reload is verified at the logic and SSR
   layers only, so the one interaction that matters most is still checked by hand.
 - `master` has not been renamed to `main`, and two commits predate the commit standard
@@ -43,7 +44,7 @@ Runs at <http://localhost:3000> via `pnpm dev`.
 
 | Command | Covers |
 |---|---|
-| `pnpm test` | 16 assertions on the storage rules: recovery from corrupt JSON, stale schema, partial and malformed records, quota failure, id collisions, seed immutability |
+| `pnpm test` | 37 assertions across two suites: 16 on opportunity storage, 21 on problem storage — checked-zero vs unchecked-blank, blank counting, ranking, signal repair, corrupt and stale records, id collisions, seed immutability |
 | `pnpm build` | Production build, includes typechecking |
 
 CI runs both on every pull request (`build`) and validates Conventional Commits on the PR title
@@ -64,7 +65,8 @@ deletion.
    company-buyer set requires exactly one.
 5. **Widen the signal set** — the ten problems are roughly four problems restated. The next pass
    should add raw signals from outside finance operations.
-6. **Then, and only then**, build the funnel UI.
+6. **Then** widen what the tool holds. The funnel UI is shipped; the constraint is now the data in
+   it, not the screen around it.
 
 ## Decisions still open
 
