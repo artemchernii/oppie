@@ -75,26 +75,41 @@ Collected 2026-10-01. Confidence per `RULES.md` §1.
 
 ### Direct — the workflow is a paid job
 
+**Link status matters here.** Job postings are deleted once the role is filled, so a dead link is
+normal — but it has to be labelled, or the record becomes a claim with nothing behind it. On
+2026-10-01 the stored links were re-checked: **1 resolved, 3 were gone (404/410), 1 was blocked to
+automated fetches, and 3 could not be read.** The app shows a link status on every company row for
+this reason.
+
 Live postings whose description *is* multi-custodian position and cash reconciliation:
 
-| Employer | Location | Role |
-|---|---|---|
-| Janus Henderson | Budapest | Reconciliation Analyst — custody (IBOR), performance (PBOR), ABOR-vs-IBOR, client market value |
-| Citi | Bogotá | Custody Portfolio Reconciliation Analyst — "across local and international custodians" |
-| Deutsche Börse / Clearstream | Cork | Analyst, Securities Reconciliations — positions vs external custodians |
-| Nordea | Portugal | Operational Analyst, Backoffice Reconciliation |
-| eXalt-Fi | Lisbon | Funds Reconciliation Specialist |
-| HN Services | Lisbon | Junior Settlement Officer |
-| Blackboardjob (understood to be a European private bank) | Lisbon | Senior Fund Reconciliation Analyst — settlement matching, cash and stock breaks |
-| Mediolanum International | Dublin | Senior Portfolio Operations Analyst |
-| SimCorp · Russell · Manulife · AllianceBernstein | various | same workflow |
+| Employer | Location | Advertised pay | Link |
+|---|---|---|---|
+| JJ Search Ltd (City firm) | London | **£35,000–£50,000** | not opened |
+| LGT Wealth Management UK | London | **£80,000–£100,000** | not opened |
+| Optio Incentives | London | **£80,000–£100,000** | not opened |
+| RBC Global Asset Management UK | London | not published | not opened |
+| Janus Henderson | Budapest | not published | **opens** |
+| Nordea | Portugal | not published | not opened |
+| eXalt-Fi | Lisbon | not published | not opened |
+| Mediolanum International | Dublin | not published | not opened |
+| SimCorp | Europe | not published | not opened |
+| Dodge & Cox | US | not published | not opened |
+| Blackboardjob (private bank) | Lisbon | not published | **gone** |
+| Citi | Bogotá | not published | **gone** |
+| Deutsche Börse / Clearstream | Cork | not published | **gone** |
 
-Salary bands, published salary guides: Lisbon trade-settlement analyst **€30–45k** · Dublin middle
-office **€40–55k** · London trade support **£40–55k**, average £49k · London collateral
-**£45–60k**, average £56.8k.
+**The London numbers are the strongest yet.** £35,000–£50,000 for a custody reconciliations analyst
+and £80,000–£100,000 for a senior one, both advertised on the posting. Optio Incentives states it is
+*establishing* a dedicated Reconciliation & Operations function — which is a firm deciding to spend
+money on this now, rather than a job that has always existed.
 
-**Read:** a firm pays €30–45k/year, plus employer costs, for one person to do this. That is a
-budget line stated out loud in a published document.
+Older, thinner evidence recorded earlier: Lisbon trade-settlement analyst **€30–45k** · Dublin
+middle office **€40–55k** · London trade support **£40–55k** (average £49k) · London collateral
+**£45–60k** (average £56.8k). These come from salary guides, not postings — marked `reported`.
+
+**Read:** a firm pays £35,000–£100,000 a year, plus employer costs, for one person to do this. That
+is a budget line stated out loud in a published document.
 
 ### Direct — a price is already accepted in the segment
 

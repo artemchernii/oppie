@@ -426,3 +426,10 @@ td strong.number-cell { font-size:12.5px; }
   .drawer { padding:22px; }
   .tab-return { left:16px; }
 }
+
+/* ---- link liveness. A source that no longer opens must say so. ---- */
+.link-chip { display:inline-block; margin-left:6px; font:9px 'DM Mono',monospace; border-radius:5px; padding:4px 7px; background:var(--panel-3); color:#8b958f; white-space:nowrap; border:1px solid transparent; }
+.link-chip.checked { background:var(--accent-dim); color:var(--accent); border-color:var(--accent-line); }
+.link-chip.dead { background:var(--red-dim); color:var(--red); border-color:var(--red-line); }
+.company-line-right { display:flex; align-items:center; gap:9px; text-align:right; }
+td .confidence-chip + .link-chip { margin-left:6px; }

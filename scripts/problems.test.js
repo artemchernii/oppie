@@ -236,6 +236,34 @@ test("a record whose gate is G2 or beyond has a paid-today sentence", () => {
   }
 });
 
+test("every company declares whether its link still opens", () => {
+  const allowed = ["checked", "dead", "unverified"];
+  for (const company of problems.seedCompanies) {
+    assert.ok(allowed.includes(company.linkStatus), `${company.name} has linkStatus "${company.linkStatus}"`);
+  }
+});
+
+test("nothing claims to be read at source unless its link actually resolved", () => {
+  const offenders = [];
+  for (const company of problems.seedCompanies) {
+    if (company.confidence === "direct" && company.linkStatus !== "checked") offenders.push(company.name);
+  }
+  for (const problem of problems.seedProblems) {
+    for (const item of problem.evidence) {
+      if (item.confidence === "direct" && item.linkStatus !== "checked") offenders.push(`${problem.id}/${item.id}`);
+    }
+  }
+  assert.deepStrictEqual(offenders, [], "direct means read on the page, which requires the link to open");
+});
+
+test("a dead link is never also claiming to be verified", () => {
+  for (const company of problems.seedCompanies) {
+    if (company.linkStatus === "dead") {
+      assert.notStrictEqual(company.confidence, "direct", `${company.name} is dead but claims direct`);
+    }
+  }
+});
+
 test("problem company references all resolve", () => {
   const ids = new Set(problems.seedCompanies.map((company) => company.id));
   for (const problem of problems.seedProblems) {

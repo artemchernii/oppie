@@ -26,6 +26,7 @@ import {
   type Confidence,
   type Evidence,
   type Gate,
+  type LinkStatus,
   type Problem,
   type Score,
   type Verdict
@@ -46,9 +47,15 @@ const isBacklog = (problem: Problem) =>
 const companyById = (id: string): Company | undefined => seedCompanies.find((company) => company.id === id);
 
 const CONFIDENCE_NOTE: Record<Confidence, string> = {
-  direct: "Seen in the source",
-  reported: "Said by someone else, not verified here",
-  inferred: "Our reading, not stated"
+  direct: "Read on the page itself",
+  reported: "Said by someone else, not read at source",
+  inferred: "Our reading, not stated anywhere"
+};
+
+const LINK_NOTE: Record<LinkStatus, string> = {
+  checked: "link opens",
+  dead: "link is gone",
+  unverified: "link not opened"
 };
 
 function Value({ text }: { text: string }) {
@@ -339,7 +346,12 @@ export default function Problems() {
 
 function CompaniesView() {
   const groups: { kind: Company["kind"]; title: string; blurb: string }[] = [
-    { kind: "employer", title: "Companies paying a salary for this work", blurb: "A job posting is a budget line stated in public. The salary is the price already being paid." },
+    {
+      kind: "employer",
+      title: "Companies paying a salary for this work",
+      blurb:
+        "A job posting is a budget line stated in public. Postings get deleted once the role is filled, so some links below are already dead — the role existed, the advert does not. That is why each row says whether its link still opens."
+    },
     { kind: "vendor", title: "Companies already selling software for it", blurb: "Someone charging money proves a price is accepted in this market." },
     { kind: "bespoke", title: "Someone paid to do it by hand", blurb: "Custom work means demand exists and nobody has productised the step." }
   ];
@@ -361,7 +373,7 @@ function CompaniesView() {
                     <th>Where</th>
                     <th>The work</th>
                     <th>Number</th>
-                    <th>How sure</th>
+                    <th>How sure / link</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -387,7 +399,12 @@ function CompaniesView() {
                         <small>{company.numberLabel}</small>
                       </td>
                       <td>
-                        <span className={`confidence-chip ${company.confidence}`}>{company.confidence}</span>
+                        <span className={`confidence-chip ${company.confidence}`} title={CONFIDENCE_NOTE[company.confidence]}>
+                          {company.confidence}
+                        </span>
+                        <span className={`link-chip ${company.linkStatus}`} title={LINK_NOTE[company.linkStatus]}>
+                          {LINK_NOTE[company.linkStatus]}
+                        </span>
                       </td>
                     </tr>
                   ))}
@@ -399,7 +416,9 @@ function CompaniesView() {
       })}
       <div className="footer">
         <span>
-          Confidence: direct = seen in the source · reported = stated by someone else · inferred = our reading. Nothing here is averaged into a score.
+          “reported” means the number was stated somewhere other than the source we can open — a salary
+          guide, a search result, an agency. “not opened” means the link has not been fetched, so treat
+          it as a lead rather than proof. Nothing here is averaged into a score.
         </span>
       </div>
     </>
@@ -519,7 +538,10 @@ function ProblemDrawer({ problem, onClose, onEdit }: { problem: Problem; onClose
                   <b>{company.name}</b>
                   <span>{company.where}</span>
                 </div>
-                <strong className="number-cell">{money(company.number) || "—"}</strong>
+                <div className="company-line-right">
+                  <strong className="number-cell">{money(company.number) || "—"}</strong>
+                  <span className={`link-chip ${company.linkStatus}`}>{LINK_NOTE[company.linkStatus]}</span>
+                </div>
               </div>
             ))}
           </div>
@@ -555,7 +577,14 @@ function ProblemDrawer({ problem, onClose, onEdit }: { problem: Problem; onClose
             <div className="evidence-line" key={item.id}>
               <div className="evidence-top">
                 <span className={`evidence-type ${item.type}`}>{item.type}</span>
-                <span className={`confidence-chip ${item.confidence}`}>{item.confidence}</span>
+                <span className={`confidence-chip ${item.confidence}`} title={CONFIDENCE_NOTE[item.confidence]}>
+                  {item.confidence}
+                </span>
+                {item.linkStatus && (
+                  <span className={`link-chip ${item.linkStatus}`} title={LINK_NOTE[item.linkStatus]}>
+                    {LINK_NOTE[item.linkStatus]}
+                  </span>
+                )}
                 {item.url ? (
                   <a className="inline-link" href={item.url} target="_blank" rel="noreferrer">
                     open ↗
