@@ -116,7 +116,6 @@ Use this operating envelope unless changed:
 - Operating a service and progressively automating it may be more viable than selling horizontal SaaS.
 
 ## 11. The paid-today test
-
 The strongest filter between a real problem and a nice-to-have:
 
 > **Is money or headcount already going at this workflow?**
@@ -132,3 +131,32 @@ Does not count: complaints, upvotes, "would you use this", or another founder's 
 
 A problem that nobody pays for today does not advance. It is parked or killed with the reason
 recorded, per `PAIN_FUNNEL.md` § G2.
+
+## 12. Collect freely, conclude never
+
+The research pipeline has three parts, and the middle one is where the line sits:
+
+```text
+collect   →   suggest   →   decide
+anyone        the engine    a person, always
+```
+
+**Collecting** has no rules worth stating beyond dedupe and honesty: a source is a URL, a query
+that found it, and the passage or figure that made it worth keeping. Quote the number, do not
+paraphrase it.
+
+**Suggesting** is allowed, and is the reason the pipeline exists. A suggestion is a value for one of
+the five questions, with its reason, and with the source it came from. It carries no authority. It
+is stored as `proposed`.
+
+**Deciding** is a human action, and the only way a suggestion enters a record. Acceptance writes
+three things together — the value, the reason, and the source — so an accepted number can always be
+traced back to what produced it. A suggestion with no reason is rejected outright: a bare number is
+exactly what this rule exists to prevent.
+
+Two consequences worth stating plainly:
+
+- **Nothing applies itself.** Not on load, not on ingest, not on a schedule, not in bulk. If a
+  mechanism could turn a suggestion into a record without a click, it is a violation.
+- **Untriaged material is not evidence.** The inbox counts in no total anywhere in the app, and a
+  source attached to no problem appears on no problem.
