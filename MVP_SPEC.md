@@ -16,16 +16,13 @@ It is not a prediction engine. It has no overall score, no weighted total, and n
 
 ## Status
 
-Two things are true at once, and the difference matters:
-
-- **Shipped.** The opportunity board: six seeded candidates, card and table views, search and
-  evidence-status filters, a detail drawer, edit mode, and `localStorage` persistence. The record
-  model is `Opportunity`.
-- **Specified, not built.** The pain funnel: `Problem` as the main object, the five gates, the
-  three axes, and the G2 paid-today field.
-
-`HANDOFF_PAIN_FUNNEL.md` is the implementation brief for the second. Until it lands, the app still
-opens on the opportunity board and `MVP_SPEC.md` describes both.
+- **Shipped.** The Problems screen, and it is the default view: funnel by stage, ranked list,
+  editable detail, evidence rows, and a Companies & numbers tab. Stored under
+  `oppie.lab.problems`.
+- **Shipped.** The opportunity board, kept as a secondary tab. The six seeded candidates stay
+  intact as reference data for the method.
+- **Still a research gap, not a code gap.** Nothing has been hand-run for a buyer, so no record
+  has reached G5.
 
 ## The main object
 
@@ -34,6 +31,14 @@ The main object is a **`Problem`**, not an `Opportunity`. The full record shape 
 
 A problem is tracked on three independent axes — `gate`, `action`, `verdict` — never on one
 maturity ladder, and never on a score.
+
+### Readiness tally
+
+Five questions, each answered 0–3 with the reason stored beside it, equal weight, 15 maximum.
+Blanks are counted and shown, never summed as zero, and completeness sorts above the tally. It is a
+judgement, labelled as one, and never a probability. See `PAIN_FUNNEL.md` § The readiness tally.
+
+`HANDOFF_PAIN_FUNNEL.md` is the implementation brief that this screen satisfies.
 
 ## Core loop
 

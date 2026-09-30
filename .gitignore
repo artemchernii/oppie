@@ -5,3 +5,7 @@ node_modules/
 .DS_Store
 .env*.local
 .tmp-test/
+
+# Personal strategy note. Contains employer, nationality and capital detail.
+# This repository is public — keep it local, never commit it.
+HANDOFF_DEMAND_SEARCH.md

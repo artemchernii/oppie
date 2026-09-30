@@ -87,14 +87,38 @@ There is no composite score. Not `83/100`, not `Pain ×2 + Market ×3`, not a we
 Weights are invented, and summing weeks against euros against ordinal severity produces a number
 that measures nothing. **Cited inputs do not rescue an invented aggregation.**
 
-What is allowed is an ordering fully determined by cited facts:
+What is allowed is an ordering fully determined by the record's own contents:
 
 1. **Furthest gate passed** — `G5` above `G4`, above `G3`, above `G2`. A fact about the world.
-2. Within one gate, **pain severity**, where severe is a cited yes/no: does inaction trigger a
-   penalty, a failed audit, a lost client, or stopped growth?
-3. Within equal severity, **the largest already-paid amount**, cited in euros per month, or as a salary.
+2. **Fewest unanswered questions.** A total with blanks is not comparable to a total without:
+   12/15 with a question skipped is a weaker claim than 10/15 with every question answered.
+3. **The readiness tally** — the sum of the five answered questions.
 
-No weights. Nothing enters the order that is not a quote, a date, and a URL.
+No weights. Every answered question carries its reason beside it, and `pnpm test` fails if a
+seeded answer has no reason.
+
+### The readiness tally
+
+Five questions, each answered 0–3:
+
+| Question | 0 | 3 |
+|---|---|---|
+| Must they fix it? | Nice to have | Deadline or penalty |
+| Are they already paying? | Nobody pays | A salary or a contract |
+| Could someone copy it? | Copied in weeks | Two advantages, compounding |
+| How fast could you get paid? | Over 6 months | Under 4 weeks |
+| What does a real test cost? | Over €2,000 | Under €50 |
+
+They carry **equal weight** — nobody invented a weighting — and every answered question stores the
+reason beside it. Two rules stop it becoming a score with extra steps:
+
+- **Blank is not zero.** `0` means checked, and the answer is no. Blank means not checked. Blanks
+  are counted and shown, never summed as zero and never hidden.
+- **The number is never shown alone.** The tally, its blanks and each answer's reason appear
+  together. A tally carrying a blank is labelled a guess, in those words.
+
+It is a **judgement sum, not a probability.** A probability would need base rates from many past
+attempts, and those do not exist yet. The app labels it accordingly.
 
 **An order is not a permission.** A record can be ordered first on budget and still fail, because
 ordering never overrides a gate. Ordering by the largest already-paid amount deliberately surfaces

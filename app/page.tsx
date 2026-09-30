@@ -15,6 +15,7 @@ import {
 } from "../lib/data";
 import { nextOpportunityId } from "../lib/persistence";
 import { useOpportunities } from "../lib/store";
+import Problems from "./Problems";
 
 const pad = (n: number) => String(n).padStart(2, "0");
 
@@ -26,7 +27,7 @@ const parseTags = (value: string) =>
 
 const sourceInitial = (type: Source["type"]) => (type === "Reddit" ? "R" : type === "YC" ? "Y" : type.slice(0, 1).toUpperCase());
 
-export default function Home() {
+function OpportunityBoard() {
   const { opportunities, hydrated, storageError, lastSavedAt, updateOpportunity, insertOpportunity, resetToSeed } = useOpportunities();
 
   const [query, setQuery] = useState("");
@@ -673,5 +674,69 @@ function EditForm({ item, isNew, onCancel, onSave }: { item: Opportunity; isNew:
         </button>
       </div>
     </form>
+  );
+}
+
+function WorkspaceSidebar({ tab, onTab }: { tab: "problems" | "opportunities"; onTab: (tab: "problems" | "opportunities") => void }) {
+  return (
+    <aside className="sidebar">
+      <div className="brand">
+        <span className="brand-mark">o</span>
+        <span>
+          oppie<span className="muted">.lab</span>
+        </span>
+      </div>
+      <div className="side-label">Workspace</div>
+      <button className={`nav ${tab === "problems" ? "active" : ""}`} onClick={() => onTab("problems")}>
+        <span>◈</span> Problems
+      </button>
+      <button className={`nav ${tab === "opportunities" ? "active" : ""}`} onClick={() => onTab("opportunities")}>
+        <span>▤</span> Opportunities <span className="count dim">legacy</span>
+      </button>
+      <div className="side-label lower">Working rules</div>
+      <div className="rule">
+        <span className="rule-dot green" /> Evidence over vibes
+      </div>
+      <div className="rule">
+        <span className="rule-dot yellow" /> Blanks stay blank
+      </div>
+      <div className="rule">
+        <span className="rule-dot red" /> Kill before you build
+      </div>
+      <div className="sidebar-bottom">
+        <div className="avatar">A</div>
+        <div>
+          <strong>Artem</strong>
+          <span>Private workspace</span>
+        </div>
+        <span className="dots">•••</span>
+      </div>
+    </aside>
+  );
+}
+
+/**
+ * The app opens on Problems. The six seeded opportunities stay reachable on the
+ * second tab, because they are reference data for the method — not a shortlist.
+ */
+export default function Home() {
+  const [tab, setTab] = useState<"problems" | "opportunities">("problems");
+
+  if (tab === "opportunities") {
+    return (
+      <>
+        <button className="tab-return" onClick={() => setTab("problems")}>
+          ← Back to problems
+        </button>
+        <OpportunityBoard />
+      </>
+    );
+  }
+
+  return (
+    <main className="shell">
+      <WorkspaceSidebar tab={tab} onTab={setTab} />
+      <Problems />
+    </main>
   );
 }
