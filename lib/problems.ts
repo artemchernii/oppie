@@ -639,28 +639,76 @@ export const seedProblems: Problem[] = [
   },
   {
     id: "P-007",
-    title: "A client report needs PDFs, spreadsheets, emails and screenshots in one pack",
+    title: "A client report needs PDFs, spreadsheets and screenshots in one pack",
     gate: "G1-signal",
-    action: "idle",
+    action: "researching",
     verdict: "open",
     domain: "Reporting",
-    market: "—",
-    what: "Evidence for a report is scattered across folders and inboxes, so someone assembles it by hand every time.",
-    affectedRole: "Advisor / accountant / operations lead",
-    buyer: "",
+    market: "London · Dublin",
+    what: "Evidence and numbers for a client report sit in folders, inboxes and custodial portals, so somebody rebuilds the same pack by hand every cycle.",
+    affectedRole: "Advisor / portfolio reporting team",
+    buyer: "Head of Client Reporting",
     workaround: "Shared folders, checklists, manual document assembly",
-    frequency: "",
-    consequence: "",
-    whyTheyPay: "",
-    paidToday: "Not checked",
-    competition: "Not checked.",
-    path: "undecided",
-    signals: blankSignals(),
-    nextQuestion: "What report is produced, for whom, and how often?",
-    unknowns: "Almost everything.",
-    killReason: "",
-    evidence: [],
-    companyIds: [],
+    frequency: "Quarterly, sometimes monthly",
+    consequence: "Report production eats days of advisor time that cannot be billed",
+    whyTheyPay: "Reporting hours are reported as the largest non-client-facing time cost in an advisory firm, so the labour is already paid for.",
+    paidToday: "Partly — reporting software is bought in this market at $5–7k/yr, but no source yet shows a firm paying specifically for the assembly step.",
+    competition: "Reporting platforms exist (Orion, Black Diamond). The assembly step is not the part they sell.",
+    path: "service",
+    signals: [
+      {
+        key: "pain",
+        question: signalDefs[0].question,
+        value: 2,
+        note: "Reported: 160–240 hours per advisor per year on portfolio reporting. Costly, but no penalty or deadline attached."
+      },
+      {
+        key: "pay",
+        question: signalDefs[1].question,
+        value: 1,
+        note: "Tools are bought in this market at $5–7k/yr, but nothing found yet shows a firm paying for the assembly step itself."
+      },
+      {
+        key: "moat",
+        question: signalDefs[2].question,
+        value: 0,
+        note: "Nothing. A folder structure and a set of templates are copied in a week."
+      },
+      {
+        key: "speed",
+        question: signalDefs[3].question,
+        value: 2,
+        note: "One quarterly pack produced by hand could be invoiced inside 4–12 weeks."
+      },
+      {
+        key: "cost",
+        question: signalDefs[4].question,
+        value: 3,
+        note: "Interviews and one hand-built pack cost under €50."
+      }
+    ],
+    nextQuestion: "What report is produced, for whom, how often — and who builds it today?",
+    unknowns: "Whether the buyer is the advisor or an operations lead, and whether they would pay for assembly alone.",
+    killReason: "Weak moat. If the work is template assembly, a client could reasonably keep doing it themselves.",
+    evidence: [
+      {
+        id: "P-007-e1",
+        type: "report",
+        observation: "Reported secondhand from Cerulli, via a vendor blog, so treat as advertising until checked: 160–240 hours per advisor per year on portfolio reporting, the largest non-client-facing time cost.",
+        url: "https://ustechautomations.com/resources/blog/financial-services-portfolio-reporting-pain-solution-2026",
+        date: "2026-10-01",
+        confidence: "reported"
+      },
+      {
+        id: "P-007-e2",
+        type: "community",
+        observation: "Advisors describe held-away and outside accounts as a manual tracking problem, mixing aggregators with hand updates.",
+        url: "https://www.reddit.com/r/CFP/comments/1kyj70u/whats_your_approach_to_tracking_heldaway_assets/",
+        date: "2026-10-01",
+        confidence: "reported"
+      }
+    ],
+    companyIds: ["c-orion", "c-panoramix"],
     createdAt: SEED_TIMESTAMP,
     updatedAt: SEED_TIMESTAMP
   },

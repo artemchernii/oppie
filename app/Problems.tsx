@@ -35,6 +35,14 @@ import { useProblems } from "../lib/problemStore";
 
 const money = (value: string) => value.trim();
 
+/**
+ * A record with no evidence and no answered question has not been looked at yet.
+ * Showing it as "0/15" would be a lie dressed as a measurement, so it is labelled
+ * a backlog item instead.
+ */
+const isBacklog = (problem: Problem) =>
+  problem.evidence.length === 0 && problem.signals.every((signal) => signal.value === null);
+
 const companyById = (id: string): Company | undefined => seedCompanies.find((company) => company.id === id);
 
 const CONFIDENCE_NOTE: Record<Confidence, string> = {
@@ -119,6 +127,7 @@ export default function Problems() {
 
   const paidFor = useMemo(() => problems.filter((problem) => problem.gate !== "G1-signal").length, [problems]);
   const openCount = useMemo(() => problems.filter((problem) => problem.verdict === "open").length, [problems]);
+  const backlogCount = useMemo(() => problems.filter(isBacklog).length, [problems]);
 
   const startNew = () => {
     const item = emptyProblem(nextProblemId(problems));
@@ -157,8 +166,8 @@ export default function Problems() {
           <h1>{tab === "problems" ? "Problems" : "Who pays, and how much"}</h1>
           <p>
             {tab === "problems"
-              ? "Every problem, how far the evidence goes, and how ready it is. Blanks are shown as blanks."
-              : "Real companies and the real numbers attached to this work."}
+              ? "Every problem you are tracking, how far the evidence goes, and how ready it is to build. Blank means not checked — it is never counted as zero."
+              : "Real companies, and the real money attached to this work. Salary bands, licence prices and custom builds, each with a source."}
           </p>
         </div>
         <div className="head-actions">
@@ -182,22 +191,26 @@ export default function Problems() {
         <>
           <div className="signal-strip">
             <div className="signal-intro">
-              <span className="signal-icon">◇</span>
+              <span className="signal-icon">◈</span>
               <div>
-                <strong>{problems.length} problems in the queue</strong>
+                <strong>{problems.length - backlogCount} researched · {backlogCount} still to look at</strong>
                 <span>
-                  {paidFor} of them have proof that money is already being spent on the work · {openCount} still open
+                  {paidFor} have proof that money is already being spent on the work · {openCount} still open
                 </span>
               </div>
             </div>
             <div className="signal-stats">
               <div>
-                <b>{paidFor}</b>
-                <span>PAID TONIGHT</span>
+                <b>{problems.length - backlogCount}</b>
+                <span>RESEARCHED</span>
               </div>
               <div>
-                <b>{problems.length - paidFor}</b>
-                <span>UNPROVEN</span>
+                <b>{backlogCount}</b>
+                <span>BACKLOG</span>
+              </div>
+              <div>
+                <b>{paidFor}</b>
+                <span>PAID FOR</span>
               </div>
             </div>
           </div>
@@ -207,7 +220,7 @@ export default function Problems() {
               <button
                 key={gate}
                 role="listitem"
-                className={`funnel-stage ${gateFilter === gate ? "active" : ""}`}
+                className={`funnel-stage ${gate.slice(0, 2).toLowerCase()} ${count === 0 ? "empty" : ""} ${gateFilter === gate ? "active" : ""}`}
                 onClick={() => setGateFilter((current) => (current === gate ? "all" : gate))}
                 title={gateCopy[gate].ask}
               >
@@ -250,8 +263,9 @@ export default function Problems() {
               <tbody>
                 {visible.map((problem) => {
                   const r = readiness(problem);
+                  const backlog = isBacklog(problem);
                   return (
-                    <tr key={problem.id} onClick={() => setSelectedId(problem.id)}>
+                    <tr key={problem.id} onClick={() => setSelectedId(problem.id)} className={backlog ? "backlog" : ""}>
                       <td>
                         <strong>
                           <span className="table-number">{problem.id}</span>
@@ -268,10 +282,14 @@ export default function Problems() {
                         <GateChip gate={problem.gate} />
                       </td>
                       <td>
-                        <span className={`tally ${r.unchecked === 0 ? "complete" : "gappy"}`}>
-                          {r.total}/{r.max}
-                          {r.unchecked > 0 && <em>{r.unchecked} blank</em>}
-                        </span>
+                        {backlog ? (
+                          <span className="backlog-tag">not researched</span>
+                        ) : (
+                          <span className={`tally ${r.unchecked === 0 ? "complete" : "gappy"}`}>
+                            {r.total}/{r.max}
+                            {r.unchecked > 0 && <em>{r.unchecked} blank</em>}
+                          </span>
+                        )}
                       </td>
                       <td>
                         <span className={`verdict-chip ${problem.verdict}`}>{verdictCopy[problem.verdict]}</span>
@@ -286,7 +304,8 @@ export default function Problems() {
 
           <div className="footer">
             <span>
-              Counts are counts of records. A number with blanks beside it is a guess, and is labelled as one.
+              “not researched” means no evidence and no answered question yet — not a score of zero.
+              A tally with blanks beside it is a guess, and is labelled as one.
             </span>
             <div className="footer-right">
               {savedFlash && <span className="saved-flag">SAVED</span>}
