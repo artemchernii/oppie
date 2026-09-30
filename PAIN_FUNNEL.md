@@ -15,6 +15,12 @@ exact failure this model exists to prevent: the rank becomes a substitute for th
 Pass/fail. Each gate names the evidence it requires. Failing a gate parks or kills the record with
 the reason recorded; it does not lower a score, because there is no score.
 
+**Gates gate commitment, not investigation.** Research is allowed at every gate, including from
+`G1`. A gate records what is *known*, not permission to look. Reading a gate as "you may not
+investigate until someone already pays" is circular — the research is how the paid-today evidence
+gets found in the first place. What a gate withholds is the next **commitment**: building, or
+hand-running work for a buyer. Never the search.
+
 ```text
 G1  Signal        observed behaviour, one source, one sentence
 G2  Paid today    someone already spends money or salary on this workflow
@@ -43,6 +49,10 @@ Counts as evidence:
 - a budget line someone will name out loud.
 
 Does not count: complaints, upvotes, "would you use this", or another founder's enthusiasm.
+
+G2 asks whether the workflow is paid for **at all** — anywhere, by anyone. It does **not** ask
+whether they would buy from you. That is a distribution question, and it is answered by G4 and the
+moat axis, not here.
 
 Required: what is paid, roughly how much, and a link.
 
@@ -85,6 +95,11 @@ What is allowed is an ordering fully determined by cited facts:
 3. Within equal severity, **the largest already-paid amount**, cited in euros per month, or as a salary.
 
 No weights. Nothing enters the order that is not a quote, a date, and a URL.
+
+**An order is not a permission.** A record can be ordered first on budget and still fail, because
+ordering never overrides a gate. Ordering by the largest already-paid amount deliberately surfaces
+large buyers — which is exactly where G4's "no procurement committee" criterion kills them. Read
+the order together with the gates, never instead of them.
 
 `0` and blank are different things:
 
