@@ -45,13 +45,26 @@ The kill reason must name the strongest reason not to build the opportunity toda
 
 Good kill reasons mention crowding, trust, regulation, distribution, switching cost, low willingness to pay, or bad economics.
 
-## 5. No fake precision
+## 5. No fake precision, and no composites
 
-Do not assign an overall score such as `83/100`. Use evidence statuses and plain-language conclusions:
+No overall score, no weighted total, no index. `83/100` is forbidden, and so is
+`Pain ×2 + Market ×3`. Weights are invented, and summing weeks against euros against ordinal
+severity produces a number that measures nothing — **cited inputs do not rescue an invented
+aggregation.**
+
+An **ordering** is allowed only where it is fully determined by cited facts, per `PAIN_FUNNEL.md`
+§ Ordering: furthest gate passed, then a cited yes/no on pain severity, then the largest
+already-paid amount. No weights, and nothing in the order that is not a quote, a date, and a URL.
+Records are never ordered before they have passed every gate.
+
+Use evidence statuses and plain-language conclusions:
 
 - `Early` — an interesting signal, not enough evidence.
 - `Mixed` — real evidence plus material unknowns.
 - `Crowded` — demand may be real, but the generic version is already heavily attacked.
+
+`0` and blank are different things: `0` is checked and zero, blank is not checked and renders
+`Not added yet`.
 
 Economics must show assumptions, not pretend to be a forecast.
 
@@ -101,3 +114,21 @@ Use this operating envelope unless changed:
 - Vertical AI operators are more interesting than general AI consulting.
 - Proven business model → new geography/vertical is a core oppie.lab research mode.
 - Operating a service and progressively automating it may be more viable than selling horizontal SaaS.
+
+## 11. The paid-today test
+
+The strongest filter between a real problem and a nice-to-have:
+
+> **Is money or headcount already going at this workflow?**
+
+Counts as evidence:
+
+- a job posting whose description **is** the workflow — the salary is the price already being paid;
+- an existing paid tool at a published price, bought by firms in this segment;
+- a contractor invoice, or an internal headcount;
+- a budget line someone will name out loud.
+
+Does not count: complaints, upvotes, "would you use this", or another founder's enthusiasm.
+
+A problem that nobody pays for today does not advance. It is parked or killed with the reason
+recorded, per `PAIN_FUNNEL.md` § G2.

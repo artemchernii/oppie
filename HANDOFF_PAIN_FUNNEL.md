@@ -17,22 +17,26 @@ Read first:
 
 The main object is now a `Problem`, not an `Opportunity`.
 
-The app should let the user move problems through these states:
+A problem is tracked on three separate axes. One ladder conflates them, so a problem cannot be
+"repeated *and* being hand-run *and* parked" without losing one of the three facts.
 
 ```text
-new → evidence → repeated → buyer-known → testing → build
-                                  ↘ killed / parked
+gate     G1-signal | G2-paid | G3-repeated | G4-buyer | G5-tested
+action   idle | researching | interviewing | hand-running | building
+verdict  open | parked | killed
 ```
 
-Do not turn states into scores or rankings.
+The gates are defined in `PAIN_FUNNEL.md` § Gates. Turn none of this into a score or a ranking:
+ordering happens per `PAIN_FUNNEL.md` § Ordering, and only for records that have passed every gate.
 
 ## UI requirements
 
 ### Funnel view
 
-Add a compact funnel or horizontal stage view showing the number of problems in each state.
+Add a compact funnel or horizontal stage view showing the number of problems at each gate.
 
-Numbers here are counts of records only, not quality scores.
+Numbers here are counts of records only, not quality scores. Each gate shows how many records have
+passed it and how many are blocked on it.
 
 Clicking a stage filters the problem list.
 
@@ -43,9 +47,12 @@ Add a readable table/card list seeded from `PROBLEM_LIST.md`:
 - problem title
 - affected role / buyer
 - current workaround
-- state
+- gate
+- pays today (G2) — shown as `Not added yet` when unchecked
 - next question or next test
 - evidence count
+
+Sort by the ordering rule in `PAIN_FUNNEL.md`, never by a score column.
 
 Use search and filters. Keep the page scannable.
 
@@ -61,12 +68,16 @@ Add a detail drawer or panel with editable fields:
 - frequency
 - business consequence
 - why they might pay
+- paid today — what is paid, roughly how much, and a link
+- competition — count, names, price range, link
+- moat — level 0–3, the advantage, and the path: `service` or `product`
+- target segment — firms nameable, net price per month, customers needed
 - skill fit
 - evidence links and observations
 - unknowns
 - kill reason
 - next test
-- state
+- gate, action, and verdict
 
 Evidence should be a small repeatable sub-record with type, observation, URL, date, and confidence.
 
@@ -76,7 +87,9 @@ Do not delete the six existing opportunity records. Keep them available as legac
 
 ## Constraints
 
-- No overall score, ranking, or invented conclusion.
+- No composite score, weighted total, or invented conclusion. Ordering by cited facts only, and
+  only for records past every gate.
+- `0` and blank are different: a checked zero renders `0`, an unchecked field renders `Not added yet`.
 - Do not auto-generate demand claims.
 - Keep evidence, unknowns, assumptions, and kill reasons separate.
 - Empty fields must say `Not added yet`.
@@ -88,10 +101,14 @@ Do not delete the six existing opportunity records. Keep them available as legac
 
 - [ ] App opens on the Problems funnel.
 - [ ] Ten initial problems are visible from `PROBLEM_LIST.md`.
-- [ ] Stage counts are visible and filter the list.
+- [ ] Gate counts are visible and filter the list.
+- [ ] Gate, action, and verdict are separate and independently editable.
+- [ ] The paid-today field is present and its evidence is linkable.
 - [ ] A problem can be opened and edited.
 - [ ] Evidence can be added and linked.
-- [ ] State changes persist after refresh.
+- [ ] No composite score, weighted total, or rank column appears anywhere.
+- [ ] An unchecked field renders `Not added yet`; a checked zero renders `0`.
+- [ ] Gate, action, and verdict changes persist after refresh.
 - [ ] A new problem can be added.
 - [ ] Existing opportunity data remains accessible.
 - [ ] `pnpm test` passes.

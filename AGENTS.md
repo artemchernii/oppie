@@ -118,10 +118,16 @@ if one of them shows up in `git status`, fix the ignore rather than adding it de
 
 These are not style preferences; a PR that breaks one should be rejected.
 
-- No overall score, ranking, or invented numeric conclusion. Ever.
+- No overall score, weighted total, or invented numeric conclusion. Ever. Ordering per
+  `PAIN_FUNNEL.md` § Ordering — furthest gate passed, then a cited yes/no on pain severity, then
+  the largest already-paid amount — is permitted, because nothing in it is invented. Weights and
+  composites are not.
 - Evidence, unknowns, assumptions, and kill reasons stay visibly separate.
+- A problem does not advance past the paid-today test on enthusiasm. Complaints, upvotes, and
+  "would you use this" are not evidence that money is already moving.
 - Empty fields render "Not added yet". Never hide them, never invent a value — an unrated
-  source has no confidence rather than a guessed `moderate`.
+  source has no confidence rather than a guessed `moderate`. A checked zero is not an empty
+  field, and an empty field never renders as a zero.
 - No AI-generated conclusions or automatic research claims.
 - The six seeded candidates in `lib/data.ts` stay intact; they are the reference data for the
   method, not a shortlist.
