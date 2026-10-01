@@ -46,6 +46,14 @@ detail, evidence rows, and a Companies & numbers tab. Stored under `oppie.lab.pr
 - `master` has not been renamed to `main`, and two commits predate the commit standard
   (`40e266b baseline: …`, `c0380b6 Merge pull request #1 …`).
 
+## Gotchas
+
+- **Never run `pnpm build` while `pnpm dev` is running.** Both write to `.next/`, so the
+  production build invalidates the dev server's chunk references and every page starts returning
+  500 with `MODULE_NOT_FOUND`. Fix: stop the dev server, `rm -rf .next`, start it again.
+- `pnpm dev` serves new routes immediately; `pnpm start` reads the build once at boot, so a route
+  added after start returns 404 until the server restarts.
+
 ## Checks
 
 | Command | Covers |
