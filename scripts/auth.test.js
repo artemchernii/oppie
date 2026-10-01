@@ -110,5 +110,67 @@ test("comparison does not leak length", () => {
   assert.strictEqual(auth.safeEqual("same", "same"), true);
 });
 
+// --- logging in ---------------------------------------------------------------
+
+const ENV = { APP_PASSWORD: "correct horse", APP_SECRET: SECRET };
+
+test("a wrong password produces no cookie at all", () => {
+  const outcome = auth.loginOutcome("wrong", ENV, NOW);
+  assert.strictEqual(outcome.ok, false);
+  assert.strictEqual(outcome.reason, "wrong-password");
+  assert.strictEqual(outcome.cookie, undefined);
+});
+
+test("an unconfigured deploy is refused as a setting, not as a wrong password", () => {
+  // The two are reported differently on purpose: one is a typo, the other is a missing
+  // variable, and telling the owner the wrong one sends them hunting for a mistake they did
+  // not make.
+  assert.strictEqual(auth.loginOutcome("correct horse", {}, NOW).reason, "unconfigured");
+  assert.strictEqual(auth.loginOutcome("correct horse", { APP_PASSWORD: "correct horse" }, NOW).reason, "unconfigured");
+  assert.strictEqual(auth.loginOutcome("correct horse", { APP_SECRET: SECRET }, NOW).reason, "unconfigured");
+});
+
+test("an unconfigured deploy outranks a wrong password", () => {
+  assert.strictEqual(auth.loginOutcome("anything at all", {}, NOW).reason, "unconfigured");
+});
+
+test("the right password produces a cookie that verifies", () => {
+  const outcome = auth.loginOutcome("correct horse", ENV, NOW);
+  assert.strictEqual(outcome.ok, true);
+  assert.strictEqual(outcome.cookie.name, auth.SESSION_COOKIE);
+  assert.strictEqual(auth.verifySession(outcome.cookie.value, SECRET, NOW), true);
+  // and it does not verify forever
+  assert.strictEqual(auth.verifySession(outcome.cookie.value, SECRET, auth.sessionExpiry(NOW) + 1), false);
+});
+
+test("the cookie is httpOnly, same-site and outlasts the tab", () => {
+  const { options } = auth.sessionCookie(SECRET, NOW);
+  assert.strictEqual(options.httpOnly, true);
+  assert.strictEqual(options.sameSite, "lax");
+  assert.strictEqual(options.path, "/");
+  assert.strictEqual(options.maxAge, auth.SESSION_MAX_AGE);
+});
+
+test("the cookie carries neither the password nor the secret", () => {
+  const { value } = auth.sessionCookie(SECRET, NOW);
+  assert.ok(!value.includes("correct horse"));
+  assert.ok(!value.includes(SECRET));
+});
+
+test("the secure flag follows the caller rather than being assumed", () => {
+  // A Secure cookie is dropped over plain http, which is every local dev request — the gate
+  // would then look broken in the one place it is hardest to debug.
+  assert.strictEqual(auth.sessionCookie(SECRET, NOW, true).options.secure, true);
+  assert.strictEqual(auth.sessionCookie(SECRET, NOW, false).options.secure, false);
+});
+
+test("locking clears the cookie rather than storing an empty valid one", () => {
+  const cleared = auth.clearedCookie();
+  assert.strictEqual(cleared.name, auth.SESSION_COOKIE);
+  assert.strictEqual(cleared.value, "");
+  assert.strictEqual(cleared.options.maxAge, 0);
+  assert.strictEqual(auth.verifySession(cleared.value, SECRET, NOW), false);
+});
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);
