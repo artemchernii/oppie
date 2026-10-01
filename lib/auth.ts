@@ -66,3 +66,67 @@ export function authConfig(env: Record<string, string | undefined> = process.env
   const secret = env.APP_SECRET ?? "";
   return { configured: Boolean(password && secret), password, secret };
 }
+
+/** Mirrors SESSION_DAYS, in the seconds a cookie wants. */
+export const SESSION_MAX_AGE = SESSION_DAYS * 24 * 60 * 60;
+
+export type SessionCookie = {
+  name: string;
+  value: string;
+  options: {
+    httpOnly: true;
+    sameSite: "lax";
+    secure: boolean;
+    path: string;
+    maxAge: number;
+  };
+};
+
+/**
+ * The cookie a successful login sets. `secure` is a parameter rather than a constant because
+ * a Secure cookie is dropped over plain http, which is every local dev request — the gate
+ * would then look broken in the one place it is hardest to debug. The caller decides from the
+ * request protocol rather than guessing.
+ */
+export function sessionCookie(secret: string, now = Date.now(), secure = true): SessionCookie {
+  return {
+    name: SESSION_COOKIE,
+    value: signSession(sessionExpiry(now), secret),
+    options: { httpOnly: true, sameSite: "lax", secure, path: "/", maxAge: SESSION_MAX_AGE }
+  };
+}
+
+/** Signing out clears the cookie. There is no server-side session list to delete from. */
+export function clearedCookie(): SessionCookie {
+  return {
+    name: SESSION_COOKIE,
+    value: "",
+    options: { httpOnly: true, sameSite: "lax", secure: true, path: "/", maxAge: 0 }
+  };
+}
+
+/**
+ * What a submitted password produces. Split out from the route handler so the decision is
+ * plain Node and can be tested without a request, which is the same reason the rest of this
+ * file exists.
+ *
+ * "unconfigured" and "wrong-password" are different answers on purpose: one means the deploy
+ * is missing APP_PASSWORD or APP_SECRET and nobody can get in, the other means someone typed
+ * the wrong thing. Reporting them identically would send the owner hunting for a typo that
+ * does not exist.
+ */
+export type LoginOutcome =
+  | { ok: true; cookie: SessionCookie }
+  | { ok: false; reason: "unconfigured" | "wrong-password" };
+
+export function loginOutcome(
+  input: string,
+  env: Record<string, string | undefined> = process.env,
+  now = Date.now(),
+  secure = true
+): LoginOutcome {
+  const { configured, password, secret } = authConfig(env);
+  if (!configured) return { ok: false, reason: "unconfigured" };
+  if (!checkPassword(input, password)) return { ok: false, reason: "wrong-password" };
+  return { ok: true, cookie: sessionCookie(secret, now, secure) };
+}

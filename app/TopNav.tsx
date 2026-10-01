@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import ThemeToggle from "./ThemeToggle";
+import SignOut from "./SignOut";
 
 const LINKS = [
   { href: "/", label: "Problems" },
@@ -31,6 +32,7 @@ export default function TopNav() {
         </div>
         <div className="nav-right">
           <ThemeToggle />
+          <SignOut />
         </div>
       </div>
     </nav>
