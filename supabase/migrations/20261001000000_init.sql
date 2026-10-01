@@ -9,6 +9,19 @@
 -- guarded, so running it twice is harmless — and re-running re-asserts the access model
 -- over any table added since.
 --
+-- The dashboard will still offer a "this creates tables without enabling Row Level
+-- Security" warning the first time. That warning is wrong about this file: every table
+-- states its own `alter table ... enable row level security` on the next line, and the DO
+-- block at the end re-asserts it over the whole schema. The lint is a pattern matcher and
+-- cannot see inside a DO block, which is why each table says it plainly as well.
+--
+-- To confirm it worked after running, this should return `rowsecurity = true` for all nine
+-- tables, `public = false` for the bucket, and one constraint:
+--
+--   select tablename, rowsecurity from pg_tables where schemaname = 'public' order by tablename;
+--   select id, public from storage.buckets where id = 'oppie-attachments';
+--   select conname from pg_constraint where conname = 'proposal_acceptance_carries_its_reason';
+--
 -- Two rules govern everything below.
 --
 -- 1. The tables mirror lib/data.ts, lib/problems.ts and lib/research.ts exactly, because
@@ -51,6 +64,8 @@ create table if not exists public.opportunities (
   updated_at          timestamptz not null default now()
 );
 
+alter table public.opportunities enable row level security;
+
 create table if not exists public.opportunity_sources (
   id              text primary key,
   opportunity_id  text not null references public.opportunities(id) on delete cascade,
@@ -66,6 +81,8 @@ create table if not exists public.opportunity_sources (
   -- sources[] is an ordered array in the model, so the order has to survive the round trip.
   position        integer not null default 0
 );
+
+alter table public.opportunity_sources enable row level security;
 
 create index if not exists opportunity_sources_opportunity_id_idx
   on public.opportunity_sources (opportunity_id);
@@ -101,6 +118,8 @@ create table if not exists public.problems (
   updated_at     timestamptz not null default now()
 );
 
+alter table public.problems enable row level security;
+
 -- The five readiness questions, at equal weight. There is deliberately no total column:
 -- readiness() in lib/problems.ts computes it, blanks are counted rather than treated as
 -- zero, and PAIN_FUNNEL.md labels the result a judgement rather than a measurement. A
@@ -120,6 +139,8 @@ create table if not exists public.problem_signals (
   note        text not null default '',
   primary key (problem_id, key)
 );
+
+alter table public.problem_signals enable row level security;
 
 -- Confidence here is `direct | reported | inferred`, which is a DIFFERENT union from the
 -- `strong | moderate | weak` used by opportunity sources. Same word, two scales.
@@ -141,6 +162,8 @@ create table if not exists public.companies (
   updated_at    timestamptz not null default now()
 );
 
+alter table public.companies enable row level security;
+
 create table if not exists public.problem_evidence (
   id          text primary key,
   problem_id  text not null references public.problems(id) on delete cascade,
@@ -159,6 +182,8 @@ create table if not exists public.problem_evidence (
   position    integer not null default 0
 );
 
+alter table public.problem_evidence enable row level security;
+
 create index if not exists problem_evidence_problem_id_idx
   on public.problem_evidence (problem_id);
 
@@ -168,6 +193,8 @@ create table if not exists public.problem_companies (
   position    integer not null default 0,
   primary key (problem_id, company_id)
 );
+
+alter table public.problem_companies enable row level security;
 
 create index if not exists problem_companies_company_id_idx
   on public.problem_companies (company_id);
@@ -191,6 +218,8 @@ create table if not exists public.collected_sources (
   confidence     text check (confidence in ('direct','reported','inferred')),
   link_status    text check (link_status in ('checked','dead','unverified'))
 );
+
+alter table public.collected_sources enable row level security;
 
 create index if not exists collected_sources_status_idx on public.collected_sources (status);
 create index if not exists collected_sources_attach_to_idx on public.collected_sources (attach_to);
@@ -216,14 +245,20 @@ create table if not exists public.proposals (
   )
 );
 
+alter table public.proposals enable row level security;
+
 create index if not exists proposals_problem_id_idx on public.proposals (problem_id);
 create index if not exists proposals_status_idx on public.proposals (status);
 
 -- ================================================================ access model
 
--- Run last, and over every table in the schema rather than a list, so a table added later
--- is denied by default instead of by remembering. RLS with no policy already denies; the
--- revoke makes it explicit and survives a `grant all` added out of habit.
+-- Every table above already enabled RLS on the line after its own definition, which is what
+-- the Supabase lint looks for. This loop is the second layer and the reason to keep it: it
+-- runs over the whole schema rather than a list, so a table added by a later migration is
+-- denied by default instead of by someone remembering. Re-running this file re-asserts it.
+--
+-- RLS with no policy already denies. The revoke makes the deny explicit and survives a
+-- `grant all` added out of habit.
 do $$
 declare t record;
 begin
