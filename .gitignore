@@ -3,7 +3,9 @@ node_modules/
 .pnpm-store/
 *.tsbuildinfo
 .DS_Store
-.env*.local
+.env
+.env.*
+!.env.example
 .tmp-test/
 
 # Personal strategy note. Contains employer, nationality and capital detail.
