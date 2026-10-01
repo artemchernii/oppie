@@ -13,3 +13,7 @@ node_modules/
 HANDOFF_DEMAND_SEARCH.md
 .vercel
 .env*
+# Exception for the example, which holds placeholder names and no values. This has to
+# stay *after* `.env*`: within one file the last matching pattern wins, so moving it
+# back above silently re-blocks the file.
+!.env.example

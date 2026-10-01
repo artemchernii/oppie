@@ -107,22 +107,37 @@ confidence being read back as `'moderate'`.
 
 ### Environment variables
 
-Two separate problems here, and only the second is obvious.
+**Verified 2026-10-01** against the live project (`vercel env ls`). The integration is installed
+as the resource `supabase-oppie` and created sixteen variables in Preview and Production:
 
-**The names must match the code.** The install dialog was configured with the custom prefix
-`STORAGE`, which produces `STORAGE_URL`. The helper code in the Supabase prompt reads
-`NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`. Those will never match.
-Either set the prefix to `NEXT_PUBLIC_SUPABASE` or change the code — but pick one, because a
-silent mismatch here surfaces as an undefined URL at runtime, not as a failed install.
+| Set | Names |
+|---|---|
+| Supabase, unprefixed | `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_JWT_SECRET` |
+| Postgres, unprefixed | `POSTGRES_URL`, `POSTGRES_URL_NON_POOLING`, `POSTGRES_PRISMA_URL`, `POSTGRES_HOST`, `POSTGRES_DATABASE`, `POSTGRES_USER`, `POSTGRES_PASSWORD` |
+| Prefixed duplicates | `NEXT_PUBLIC_POSTGRES_DBSUPABASE_URL`, `NEXT_PUBLIC_POSTGRES_DBSUPABASE_PUBLISHABLE_KEY`, `NEXT_PUBLIC_POSTGRES_DBSUPABASE_ANON_KEY` |
 
-**`Sensitive` contradicts `NEXT_PUBLIC_`.** `NEXT_PUBLIC_*` values are inlined into the browser
-bundle by design, so marking them sensitive is meaningless there and hides the value from
-`vercel env pull`. Turn `Sensitive` off for the two publishable variables, and keep it firmly on
-for any secret key — which must never be prefixed `NEXT_PUBLIC_`.
+Three things follow.
 
-Under the recommended server-only shape, neither publishable variable is read at all; the app
-needs the URL and the secret key. Verify whether the integration actually creates a secret key
-and under what name before wiring anything up — see open questions.
+**The prefix produced junk.** The custom prefix was `NEXT_PUBLIC_POSTGRES_DB`, so the integration
+created a second, prefixed copy of three variables — note there is no underscore between `DB` and
+`SUPABASE`. Nothing will ever read those names, and they are not what the onboarding code expects
+either.
+
+**The name the onboarding code reads does not exist.** That code reads `NEXT_PUBLIC_SUPABASE_URL`
+and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`. Neither is in the list, so the sample would fail as an
+undefined URL at runtime rather than at install time. The fix is not a new variable: point the code
+at `SUPABASE_URL`, which already exists.
+
+**All sixteen are marked `Secret`/`Hidden`, including the ones that are not secret.**
+`SUPABASE_URL` and the publishable and anon keys ship to browsers by design, so `Sensitive` buys
+nothing there — and it costs something real, because `vercel env pull` cannot retrieve a hidden
+value, so local development needs those values copied from the Supabase dashboard by hand. Keep
+`Secret` on `SUPABASE_SECRET_KEY` and `SUPABASE_SERVICE_ROLE_KEY`, and only those.
+
+The recommended server-only shape needs exactly two of the sixteen: `SUPABASE_URL` and
+`SUPABASE_SECRET_KEY`. **Nothing needs to be added in Vercel.** The `POSTGRES_*` set is for an ORM
+talking to Postgres directly and is unused until one is added; `SUPABASE_SERVICE_ROLE_KEY` and
+`SUPABASE_JWT_SECRET` are the legacy pair that `SUPABASE_SECRET_KEY` supersedes.
 
 ### What does not change yet
 
@@ -137,8 +152,9 @@ and under what name before wiring anything up — see open questions.
 
 ### Open questions
 
-1. **Is a secret key created by the integration, and under what name?** The recommended shape
-   depends on it. Unverified.
+1. ~~**Is a secret key created by the integration, and under what name?**~~ **Answered**
+   2026-10-01: `SUPABASE_SECRET_KEY` exists in Preview and Production. It is the only secret the
+   server-only shape needs, alongside `SUPABASE_URL`.
 2. **Cutover policy.** Local-first write-through, remote-first, or two-way sync? Unstated. The
    recommendation is that local stays authoritative and remote is a mirror until a separate
    entry decides otherwise, because the failure mode of getting this wrong is lost records.
