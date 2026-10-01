@@ -6,9 +6,9 @@ Implement the next MVP slice: make opportunity records editable and persist them
 
 Read these files first:
 
-- `MVP_SPEC.md`
-- `RULES.md`
-- `RESEARCH_CONTEXT.md`
+- `docs/MVP_SPEC.md`
+- `docs/RULES.md`
+- `docs/RESEARCH_CONTEXT.md`
 - `lib/data.ts`
 - `app/page.tsx`
 - `app/globals.css`
@@ -61,7 +61,7 @@ Make the existing “Add opportunity” button open a blank form with sensible d
 
 - Move the current static array into a client-safe seed module if needed.
 - Create a small `useLocalStorage` or equivalent hook.
-- Keep the data shape aligned with the model in `MVP_SPEC.md`.
+- Keep the data shape aligned with the model in `docs/MVP_SPEC.md`.
 - Use controlled form fields and a single save action.
 - Keep the drawer as the main editing surface; do not create a new route.
 - Add a small saved/updated confirmation state.

@@ -24,7 +24,7 @@ Runs at <http://localhost:3000> via `pnpm dev`.
   test, and an ordering rule instead of a scoring rule.
 - **G2 evidence collected for the reconciliation cluster.** The workflow is a paid job, a paid
   software category, and bespoke custom work. P-001, P-003 and P-006 now clear G2 — see
-  `PROBLEM_LIST.md` § G2 evidence. The sharpest finding: vendors bill data import separately, by
+  `docs/PROBLEM_LIST.md` § G2 evidence. The sharpest finding: vendors bill data import separately, by
   effort, at up to tens of thousands, so messy statement ingestion is the part nobody has
   productised.
 - **The Problems screen is built and is the default view.** Funnel by stage, ranked list, editable
@@ -88,12 +88,17 @@ deletion.
 
 ## Important files
 
-- `PAIN_FUNNEL.md` — the gates, the ordering rule, and the problem record shape
-- `PROBLEM_LIST.md` — the research queue, plus the G2 evidence
-- `INTERVIEW_GUIDE.md` — who to talk to and what to ask
-- `MVP_SPEC.md` — product scope and acceptance criteria
-- `RULES.md` — research methodology
-- `HANDOFF_PAIN_FUNNEL.md` — the pending funnel implementation brief
-- `RESEARCH_CONTEXT.md` — lessons from the Business Idea Session
 - `AGENTS.md` — branch, commit, review, and product-invariant rules
-- `HANDOFF_EDITING_PERSISTENCE.md` — completed implementation handoff
+- `DECISIONS.md` — decisions with a date, and what each one overrides
+- `docs/README.md` — index of the method, product and history docs
+- `docs/PAIN_FUNNEL.md` — the gates, the ordering rule, and the problem record shape
+- `docs/PROBLEM_LIST.md` — the research queue, plus the G2 evidence
+- `docs/INTERVIEW_GUIDE.md` — who to talk to and what to ask
+- `docs/MVP_SPEC.md` — product scope and acceptance criteria
+- `docs/RULES.md` — research methodology
+- `docs/handoffs/HANDOFF_PAIN_FUNNEL.md` — the funnel implementation brief
+- `docs/RESEARCH_CONTEXT.md` — lessons from the Business Idea Session
+- `docs/handoffs/HANDOFF_EDITING_PERSISTENCE.md` — completed implementation handoff
+
+`docs/handoffs/HANDOFF_SUPABASE.md` is the current one. `HANDOFF_DEMAND_SEARCH.md` stays untracked
+at the root on purpose: it holds personal detail and this repository is public.

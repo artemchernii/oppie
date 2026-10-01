@@ -154,7 +154,7 @@ they are the paths this funnel is pointed at.
 For a small operator, a moat is almost never technology. It is access, distribution, switching
 cost, a system-of-record position, or a niche too small for incumbents to bother with. No moat plus
 real paid pain plus a small niche is a **service business** — a legitimate outcome, not a failure
-(see `RULES.md` §10). Killing it for lack of moat loses money.
+(see `docs/RULES.md` §10). Killing it for lack of moat loses money.
 
 ```text
 pain ≤ 1                        → kill, whatever the moat

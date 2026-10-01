@@ -3,7 +3,7 @@
 // Framework-free: safe to import from client or server, and compiled by `pnpm test`
 // so the storage rules can be exercised in plain Node.
 //
-// Three axes, deliberately separate (see PAIN_FUNNEL.md):
+// Three axes, deliberately separate (see docs/PAIN_FUNNEL.md):
 //   gate    — how far the evidence goes
 //   action  — what we are doing about it
 //   verdict — the decision
@@ -201,7 +201,7 @@ export function readiness(problem: Problem): { total: number; max: number; check
 }
 
 /**
- * Ordering per PAIN_FUNNEL.md: furthest gate first, then completeness, then the tally.
+ * Ordering per docs/PAIN_FUNNEL.md: furthest gate first, then completeness, then the tally.
  *
  * Completeness comes before the tally on purpose. A total with blanks is not comparable
  * to a total without: 12/15 with a question unanswered is a weaker claim than 10/15 with

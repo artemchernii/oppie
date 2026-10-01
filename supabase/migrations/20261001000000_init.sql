@@ -122,7 +122,7 @@ alter table public.problems enable row level security;
 
 -- The five readiness questions, at equal weight. There is deliberately no total column:
 -- readiness() in lib/problems.ts computes it, blanks are counted rather than treated as
--- zero, and PAIN_FUNNEL.md labels the result a judgement rather than a measurement. A
+-- zero, and docs/PAIN_FUNNEL.md labels the result a judgement rather than a measurement. A
 -- stored total would be an invented index the moment a blank was summed as 0.
 create table if not exists public.problem_signals (
   problem_id  text not null references public.problems(id) on delete cascade,

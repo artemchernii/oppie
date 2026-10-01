@@ -1,6 +1,6 @@
 // oppie.lab — opportunity model and seed data.
 //
-// Shape follows MVP_SPEC.md. Framework-free: safe to import from client or server.
+// Shape follows docs/MVP_SPEC.md. Framework-free: safe to import from client or server.
 //
 // Two status fields, deliberately orthogonal:
 //   stage          — where this sits in the research pipeline
@@ -50,7 +50,7 @@ export const evidenceStatuses: EvidenceStatus[] = ["early", "mixed", "crowded"];
 export const sourceTypes: SourceType[] = ["YC", "Reddit", "Company", "Pricing", "Review", "Job", "Regulation", "Acquisition", "Other"];
 export const confidences: Confidence[] = ["strong", "moderate", "weak"];
 
-/** Plain-language conclusions, derived from evidenceStatus. Per RULES.md #5: no fake precision. */
+/** Plain-language conclusions, derived from evidenceStatus. Per docs/RULES.md #5: no fake precision. */
 export const evidenceStatusCopy: Record<EvidenceStatus, { label: string; conclusion: string }> = {
   early: { label: "Early", conclusion: "Interesting signal, not enough evidence" },
   mixed: { label: "Mixed", conclusion: "Real evidence plus material unknowns" },

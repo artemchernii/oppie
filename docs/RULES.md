@@ -52,7 +52,7 @@ No overall score, no weighted total, no index. `83/100` is forbidden, and so is
 severity produces a number that measures nothing — **cited inputs do not rescue an invented
 aggregation.**
 
-An **ordering** is allowed only where it is fully determined by cited facts, per `PAIN_FUNNEL.md`
+An **ordering** is allowed only where it is fully determined by cited facts, per `docs/PAIN_FUNNEL.md`
 § Ordering: furthest gate passed, then a cited yes/no on pain severity, then the largest
 already-paid amount. No weights, and nothing in the order that is not a quote, a date, and a URL.
 Records are never ordered before they have passed every gate.
@@ -130,7 +130,7 @@ Counts as evidence:
 Does not count: complaints, upvotes, "would you use this", or another founder's enthusiasm.
 
 A problem that nobody pays for today does not advance. It is parked or killed with the reason
-recorded, per `PAIN_FUNNEL.md` § G2.
+recorded, per `docs/PAIN_FUNNEL.md` § G2.
 
 ## 12. Collect freely, conclude never
 

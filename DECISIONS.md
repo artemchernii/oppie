@@ -96,7 +96,7 @@ rather than trusting the application layer.
 | A checked zero is not an empty field | `proposals.value` is a nullable `smallint` with `check (value between 0 and 3)`. `0` and `NULL` are different readings and must stay different. |
 | A suggestion carrying no reason is rejected at the storage boundary | `check (status <> 'accepted' or (reason <> '' and source_url <> ''))`. Acceptance writes the reason and the source beside the number. |
 | Untriaged sources count in no total | `collected_sources.status` in `('new','kept','spent')`, `not null` default `'new'`. No view, column or generated value totals `'new'`. |
-| No weighted total, no invented index | No composite score column, stored or generated. The readiness tally exists only in `PAIN_FUNNEL.md` at equal weight, and stays computed, never persisted. |
+| No weighted total, no invented index | No composite score column, stored or generated. The readiness tally exists only in `docs/PAIN_FUNNEL.md` at equal weight, and stays computed, never persisted. |
 | Evidence, unknowns, assumptions and kill reasons stay visibly separate | Separate nullable columns, never merged into one "confidence" field, and never defaulted to empty on read. |
 | An empty field never renders as a zero | The `normalize*` functions in `lib/persistence.ts` and friends stay the read path: unexpected shapes degrade to "empty", never to a value. Remote rows inherit the same treatment. |
 | The six seeded candidates are reference data | Seeds stay in `lib/data.ts` and are never uploaded. The database holds user records only, so a remote row count is not a shortlist length. |

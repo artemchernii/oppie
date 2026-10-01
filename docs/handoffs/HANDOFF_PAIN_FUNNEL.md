@@ -6,11 +6,11 @@ Change the oppie.lab MVP from an opportunity board into a pain-first research fu
 
 Read first:
 
-- `PAIN_FUNNEL.md`
-- `PROBLEM_LIST.md`
-- `MVP_SPEC.md`
-- `RULES.md`
-- `RESEARCH_CONTEXT.md`
+- `docs/PAIN_FUNNEL.md`
+- `docs/PROBLEM_LIST.md`
+- `docs/MVP_SPEC.md`
+- `docs/RULES.md`
+- `docs/RESEARCH_CONTEXT.md`
 - `AGENTS.md`
 
 ## Product change
@@ -26,8 +26,8 @@ action   idle | researching | interviewing | hand-running | building
 verdict  open | parked | killed
 ```
 
-The gates are defined in `PAIN_FUNNEL.md` § Gates. Turn none of this into a score or a ranking:
-ordering happens per `PAIN_FUNNEL.md` § Ordering, and only for records that have passed every gate.
+The gates are defined in `docs/PAIN_FUNNEL.md` § Gates. Turn none of this into a score or a ranking:
+ordering happens per `docs/PAIN_FUNNEL.md` § Ordering, and only for records that have passed every gate.
 
 ## UI requirements
 
@@ -42,7 +42,7 @@ Clicking a stage filters the problem list.
 
 ### Problem list
 
-Add a readable table/card list seeded from `PROBLEM_LIST.md`:
+Add a readable table/card list seeded from `docs/PROBLEM_LIST.md`:
 
 - problem title
 - affected role / buyer
@@ -52,7 +52,7 @@ Add a readable table/card list seeded from `PROBLEM_LIST.md`:
 - next question or next test
 - evidence count
 
-Sort by the ordering rule in `PAIN_FUNNEL.md`, never by a score column.
+Sort by the ordering rule in `docs/PAIN_FUNNEL.md`, never by a score column.
 
 Use search and filters. Keep the page scannable.
 
@@ -100,7 +100,7 @@ Do not delete the six existing opportunity records. Keep them available as legac
 ## Acceptance criteria
 
 - [ ] App opens on the Problems funnel.
-- [ ] Ten initial problems are visible from `PROBLEM_LIST.md`.
+- [ ] Ten initial problems are visible from `docs/PROBLEM_LIST.md`.
 - [ ] Gate counts are visible and filter the list.
 - [ ] Gate, action, and verdict are separate and independently editable.
 - [ ] The paid-today field is present and its evidence is linkable.
