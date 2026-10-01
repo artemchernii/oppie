@@ -1,7 +1,7 @@
 # oppie.lab — working agreement
 
-Applies to every contributor, human or agent. `RULES.md` governs the *research*; this file
-governs the *repository*. Product scope lives in `MVP_SPEC.md`.
+Applies to every contributor, human or agent. `docs/RULES.md` governs the *research*; this file
+governs the *repository*. Product scope lives in `docs/MVP_SPEC.md`.
 
 ## 1. master is protected — nothing lands directly
 
@@ -119,7 +119,7 @@ if one of them shows up in `git status`, fix the ignore rather than adding it de
 These are not style preferences; a PR that breaks one should be rejected.
 
 - No weighted total, no invented index, no numeric conclusion dressed up as a measurement.
-  The readiness tally in `PAIN_FUNNEL.md` § Ordering is permitted: five questions at **equal**
+  The readiness tally in `docs/PAIN_FUNNEL.md` § Ordering is permitted: five questions at **equal**
   weight, every answer stored with its reason, blanks counted and shown rather than summed as
   zero, and completeness sorted above the tally. It is labelled a judgement, never a probability.
 - Evidence, unknowns, assumptions, and kill reasons stay visibly separate.

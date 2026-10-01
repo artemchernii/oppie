@@ -12,7 +12,7 @@ The MVP should help answer two questions, in this order:
 > Which of the survivors deserves the next small test?
 
 It is not a prediction engine. It has no overall score, no weighted total, and no index — see
-`RULES.md` §5 and `PAIN_FUNNEL.md`.
+`docs/RULES.md` §5 and `docs/PAIN_FUNNEL.md`.
 
 ## Status
 
@@ -27,7 +27,7 @@ It is not a prediction engine. It has no overall score, no weighted total, and n
 ## The main object
 
 The main object is a **`Problem`**, not an `Opportunity`. The full record shape is in
-`PAIN_FUNNEL.md` § Problem record; it is not duplicated here.
+`docs/PAIN_FUNNEL.md` § Problem record; it is not duplicated here.
 
 A problem is tracked on three independent axes — `gate`, `action`, `verdict` — never on one
 maturity ladder, and never on a score.
@@ -36,9 +36,9 @@ maturity ladder, and never on a score.
 
 Five questions, each answered 0–3 with the reason stored beside it, equal weight, 15 maximum.
 Blanks are counted and shown, never summed as zero, and completeness sorts above the tally. It is a
-judgement, labelled as one, and never a probability. See `PAIN_FUNNEL.md` § The readiness tally.
+judgement, labelled as one, and never a probability. See `docs/PAIN_FUNNEL.md` § The readiness tally.
 
-`HANDOFF_PAIN_FUNNEL.md` is the implementation brief that this screen satisfies.
+`docs/handoffs/HANDOFF_PAIN_FUNNEL.md` is the implementation brief that this screen satisfies.
 
 ## Core loop
 
@@ -62,7 +62,7 @@ judgement, labelled as one, and never a probability. See `PAIN_FUNNEL.md` § The
 
 ### Problem list
 
-Seeded from `PROBLEM_LIST.md`. Columns: title, affected role / buyer, current workaround, gate,
+Seeded from `docs/PROBLEM_LIST.md`. Columns: title, affected role / buyer, current workaround, gate,
 pays today, next question or test, evidence count. Search and filters. Sorted by the ordering rule,
 never by a score column.
 
@@ -70,7 +70,7 @@ Unchecked fields render `Not added yet`. A checked zero renders `0`. The two are
 
 ### Problem detail
 
-A drawer or panel with the editable fields listed in `HANDOFF_PAIN_FUNNEL.md` § Problem detail,
+A drawer or panel with the editable fields listed in `docs/handoffs/HANDOFF_PAIN_FUNNEL.md` § Problem detail,
 including `paidToday`, `competition`, `moat`, and `targetSegment`, plus evidence as repeatable
 sub-records (type, observation, URL, date, confidence).
 
@@ -81,7 +81,7 @@ method, not a shortlist, and they are not deleted.
 
 ## Minimal data model
 
-`Problem` and `Evidence` are defined in `PAIN_FUNNEL.md` § Problem record. `Opportunity` and
+`Problem` and `Evidence` are defined in `docs/PAIN_FUNNEL.md` § Problem record. `Opportunity` and
 `Source` remain as shipped, until the legacy view is migrated or retired.
 
 ## Out of scope
@@ -93,7 +93,7 @@ method, not a shortlist, and they are not deleted.
 - notifications
 - complex financial modelling
 - choosing a final business automatically
-- any composite score, weighted total, or ranking beyond `PAIN_FUNNEL.md` § Ordering
+- any composite score, weighted total, or ranking beyond `docs/PAIN_FUNNEL.md` § Ordering
 
 ## Acceptance criteria
 

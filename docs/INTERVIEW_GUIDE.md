@@ -8,7 +8,7 @@ vocabulary; this file turns them into conversations.
 **Reconciling positions, cash, and transactions across multiple custodians and brokers from
 statement files, before reporting.**
 
-`PROBLEM_LIST.md` § G2 evidence shows this is paid for three ways: as a salaried job, as a software
+`docs/PROBLEM_LIST.md` § G2 evidence shows this is paid for three ways: as a salaried job, as a software
 licence, and as bespoke custom work. The unproven part is not whether anyone pays — it is whether
 anyone buys **from a stranger** instead of hiring or commissioning.
 
@@ -18,12 +18,12 @@ In order of information per unit of effort. Start at the top.
 
 | Tier | Who | How to reach them | Why them |
 |---|---|---|---|
-| 1 | The freelance developer who built this for a solo RIA (r/fintech, linked in `PROBLEM_LIST.md`) | One direct message | They already did the work. They know the price, what broke, what the client said, and why they chose not to productise it. Highest information per effort available anywhere. |
+| 1 | The freelance developer who built this for a solo RIA (r/fintech, linked in `docs/PROBLEM_LIST.md`) | One direct message | They already did the work. They know the price, what broke, what the client said, and why they chose not to productise it. Highest information per effort available anywhere. |
 | 2 | The hiring manager behind the Lisbon and Portugal postings — eXalt-Fi, HN Services, Nordea's Backoffice Reconciliation team | The contact on the posting, or LinkedIn | They are paying for this workflow **today** and can state the salary. Ask about the workflow, never for a job. |
 | 3 | Licensed Portuguese autonomous investment consultants | CMVM publishes the register of *consultores para investimento autónomos* — a named list | Regulated, named, contactable, and small enough that they answer. |
-| 4 | Operations leads at 5–50 person advisory, family-office, and fund-administration firms across the EU | Trade associations, LinkedIn, local directories | The company-buyer target shape from `PAIN_FUNNEL.md` § Research scope. |
+| 4 | Operations leads at 5–50 person advisory, family-office, and fund-administration firms across the EU | Trade associations, LinkedIn, local directories | The company-buyer target shape from `docs/PAIN_FUNNEL.md` § Research scope. |
 
-**Do not start with retail investors.** They pay least, churn fastest, and `PROBLEM_LIST.md` already
+**Do not start with retail investors.** They pay least, churn fastest, and `docs/PROBLEM_LIST.md` already
 flags P-002 as the retail record.
 
 ## The script

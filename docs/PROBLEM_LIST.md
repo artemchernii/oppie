@@ -6,7 +6,7 @@ workflows, not products.
 **Where the list stands.** The reconciliation cluster — P-001, P-003, P-006 — now clears **G2**:
 the workflow is demonstrably paid for, as a salaried job, as a software licence, and as bespoke
 custom work. See § G2 evidence. Everything else is still at G1. Research is allowed at every gate;
-only *commitment* is gated, per `PAIN_FUNNEL.md`.
+only *commitment* is gated, per `docs/PAIN_FUNNEL.md`.
 
 ## Gates
 
@@ -32,7 +32,7 @@ The advisor buyer is unproven and moves to P-009.
 
 ## Ordering
 
-Ordered per `PAIN_FUNNEL.md` § Ordering: furthest gate passed, then cited pain severity, then the
+Ordered per `docs/PAIN_FUNNEL.md` § Ordering: furthest gate passed, then cited pain severity, then the
 largest already-paid amount.
 
 | Rank | ID | Gate | Pain severity (cited) | Already paid (cited) | Path |
@@ -71,7 +71,7 @@ other roles — before any more depth is added to this cluster.
 
 ## G2 evidence — the reconciliation workflow is paid for
 
-Collected 2026-10-01. Confidence per `RULES.md` §1.
+Collected 2026-10-01. Confidence per `docs/RULES.md` §1.
 
 ### Direct — a legal forcing function (the strongest kind of pain)
 
@@ -210,7 +210,7 @@ freelance developer below was hired to do, and the same step P-001 describes.
   not reach.
 - Count and identity of EU firms with this workflow outside Portugal.
 
-The first of those is what `INTERVIEW_GUIDE.md` exists to answer.
+The first of those is what `docs/INTERVIEW_GUIDE.md` exists to answer.
 
 ## Evidence with no budget attached
 
