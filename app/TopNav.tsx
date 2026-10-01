@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import ThemeToggle from "./ThemeToggle";
-import SignOut from "./SignOut";
 
 const LINKS = [
   { href: "/", label: "Problems" },
@@ -32,7 +31,12 @@ export default function TopNav() {
         </div>
         <div className="nav-right">
           <ThemeToggle />
-          <SignOut />
+          {/* A plain form, so signing out needs no JavaScript and no client-side Supabase. */}
+          <form action="/auth/signout" method="post">
+            <button className="btn btn-sm" type="submit">
+              Sign out
+            </button>
+          </form>
         </div>
       </div>
     </nav>
