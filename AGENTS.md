@@ -128,7 +128,11 @@ These are not style preferences; a PR that breaks one should be rejected.
 - Empty fields render "Not added yet". Never hide them, never invent a value — an unrated
   source has no confidence rather than a guessed `moderate`. A checked zero is not an empty
   field, and an empty field never renders as a zero.
-- No AI-generated conclusions or automatic research claims.
+- No automatic conclusions. The research pipeline may **collect** sources and may **suggest**
+  answers, but a suggestion reaches a record only when a person accepts it — and acceptance writes
+  the reason and the source into the record beside the number. Nothing is applied on load, on
+  ingest, or on a schedule. A suggestion carrying no reason is rejected at the storage boundary.
+- Untriaged sources count in no total. The inbox is a queue, not evidence.
 - The six seeded candidates in `lib/data.ts` stay intact; they are the reference data for the
   method, not a shortlist.
 - Local-only: no backend, auth, accounts, billing, or sync without an explicit decision.

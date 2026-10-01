@@ -22,14 +22,19 @@ import {
   type Verdict
 } from "../lib/problems";
 import { useProblems } from "../lib/problemStore";
+import { pendingFor } from "../lib/research";
+import { useResearch } from "../lib/researchStore";
 import { ConfidenceChip, GateChip, LinkChip, ReadinessPanel, VerdictChip, isBacklog } from "./ui";
 
 const companyById = (id: string) => seedCompanies.find((company) => company.id === id);
 
 export default function ProblemDetail({ id }: { id: string }) {
   const { problems, hydrated, updateProblem } = useProblems();
+  const { proposals, acceptProposal, decideProposal } = useResearch();
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState<Problem | null>(null);
+
+  const suggestions = useMemo(() => pendingFor(proposals, id), [proposals, id]);
 
   const problem = useMemo(() => problems.find((item) => item.id === id) ?? null, [problems, id]);
 
@@ -145,6 +150,36 @@ export default function ProblemDetail({ id }: { id: string }) {
               <div className="callout danger">
                 <p>{problem.killReason}</p>
               </div>
+            </section>
+          )}
+
+          {suggestions.length > 0 && (
+            <section className="section">
+              <h2 className="section-label">Suggested answers, waiting on you</h2>
+              {suggestions.map((proposal) => (
+                <div className="aside-card" key={proposal.id} style={{ marginBottom: 12 }}>
+                  <div className="chip-row" style={{ marginBottom: 8 }}>
+                    <span className="chip chip-warn">suggested</span>
+                    <span className="chip chip-plain">{proposal.signalKey}</span>
+                    <span className="chip">{proposal.value}/3</span>
+                  </div>
+                  <p style={{ margin: "0 0 10px", color: "var(--text-muted)" }}>{proposal.reason}</p>
+                  <a href={proposal.sourceUrl} target="_blank" rel="noreferrer" style={{ fontSize: 12 }}>
+                    {proposal.sourceUrl.replace(/^https?:\/\//, "").slice(0, 70)} ↗
+                  </a>
+                  <div className="chip-row" style={{ marginTop: 12 }}>
+                    <button
+                      className="btn btn-primary btn-sm"
+                      onClick={() => acceptProposal(proposal.id, problem, (next) => updateProblem(next.id, next))}
+                    >
+                      Accept
+                    </button>
+                    <button className="btn btn-sm" onClick={() => decideProposal(proposal.id, "rejected")}>
+                      Reject
+                    </button>
+                  </div>
+                </div>
+              ))}
             </section>
           )}
 

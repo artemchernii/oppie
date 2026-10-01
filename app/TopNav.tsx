@@ -2,9 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import ThemeToggle from "./ThemeToggle";
 
 const LINKS = [
   { href: "/", label: "Problems" },
+  { href: "/inbox", label: "Inbox" },
   { href: "/companies", label: "Companies & numbers" },
   { href: "/opportunities", label: "Legacy board" }
 ];
@@ -26,6 +28,9 @@ export default function TopNav() {
               {link.label}
             </Link>
           ))}
+        </div>
+        <div className="nav-right">
+          <ThemeToggle />
         </div>
       </div>
     </nav>
