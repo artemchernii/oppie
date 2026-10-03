@@ -136,5 +136,5 @@ market size, prices, or accepted Problems.
 ## Copy-paste prompt
 
 ```text
-Continue oppie.lab: fix the light-theme contrast on /inbox.
+Continue oppie.lab: put one real source through the loop with me.
 ```

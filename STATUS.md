@@ -191,10 +191,16 @@ init migration's revoke loop only covered tables that existed then. **Applied by
 2026-10-04**; the Playwright server now logs `42501 permission denied for table problem_ratings`
 where it previously got an empty list.
 
-### Known visual issue, not from this change
+### Light theme (fixed 2026-10-04)
 
-In the light theme (the default until the toggle stores `dark`), `/inbox` headings are near-white
-on white and the "Keep source" primary button label is unreadable. Dark theme renders correctly.
+Plain version: the redesign only worked in dark mode; in light mode most headings were near-white on
+white (1.11:1 contrast). Light mode now has its own warm-paper palette and every page reads. Dark
+mode is unchanged, checked pixel for pixel on six pages.
+
+Precise version: `app/globals.css` gains 33 `--ed-*` colour roles. Their dark values are the
+redesign's original hexes; light values are chosen per role (darker orange/violet for text, bright
+ones kept for fills and shadows). A Playwright test measures heading/label contrast in light mode on
+`/`, `/inbox`, `/companies`, `/companies/[id]`, `/problems/[id]`, `/discover` and fails below 4.5:1.
 
 ## What is not built
 
@@ -318,10 +324,10 @@ Nothing is required. When #45 is merged, the open follow-ups are, in rough order
    in `/inbox` with a reason. Nothing real has gone through the loop yet.
 2. Add Reddit credentials to `.env.local` (`REDDIT_CLIENT_ID`, `REDDIT_CLIENT_SECRET`,
    `REDDIT_USER_AGENT`) to try live collection.
-3. Fix the light-theme contrast on `/inbox`, and the hardcoded "Fintech · reconciliation" label.
+3. Replace the hardcoded "Fintech · reconciliation" label on `/companies`.
 
 ## Suggested next prompt
 
 ```text
-Continue oppie.lab: fix the light-theme contrast on /inbox.
+Continue oppie.lab: put one real source through the loop with me.
 ```
