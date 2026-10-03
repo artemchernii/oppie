@@ -423,6 +423,53 @@ thing is a second column that can disagree. A test asserts it has not appeared.
 
 ---
 
+## 8. The seed problems stay on the board
+
+**Date:** 2026-10-03
+**Status:** Decided and implemented.
+**Decided by:** the defect, not a preference. This is written down because it changes what is on
+screen and because a test that asserted the old behaviour had to change with it.
+
+### What was wrong
+
+The first-load merge replaced the seed list with whatever the database held:
+
+```ts
+const base = remoteList.length > 0 ? remoteList : clone(seeds);
+```
+
+So with five problems stored, **the other five seeds disappeared from the screen.** It read as five
+problems having been deleted, and nothing said so. Measured on 2026-10-03: five rows in the database,
+five problems visible, ten in the file.
+
+### What was decided
+
+**The seeds are the board.** A stored record replaces its own seed by id and adds to the rest; it
+never takes the untouched seeds with it — `base = mergeById(clone(seeds), remoteList)`.
+
+Entry #6 said "the seeds show when the remote table is empty", and the old line implemented that
+literally. That was the wrong reading of it. The researched problems are the work itself, not
+scaffolding that stops existing once something is stored, and `AGENTS.md` § 6 already treats the
+seeded candidates as reference data that stays reachable.
+
+### Consequences
+
+- Storing one record can no longer hide nine others.
+- A record deleted from the database would come back from the seeds. There is no delete UI, so this
+  cannot happen yet. When delete lands it needs a tombstone, or the seeds need a different rule.
+- **Three tests asserted the old behaviour and were rewritten** to assert the record rather than the
+  length of the list: "first load shows the database's copy of a record it has", "a record the browser
+  has never seen survives the merge and is not dropped", and "for the same id the browser's copy wins".
+  A test changed to follow a change is worth flagging, so: those three, and no others.
+
+### Also in the same change
+
+`problem_companies` is written now. It was left unwritten because the foreign key pointed at an empty
+`companies` table; entry #7 loaded the researched companies, so a link row resolves and the
+competition a record claims becomes checkable rather than a claim about a list nobody else can see.
+
+---
+
 ## 6. The engine is Python and local; ratings are blind
 
 **Date:** 2026-10-03

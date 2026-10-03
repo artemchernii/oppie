@@ -9,7 +9,7 @@
 // and a mapping split across two files is where a rename starts reading `undefined` and writing
 // null over somebody's record.
 
-import { problemsFromRemote, evidenceRowsFrom, problemRowFrom, signalRowsFrom } from "./problemSync";
+import { problemsFromRemote, companyLinkRowsFrom, evidenceRowsFrom, problemRowFrom, signalRowsFrom } from "./problemSync";
 import type { Problem } from "./problems";
 import { supabaseForRoute } from "./supabase/server";
 import { supabaseConfig } from "./supabaseConfig";
@@ -103,11 +103,20 @@ export async function saveRemoteProblem(problem: Problem): Promise<ProblemSave> 
       : await supabase.from("problem_evidence").delete().eq("problem_id", problem.id);
     if (prunedEvidence.error) return { ok: false, error: reason(prunedEvidence.error) };
 
-    // `problem_companies` is deliberately NOT written. Its foreign key points at `companies`,
-    // which is still seed-only data in lib/problems.ts — inserting a link row would either fail
-    // the constraint or require uploading the reference companies, which DECISIONS.md #1 forbids.
-    // Company attribution is read-only in the UI, so nothing a person can do this slice is lost.
-    // It moves with the companies screen.
+    // The company links. This was left unwritten while `companies` was empty, because the foreign
+    // key had nothing to point at; `DECISIONS.md` #7 loaded the researched companies, so a link row
+    // now resolves and the competition a record claims is checkable.
+    const links = companyLinkRowsFrom(problem);
+    if (links.length > 0) {
+      const written = await supabase.from("problem_companies").upsert(links, { onConflict: "problem_id,company_id" });
+      if (written.error) return { ok: false, error: reason(written.error) };
+    }
+
+    const keptCompanies = links.map((row) => String(row.company_id));
+    const prunedLinks = keptCompanies.length
+      ? await supabase.from("problem_companies").delete().eq("problem_id", problem.id).not("company_id", "in", inList(keptCompanies))
+      : await supabase.from("problem_companies").delete().eq("problem_id", problem.id);
+    if (prunedLinks.error) return { ok: false, error: reason(prunedLinks.error) };
 
     return { ok: true };
   } catch (error) {

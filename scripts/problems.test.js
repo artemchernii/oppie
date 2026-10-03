@@ -306,11 +306,11 @@ test("nothing is written before hydration, so a pre-load render cannot replace r
   assert.deepStrictEqual(plan.upload, []);
 });
 
-test("first load shows the database records, never the seed placeholder", () => {
+test("first load shows the database's copy of a record it has", () => {
   const plan = sync.planFirstLoad({ remote: [syncProblem("P-001", "Read from the database")], local: null });
-  assert.strictEqual(plan.problems.length, 1);
-  assert.strictEqual(plan.problems[0].title, "Read from the database");
-  assert.notStrictEqual(plan.problems[0].title, problems.seedProblems[0].title);
+  const shown = plan.problems.find((problem) => problem.id === "P-001");
+  assert.strictEqual(shown.title, "Read from the database");
+  assert.notStrictEqual(shown.title, problems.seedProblems[0].title);
   assert.deepStrictEqual(plan.upload, []);
 });
 
@@ -350,10 +350,8 @@ test("a record the browser has never seen survives the merge and is not dropped"
   const mine = syncProblem("P-011", "Only in this browser");
   const theirs = syncProblem("P-012", "Only in the database");
   const plan = sync.planFirstLoad({ remote: [theirs], local: [mine] });
-  assert.deepStrictEqual(
-    plan.problems.map((problem) => problem.id).sort(),
-    ["P-011", "P-012"]
-  );
+  assert.ok(plan.problems.some((problem) => problem.id === "P-011"), "the browser's own record was dropped");
+  assert.ok(plan.problems.some((problem) => problem.id === "P-012"), "the database's record was dropped");
 });
 
 test("for the same id the browser's copy wins, and is written over the database copy", () => {
@@ -361,7 +359,7 @@ test("for the same id the browser's copy wins, and is written over the database 
     remote: [syncProblem("P-011", "Older database copy")],
     local: [syncProblem("P-011", "Newer browser copy")]
   });
-  assert.strictEqual(plan.problems[0].title, "Newer browser copy");
+  assert.strictEqual(plan.problems.find((problem) => problem.id === "P-011").title, "Newer browser copy");
   assert.deepStrictEqual(plan.upload.map((problem) => problem.id), ["P-011"]);
 });
 
@@ -512,6 +510,37 @@ test("what a figure means is not stored twice — kind already says it", () => {
     assert.ok(["employer", "vendor", "bespoke"].includes(company.kind), company.name + " has kind " + company.kind);
     assert.ok(!("number" in company) && !("where" in company), company.name + " still uses the old field names");
   });
+});
+
+test("the seed problems stay on the board after one of them is edited", () => {
+  // Regression, found on 2026-10-03 with five problems stored: the other five seeds disappeared from
+  // the screen, which reads as five problems having been deleted. A record being stored is not a
+  // reason for the reference data to vanish.
+  const edited = { ...problems.seedProblems[2], title: "Edited by hand" };
+  const plan = sync.planFirstLoad({ remote: [edited], local: null });
+  assert.strictEqual(plan.problems.length, problems.seedProblems.length, "editing one problem hid the others");
+  assert.strictEqual(plan.problems.find((problem) => problem.id === edited.id).title, "Edited by hand");
+});
+
+test("a record the database has and the seeds do not is added, not substituted", () => {
+  const fresh = syncProblem("P-900", "Only in the database");
+  const plan = sync.planFirstLoad({ remote: [fresh], local: null });
+  assert.strictEqual(plan.problems.length, problems.seedProblems.length + 1);
+  assert.ok(plan.problems.some((problem) => problem.id === "P-900"));
+});
+
+test("company links are written in order, and an empty list means no links", () => {
+  const source = syncProblem("P-011", "Links");
+  source.companyIds = ["c-duco", "c-reconart"];
+  const rows = sync.companyLinkRowsFrom(source);
+  assert.deepStrictEqual(rows, [
+    { problem_id: "P-011", company_id: "c-duco", position: 0 },
+    { problem_id: "P-011", company_id: "c-reconart", position: 1 }
+  ]);
+  source.companyIds = [];
+  assert.deepStrictEqual(sync.companyLinkRowsFrom(source), []);
+  source.companyIds = ["c-duco", "  ", ""];
+  assert.strictEqual(sync.companyLinkRowsFrom(source).length, 1, "a blank company id was written as a link");
 });
 
 console.log(`\n${passed} passed, ${failed} failed`);
