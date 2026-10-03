@@ -13,7 +13,7 @@
 ## 2. Ratings at the storage boundary
 
 - [ ] 2.1 Write `supabase/migrations/20261004000000_problem_ratings.sql`: the `problem_ratings` table from design.md § 4, its divergence CHECK, `enable row level security`, the allowlist policy and grants matching the nine existing tables. Verify the file is idempotent, then paste it into the dashboard and confirm `select conname from pg_constraint where conname = 'rating_reason_required_on_divergence'` returns one row.
-- [ ] 2.2 Add a pure predicate for the divergence rule to `lib/analysis.ts` (given a rating and a score, is a reason required?). Verify with assertions at the threshold: exactly 3 apart needs no reason, 4 apart does.
+- [x] 2.2 Add a pure predicate for the divergence rule to `lib/analysis.ts` (given a rating and a score, is a reason required?). Verify with assertions at the threshold: exactly 3 apart needs no reason, 4 apart does.
 - [ ] 2.3 Add the read and write for ratings to `lib/problemRemote.ts` as the signed-in person, following `saveRemoteProblem`: a read for a page and a write that refuses an empty reason where one is required. Verify with a live round trip, and by confirming a rating of 7 against a score of 0 with an empty reason is refused by the database as well as by the caller.
 - [ ] 2.4 Expose the write as a server action beside `saveProblem` in `lib/problemActions.ts`. Verify with `pnpm exec tsc --noEmit` and by calling it from the detail surface in group 3.
 

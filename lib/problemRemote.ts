@@ -9,14 +9,16 @@
 // and a mapping split across two files is where a rename starts reading `undefined` and writing
 // null over somebody's record.
 
-import { problemsFromRemote, companyLinkRowsFrom, evidenceRowsFrom, problemRowFrom, signalRowsFrom } from "./problemSync";
-import type { Problem } from "./problems";
+import { problemsFromRemote, ratingFromRow, ratingRowFrom, companyLinkRowsFrom, evidenceRowsFrom, problemRowFrom, signalRowsFrom } from "./problemSync";
+import { analyse, requiresReason, DIVERGENCE_THRESHOLD, RATING_MAX, RATING_MIN } from "./analysis";
+import type { Problem, ProblemRating } from "./problems";
 import { supabaseForRoute } from "./supabase/server";
 import { supabaseConfig } from "./supabaseConfig";
 import { isNextControlFlow, messageOf, reason } from "./supabaseResult";
 
 export type ProblemsRead = { ok: true; problems: Problem[] } | { ok: false; error: string };
 export type ProblemSave = { ok: true } | { ok: false; error: string };
+export type RatingsRead = { ok: true; ratings: ProblemRating[] } | { ok: false; error: string };
 
 /**
  * Every problem, with its signals, evidence and company links.
@@ -137,4 +139,144 @@ export async function saveRemoteProblem(problem: Problem): Promise<ProblemSave> 
 /** A PostgREST `in` list. Values are JSON-quoted so an id with a comma or a quote cannot split it. */
 function inList(values: readonly string[]): string {
   return `(${values.map((value) => JSON.stringify(value)).join(",")})`;
+}
+
+// ============================================================ ratings
+
+export type RatingsPage = { ratings: ProblemRating[]; error: string | null };
+
+/**
+ * Every rating ever made, oldest first.
+ *
+ * All of them rather than the latest per problem, because the divergence log is the point of the
+ * table: the older rows are the ones that say the rubric was wrong. The caller picks the row that
+ * decides whether a score may be shown — one whose `rubricVersion` is the current one.
+ */
+export async function readRemoteRatings(): Promise<RatingsRead> {
+  if (!supabaseConfig().userConfigured) {
+    return { ok: false, error: "SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY are not both set" };
+  }
+
+  try {
+    const { supabase } = supabaseForRoute();
+    const result = await supabase.from("problem_ratings").select("*").order("created_at", { ascending: true }).order("id", { ascending: true });
+    if (result.error) return { ok: false, error: reason(result.error) };
+
+    const rows = Array.isArray(result.data) ? result.data : [];
+    const ratings: ProblemRating[] = [];
+    for (const row of rows) {
+      const rating = ratingFromRow(row as Record<string, unknown>);
+      // A row that cannot be read as a rating is dropped, not repaired. It is not announced here:
+      // the caller shows the ratings it can trust, and a made-up one would be worse than a missing
+      // one — the arithmetic between the two numbers is the only thing this table is for.
+      if (rating) ratings.push(rating);
+    }
+    return { ok: true, ratings };
+  } catch (error) {
+    if (isNextControlFlow(error)) throw error;
+    return { ok: false, error: messageOf(error, "unknown read failure") };
+  }
+}
+
+/**
+ * What a page renders the ratings from. No fallback, for the same reason `problemsForPage` has
+ * none: a screen that shows something else while looking like the real thing is worse than one that
+ * says it could not load.
+ */
+export async function ratingsForPage(): Promise<RatingsPage> {
+  const result = await readRemoteRatings();
+  if (!result.ok) {
+    console.error(`[ratings] read failed: ${result.error}`);
+    return { ratings: [], error: result.error };
+  }
+  return { ratings: result.ratings, error: null };
+}
+
+/** What a person submits: their number, and their reason when one is owed. Nothing else. */
+export type RatingInput = {
+  problemId: string;
+  rating: number;
+  reason: string;
+};
+
+/**
+ * Stores one person's rating of one problem, together with the system's score at that moment.
+ *
+ * **The score is recomputed here, not taken from the browser.** `score_at_rating` claims to be what
+ * the system said, so it has to be what the system says: the record is read, `analyse` runs over it,
+ * and the version that produced the number is written beside it. A number supplied by the caller
+ * would be a claim about the system that the system never made, and the divergence log built on it
+ * would be a log of nothing.
+ *
+ * Nothing is applied on the way in. This is the one path a rating takes, it is one insert, and it
+ * happens because a person pressed something — see `docs/RULES.md` § 12.
+ *
+ * There are two gates on the divergence rule and both are wanted. The caller refuses an empty reason
+ * where one is owed, with a message that says how far apart the two numbers were; the database's
+ * `rating_reason_required_on_divergence` refuses the same row even if a caller forgets. A silent
+ * violation here would be permanent, which is why the rule is held in both places.
+ */
+export async function saveRemoteRating(input: RatingInput): Promise<ProblemSave> {
+  if (!supabaseConfig().userConfigured) {
+    return { ok: false, error: "SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY are not both set" };
+  }
+
+  if (!Number.isInteger(input.rating) || input.rating < RATING_MIN || input.rating > RATING_MAX) {
+    return { ok: false, error: `a rating is a whole number from ${RATING_MIN} to ${RATING_MAX}` };
+  }
+
+  try {
+    const { supabase } = supabaseForRoute();
+
+    // The whole record is read rather than the four child tables filtered by id: the analysis is
+    // computed from exactly what the detail surface renders, so the score stored here is the score
+    // a person could check by hand against the page they were looking at.
+    const problems = await readRemoteProblems();
+    if (!problems.ok) return { ok: false, error: `could not read the record to rate it: ${problems.error}` };
+
+    const problem = problems.problems.find((item) => item.id === input.problemId);
+    if (!problem) return { ok: false, error: `no problem ${input.problemId} to rate` };
+
+    const analysis = analyse(problem);
+    if (analysis.score === null) {
+      // `answered_at_rating` is NOT NULL and at least 1 for the same reason. There is no score and
+      // no base, so there is nothing for a rating to agree or disagree with.
+      return { ok: false, error: `nothing has been answered on ${problem.id} yet, so there is no score to rate against` };
+    }
+
+    const given = input.reason.trim();
+    if (requiresReason(input.rating, analysis.score) && given === "") {
+      const apart = Math.abs(input.rating - analysis.score);
+      return { ok: false, error: `a rating ${apart} points from the score (more than ${DIVERGENCE_THRESHOLD}) needs the reason for the disagreement` };
+    }
+
+    const written = await supabase.from("problem_ratings").insert(
+      ratingRowFrom({
+        id: newRatingId(),
+        problemId: problem.id,
+        rubricVersion: analysis.rubricVersion,
+        scoreAtRating: analysis.score,
+        answeredAtRating: analysis.answered,
+        rating: input.rating,
+        reason: given
+      })
+    );
+    if (written.error) return { ok: false, error: reason(written.error) };
+
+    return { ok: true };
+  } catch (error) {
+    if (isNextControlFlow(error)) throw error;
+    return { ok: false, error: messageOf(error, "unknown write failure") };
+  }
+}
+
+/**
+ * A fresh rating id, allocated with the insert and never chosen by a browser.
+ *
+ * `crypto.randomUUID`, the same source `nextOpportunityId` uses, rather than a count: a rating is
+ * never deleted, so a count would be stable either way, but a collision would silently overwrite a
+ * person's judgement rather than raise.
+ */
+function newRatingId(): string {
+  return `rate-${crypto.randomUUID()}`;
 }

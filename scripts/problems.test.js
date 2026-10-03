@@ -385,5 +385,92 @@ test("a missing database column becomes an empty field, never a fabricated one",
   assert.ok(read[0].signals.every((signal) => signal.value === null), "an absent signal must be blank, not zero");
 });
 
+// ============================================================ ratings
+
+/** A `problem_ratings` row as PostgREST returns it: snake_case, and nothing else. */
+const ratingRow = (over) => ({
+  id: "rate-1",
+  problem_id: "P-900",
+  rubric_version: 1,
+  score_at_rating: 3,
+  answered_at_rating: 5,
+  rating: 7,
+  reason: "the buyer already runs this by hand",
+  created_at: "2026-10-04T09:00:00.000Z",
+  ...over
+});
+
+test("a rating is written without a timestamp, and read back with the database's", () => {
+  const written = sync.ratingRowFrom({
+    id: "rate-1",
+    problemId: "P-900",
+    rubricVersion: 1,
+    scoreAtRating: 3,
+    answeredAtRating: 5,
+    rating: 7,
+    reason: "the buyer already runs this by hand"
+  });
+  assert.deepStrictEqual(written, {
+    id: "rate-1",
+    problem_id: "P-900",
+    rubric_version: 1,
+    score_at_rating: 3,
+    answered_at_rating: 5,
+    rating: 7,
+    reason: "the buyer already runs this by hand"
+  });
+  // The moment a rating was made is the moment the database accepted it. A clock here would let
+  // this process, or a browser driving it, decide when somebody changed their mind.
+  assert.ok(!("created_at" in written), "the write asserted its own timestamp");
+
+  const read = sync.ratingFromRow(ratingRow());
+  assert.strictEqual(read.id, "rate-1");
+  assert.strictEqual(read.problemId, "P-900", "problem_id did not survive the round trip");
+  assert.strictEqual(read.rubricVersion, 1);
+  assert.strictEqual(read.scoreAtRating, 3);
+  assert.strictEqual(read.answeredAtRating, 5, "the base the score was computed over was lost");
+  assert.strictEqual(read.rating, 7);
+  assert.strictEqual(read.reason, "the buyer already runs this by hand");
+  assert.strictEqual(read.createdAt, "2026-10-04T09:00:00.000Z");
+});
+
+test("the base travels with the score, and a rating with none is not a rating", () => {
+  // Without this the stored score is a number whose inputs cannot be recovered, which is what
+  // docs/RULES.md § 5 forbids. Zero answered means there was no score to disagree with at all.
+  [0, 8, null, undefined, "five"].forEach((value) => {
+    assert.strictEqual(sync.ratingFromRow(ratingRow({ answered_at_rating: value })), null, "answered_at_rating=" + value + " was accepted");
+  });
+});
+
+test("a rating that cannot be read as one is dropped, not repaired", () => {
+  [
+    { id: "" },
+    { problem_id: "" },
+    { rubric_version: 0 },
+    { rubric_version: null },
+    { score_at_rating: 11 },
+    { score_at_rating: 3.5 },
+    { rating: -1 },
+    { reason: null }
+  ].forEach((over) => {
+    assert.strictEqual(sync.ratingFromRow(ratingRow(over)), null, JSON.stringify(over) + " was accepted as a rating");
+  });
+});
+
+test("a divergent row with no reason is not readable as agreement", () => {
+  // The CHECK in 20261004000000_problem_ratings.sql keeps such a row from being written. If one is
+  // there anyway, the right reading is that the row is not trustworthy — never that the person who
+  // disagreed silently agreed.
+  assert.strictEqual(sync.ratingFromRow(ratingRow({ rating: 7, score_at_rating: 3, reason: "" })), null);
+  assert.strictEqual(sync.ratingFromRow(ratingRow({ rating: 7, score_at_rating: 3, reason: "   " })), null);
+});
+
+test("exactly the threshold apart needs no reason; one point further does", () => {
+  const atThreshold = sync.ratingFromRow(ratingRow({ rating: 7, score_at_rating: 4, reason: "" }));
+  assert.strictEqual(atThreshold.rating, 7, "three points apart is agreement enough to store quietly");
+  assert.strictEqual(atThreshold.reason, "", "an empty reason must read as empty, not as a placeholder");
+  assert.strictEqual(sync.ratingFromRow(ratingRow({ rating: 7, score_at_rating: 3, reason: "" })), null, "four points apart needs the reason that is not there");
+});
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

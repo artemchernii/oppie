@@ -201,6 +201,38 @@ export type Problem = {
   updatedAt: string;
 };
 
+/**
+ * A person's own rating of a problem, stored beside the machine's score.
+ *
+ * Its own table rather than a column on `Problem`, because a rating is an event: one judgement at
+ * one moment against one `rubricVersion`. A column would keep only the last one and would lose what
+ * prompted it.
+ *
+ * `scoreAtRating` and `answeredAtRating` are stored rather than derived. The score is recomputed on
+ * read, so after any edit to the problem the number the person was disagreeing with would be gone;
+ * the divergence is a fact about a moment. The base travels with the score for the same reason the
+ * live one does — a score is a proportion over the dimensions that were answered, and a number
+ * without its base cannot be read (`docs/RULES.md` § 5).
+ *
+ * `reason` is `''` when the rating agreed and none was asked for. That is a decided value, not a
+ * missing one: a surface says "no reason needed" rather than "Not added yet".
+ */
+export type ProblemRating = {
+  id: string;
+  problemId: string;
+  /** The rubric that produced `scoreAtRating`. A stored rating is never recomputed against a newer one. */
+  rubricVersion: number;
+  /** The system's score at the moment of the rating, 0-10. Same scale as `rating`, on purpose. */
+  scoreAtRating: number;
+  /** How many of the seven dimensions `scoreAtRating` was computed over. */
+  answeredAtRating: number;
+  /** The person's own number, 0-10. */
+  rating: number;
+  /** Required only where `rating` diverges from `scoreAtRating`; nothing is required where it agrees. */
+  reason: string;
+  createdAt: string;
+};
+
 export const SEED_TIMESTAMP = "2026-10-01T09:00:00.000Z";
 
 export const emptyProblem = (id: string): Problem => ({
