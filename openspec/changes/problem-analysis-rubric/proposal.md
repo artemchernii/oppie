@@ -78,8 +78,8 @@ a person, and acceptance writes the value, the reason and the source together.
   shape `lib/problemSync.ts` established.
 - A new read-only surface showing the analysis next to the record. No existing screen changes
   meaning, and no stored field is added.
-- `docs/RULES.md` § 1, § 2, § 3, § 4, § 5, § 11 and `docs/PAIN_FUNNEL.md` § Ordering become the
-  cited sources for requirements rather than prose that only a person reads.
+- `docs/RULES.md` § 1, § 2, § 3, § 4, § 5, § 11 and `docs/PAIN_FUNNEL.md` § Part 2 — Ordering
+  become the cited sources for requirements rather than prose that only a person reads.
 - `AGENTS.md` § 6, `docs/MVP_SPEC.md` and `openspec/config.yaml` are amended in the same PR, because a
   rule that contradicts a decision is how the two drift apart.
 - No stored field changes and no existing screen changes meaning. The score is computed, never stored

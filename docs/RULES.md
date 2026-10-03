@@ -67,10 +67,10 @@ only coherent where both inputs are the same kind of quantity.
 A person's own rating, stored beside the machine's and against the version of the rubric that
 produced it, is what keeps the rubric honest.
 
-An **ordering by cited facts** remains available and is the default, per `docs/PAIN_FUNNEL.md`
-§ Ordering: furthest gate passed, then a cited yes/no on pain severity, then the largest already-paid
-amount. Nothing in that order that is not a quote, a date, and a URL. Records are never ordered
-before they have passed every gate.
+The **default order of the board** is the one in `docs/PAIN_FUNNEL.md` § Part 2 — Ordering: furthest
+gate passed, then fewest unanswered questions, then the readiness tally. It is stated once, there,
+and deliberately not restated here — a paraphrase is how two versions of the same rule start
+disagreeing.
 
 Use evidence statuses and plain-language conclusions:
 

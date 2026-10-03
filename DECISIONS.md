@@ -278,8 +278,8 @@ person disagree.
 - Analysis output stays proposal-shaped, so the existing accept-with-reason guard applies unchanged.
 - Anything that could put a verdict or a score in a record without a click and a reason is a
   violation of this entry, not an optimisation of it.
-- The default list order remains the cited ordering in `docs/PAIN_FUNNEL.md` § Ordering. Sorting by
-  the score is available and must be labelled as sorting by the system's judgement.
+- The default list order remains the cited ordering in `docs/PAIN_FUNNEL.md` § Part 2 — Ordering.
+  Sorting by the score is available and must be labelled as sorting by the system's judgement.
 
 ### Open
 

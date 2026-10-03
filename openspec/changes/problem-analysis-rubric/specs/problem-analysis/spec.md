@@ -172,9 +172,9 @@ it is stored.
 
 ### Requirement: Ordering by judgement is labelled as such
 
-The default order of problems SHALL remain the cited ordering in `docs/PAIN_FUNNEL.md` § Ordering.
-Sorting by the system's score SHALL be available, and SHALL be labelled as sorting by the system's
-judgement rather than by cited facts.
+The default order of problems SHALL remain the cited ordering in `docs/PAIN_FUNNEL.md` § Part 2 —
+Ordering. Sorting by the system's score SHALL be available, and SHALL be labelled as sorting by the
+system's judgement rather than by cited facts.
 
 #### Scenario: The list is sorted by default
 - **WHEN** problems are ordered without anyone having chosen an order

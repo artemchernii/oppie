@@ -81,21 +81,29 @@ broker exports, produce one exception report.
 Required: the test, a time limit, a cost limit, and the result that would change our mind — written
 **before** the test runs.
 
-## Part 2 — Ordering, not scoring
+## Part 2 — Ordering
 
-There is no composite score. Not `83/100`, not `Pain ×2 + Market ×3`, not a weighted total.
-Weights are invented, and summing weeks against euros against ordinal severity produces a number
-that measures nothing. **Cited inputs do not rescue an invented aggregation.**
+A hidden number is forbidden, and so is any figure that presents itself as a measurement of a market
+or a probability of success. `83/100` handed down as a verdict on a business is exactly that, and it
+stays banned. `docs/RULES.md` § 5 holds the rule and the four conditions a score has to meet.
 
-What is allowed is an ordering fully determined by the record's own contents:
+**The default order of the board is the cited ordering.** It is fully determined by the record's own
+contents and it uses no weights:
 
 1. **Furthest gate passed** — `G5` above `G4`, above `G3`, above `G2`. A fact about the world.
 2. **Fewest unanswered questions.** A total with blanks is not comparable to a total without:
    12/15 with a question skipped is a weaker claim than 10/15 with every question answered.
 3. **The readiness tally** — the sum of the five answered questions.
 
-No weights. Every answered question carries its reason beside it, and `pnpm test` fails if a
-seeded answer has no reason.
+Every answered question carries its reason beside it, and `pnpm test` fails if a seeded answer has no
+reason.
+
+### Where a score sits
+
+A score is computed as well, from the rubric in `docs/ENGINE.md` § Where scoring sits, and the board
+can be ordered by it. That number is labelled as this system's judgement rather than as a fact about
+the world. The two orders sit side by side on purpose: the cited one is what is *known*, the score is
+what is *judged*, and reading one for the other is the mistake to avoid.
 
 ### The readiness tally
 
