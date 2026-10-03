@@ -367,6 +367,62 @@ data for the method, not the screen that displays them.
 
 ---
 
+## 7. Companies become records; their money gets a unit and never a total
+
+**Date:** 2026-10-03
+**Status:** Decided. The schema, the model and the screen are implemented
+(`openspec/changes/company-records/`); the load and the read follow.
+**Decided by:** the owner, answering the "who already solves this" question.
+
+### What was decided
+
+Three things, all so that who solves this and what they charge can actually be looked at.
+
+**The 21 researched companies become rows in `companies`.** They are research findings that happen to
+live in code, not placeholders, so **"seeds are never uploaded" narrows**: it keeps covering the six
+seeded opportunities in `lib/data.ts` and the ten seeded problems, which are reference data for the
+method. It does not cover the companies, which are the evidence the method produced. The load is
+one-way and runs once through `pnpm load:companies`, reading the compiled model rather than repeating
+the rows in SQL, so there is one copy of the data and nothing to drift.
+
+**Country is two letters; location stays free text.** `country` is `US`, `GB`, `PT`, `IE`, `HU`,
+`CO`, `EU`, or empty. A count by location over "UK", "United Kingdom" and "London, UK" is three
+half-answers, and a location overview built on it is a chart of ones. `location` keeps the original
+wording beside the code, so normalising loses nothing.
+
+**The money gets a unit and a footing, and no total.** `amount` and `amount_note` are renamed from
+`number` and `number_label`, which did not say what they held while sitting next to a currency
+column. `currency` and `basis` are added. The figure itself is still quoted verbatim and never parsed.
+
+### What this does not authorise
+
+Adding the figures up, averaging them, or drawing them on one axis. There are three currencies, and
+the figures answer two different questions: what a firm pays a person, and what a firm pays a vendor.
+The footing varies on top of that — per year, per user per month, per project, a share of AUM, and one
+"bespoke build" that is not a number at all. Two tables, never one chart.
+
+A database constraint enforces the weaker half: a currency or a basis with no amount is rejected,
+because a row saying `USD` beside "Not added yet" is a contradiction rather than a reading.
+
+### Deliberately not added
+
+A `money kind` column. `kind` already decides what `amount` means — `employer` pays a salary, `vendor`
+charges for software, `bespoke` charges for the work by hand — and a second column saying the same
+thing is a second column that can disagree. A test asserts it has not appeared.
+
+### Consequences
+
+- `Company.number`, `numberLabel` and `where` are gone. The fields are `amount`, `amountNote`,
+  `location`, plus `country`, `currency` and `basis`.
+- `/companies` groups by country and splits the figures into two tables. Charts over 21 rows are
+  decoration, so the only bar drawn is a count rendered as a length.
+- The page still reads the seeds. Making it read the database, and running the load, is the next step
+  and is the same shape as the problems slice.
+- The rubric's `competition` dimension gains a source it can cite once the load has run, which is what
+  `problem-analysis` was missing on almost every record.
+
+---
+
 ## 6. The engine is Python and local; ratings are blind
 
 **Date:** 2026-10-03

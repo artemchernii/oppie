@@ -468,5 +468,51 @@ test("an unreadable timestamp is kept rather than becoming now, which would mark
   assert.strictEqual(read.createdAt, "not a date");
 });
 
+test("every company says where it is in a form that can be counted", () => {
+  problems.seedCompanies.forEach((company) => {
+    assert.ok(company.country === "" || /^[A-Z]{2}$/.test(company.country), company.name + " has country " + JSON.stringify(company.country));
+    assert.ok(company.location.trim(), company.name + " has no location text beside the code");
+    assert.ok(problems.seedCompanies.filter((other) => other.id === company.id).length === 1, company.id + " is not unique");
+  });
+});
+
+test("a figure never arrives without the two things that make it readable", () => {
+  problems.seedCompanies.forEach((company) => {
+    assert.ok(problems.moneyBases.includes(company.basis), company.name + " has basis " + JSON.stringify(company.basis));
+    assert.ok(problems.currencies.includes(company.currency), company.name + " has currency " + JSON.stringify(company.currency));
+    if (company.currency) assert.ok(company.amount.trim(), company.name + " carries a currency and no amount");
+    if (company.basis) assert.ok(company.amount.trim(), company.name + " carries a basis and no amount");
+    if (company.amount.trim()) assert.ok(company.amountNote.trim(), company.name + " quotes a figure with no provenance note");
+  });
+});
+
+test("the currency matches the symbol the figure is written with", () => {
+  const bySymbol = { $: "USD", "£": "GBP", "€": "EUR" };
+  problems.seedCompanies.forEach((company) => {
+    const symbol = company.amount.trim().charAt(0);
+    if (bySymbol[symbol]) assert.strictEqual(company.currency, bySymbol[symbol], company.name + " writes " + company.amount + " and calls it " + company.currency);
+  });
+});
+
+// A tripwire, not a data assertion. If the figures ever became one kind of quantity in one currency on
+// one footing, a total might become defensible and this would fail to say so.
+test("the money is not one kind of quantity, so nothing may total it", () => {
+  const priced = problems.seedCompanies.filter((company) => company.amount.trim());
+  assert.ok(priced.length >= 2, "too few figures to say anything about them");
+  assert.ok(new Set(priced.map((company) => company.currency)).size > 1, "every figure shares a currency");
+  assert.ok(new Set(priced.map((company) => company.basis)).size > 1, "every figure is on the same footing");
+  assert.ok(priced.some((company) => company.kind === "employer"), "no salary is recorded, so the two questions are not both present");
+  assert.ok(priced.some((company) => company.kind !== "employer"), "no vendor price is recorded");
+  assert.ok(priced.some((company) => /[–%]|tens of thousands|one bespoke/.test(company.amount)), "every figure parsed cleanly into a number, which is suspicious");
+});
+
+test("what a figure means is not stored twice — kind already says it", () => {
+  problems.seedCompanies.forEach((company) => {
+    assert.ok(!("moneyKind" in company), company.name + " carries a second copy of kind");
+    assert.ok(["employer", "vendor", "bespoke"].includes(company.kind), company.name + " has kind " + company.kind);
+    assert.ok(!("number" in company) && !("where" in company), company.name + " still uses the old field names");
+  });
+});
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);
