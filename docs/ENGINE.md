@@ -190,8 +190,11 @@ Four things worth stating, because each one is a way the number could lie:
   over 7 answers are the same number. That is exactly why `checked N of 7` and the not-checked count
   always travel with it — a surface showing the score without the base is showing a number that
   cannot be read.
-- **Sorting by score breaks ties by more checked.** Same proportion, more evidence, first. Otherwise
-  a barely-examined record ties with a fully-examined one.
+- **Completeness sorts *first*, not as a tie-break.** Measured over the seeded records on 2026-10-03:
+  P-002, with two of seven checked, scored 10/10 — the same as P-001 with six of seven checked and one
+  known hole. Sorted by score alone the *least* examined record wins, which is backwards. So the
+  order is completeness first, then the score, which is the same rule `PAIN_FUNNEL.md` § Part 2
+  already uses for the cited ordering. A number and a caveat can be read apart; an order cannot.
 - **Equal weights means nobody has invented a weighting yet.** The tally in `PAIN_FUNNEL.md` §
   *The readiness tally* earns its equal weights the same way. A weight other than 1 has to be earned
   from the divergence log, and arrives as a new rubric version rather than as an edit.

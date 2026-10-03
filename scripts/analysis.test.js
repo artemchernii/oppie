@@ -9,7 +9,7 @@ const path = require("path");
 
 const OUT = path.join(__dirname, "..", ".tmp-test");
 const problems = require(path.join(OUT, "problems.js"));
-const { analyse, summarise, requiresReason, dimensionDefs, WEIGHTS, RUBRIC_VERSION, DIVERGENCE_THRESHOLD } = require(path.join(OUT, "analysis.js"));
+const { analyse, summarise, requiresReason, compareByScore, dimensionDefs, WEIGHTS, RUBRIC_VERSION, DIVERGENCE_THRESHOLD } = require(path.join(OUT, "analysis.js"));
 
 let passed = 0;
 let failed = 0;
@@ -98,6 +98,28 @@ test("the base travels with the number, so five answers cannot pass for seven", 
   assert.strictEqual(five.score, seven.score);
 });
 
+// Regression, found by running the rubric over the seeded records on 2026-10-03: P-002 had two of
+// seven dimensions checked, got them both right, and scored 10/10 — the same as P-001 with six of
+// seven checked and one known hole. The score is a proportion, so the base has to decide the order.
+test("an almost untouched record cannot outrank a well-checked one on a high proportion", () => {
+  const keys = dimensionDefs.map((def) => def.key);
+  const barely = summarise(dims(keys.map((key) => [key, key === "wedge" || key === "paid" ? "yes" : "unknown"])));
+  const thoroughly = summarise(dims(keys.map((key) => [key, "yes"])));
+  assert.strictEqual(barely.score, thoroughly.score, "both are a perfect proportion over what was checked");
+  assert.strictEqual(barely.answered, 2);
+  assert.strictEqual(thoroughly.answered, 7);
+  const order = [thoroughly, barely].sort(compareByScore);
+  assert.strictEqual(order[0].answered, 7, "completeness must sort above the proportion");
+});
+
+test("a record with nothing answered sorts last, not first", () => {
+  const nothing = analyse(problems.emptyProblem("P-951"));
+  const something = analyse(good());
+  const order = [nothing, something].sort(compareByScore);
+  assert.strictEqual(order[0].answered, 7);
+  assert.strictEqual(order[1].score, null);
+});
+
 test("the score is on the same 0-10 scale as a rating, so the two can be compared", () => {
   const all = [["wedge"], ["paid"], ["repeats"], ["buyer"], ["competition"], ["kill"], ["citations"]];
   assert.strictEqual(analyse(good()).score, 10);
@@ -164,8 +186,31 @@ test("a kill reason that names nothing real is a no; an empty one is unknown", (
   assert.strictEqual(find(problem, "kill").verdict, "unknown");
   problem.killReason = "Needs more research";
   assert.strictEqual(find(problem, "kill").verdict, "no");
+  problem.killReason = "TBD";
+  assert.strictEqual(find(problem, "kill").verdict, "no");
   problem.killReason = "Crowded: three vendors already sell this";
   assert.strictEqual(find(problem, "kill").verdict, "yes");
+});
+
+// Regression, and the reason the vocabulary check was removed. Both of these are real seeded
+// reasons that a keyword allowlist judged a `no` on 2026-10-03 because they did not use the words
+// on the list. A false `no` costs a point and mis-ranks the record.
+test("a real reason is a yes even when it uses none of the words RULES § 4 lists", () => {
+  const roomy = problems.emptyProblem("P-911");
+  roomy.killReason = "Fund administrators buy through procurement. If every reachable buyer needs a committee, the sales cycle is the product.";
+  assert.strictEqual(find(roomy, "kill").verdict, "yes", "a procurement committee is a real kill reason");
+
+  const retail = problems.emptyProblem("P-912");
+  retail.killReason = "Retail buyer. Individuals pay least and churn fastest.";
+  assert.strictEqual(find(retail, "kill").verdict, "yes", "low willingness to pay is a real kill reason");
+  assert.ok(retail.killReason.length > 0 && find(retail, "kill").citation.passage.length > 0, "the reason must be shown beside the verdict");
+});
+
+test("no seeded record is judged to have failed to write a reason", () => {
+  problems.seedProblems.forEach((seed) => {
+    if (!seed.killReason.trim()) return;
+    assert.notStrictEqual(find(seed, "kill").verdict, "no", seed.id + " has a written reason but was judged a non-reason: " + JSON.stringify(seed.killReason.slice(0, 80)));
+  });
 });
 
 test("a direct claim on a link nobody opened is a no", () => {
