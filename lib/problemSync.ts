@@ -14,7 +14,7 @@
 // mapped explicitly here rather than derived. A rename that quietly starts reading `undefined`
 // is the failure this file exists to make impossible.
 
-import { seedProblems, type Evidence, type Problem, type Signal } from "./problems";
+import { type Evidence, type Problem, type Signal } from "./problems";
 import { normalizeProblem } from "./problemPersistence";
 
 export type Row = Record<string, unknown>;
@@ -24,7 +24,6 @@ const isRow = (value: unknown): value is Row =>
 
 const rows = (value: unknown): Row[] => (Array.isArray(value) ? value.filter(isRow) : []);
 
-const clone = <T,>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
 
 const positionOf = (row: Row): number =>
   typeof row.position === "number" && Number.isFinite(row.position) ? row.position : 0;
@@ -33,16 +32,13 @@ const byPosition = (a: Row, b: Row): number => positionOf(a) - positionOf(b);
 
 /**
  * Postgres hands a `timestamptz` back as `2026-10-01T09:00:00+00:00`; the app writes
- * `new Date().toISOString()`, which is `...000Z`. They are the same instant and different strings.
- *
- * Left alone, that difference is not cosmetic: the `isPristineSeed` / re-upload comparison is
- * structural, so a saved record would never match the row it had just become and **every page
- * load would write it again**. Measured against the live project on 2026-10-03, before this fix:
- * the row came back `+00:00`, the cache held `Z`, and the next load recomputed it as an upload.
+ * `new Date().toISOString()`, which is `...000Z`. They are the same instant and different strings,
+ * and a structural comparison read that as a change — so a saved record never matched the row it had
+ * just become. Measured against the live project on 2026-10-03, before this fix: the row came back
+ * `+00:00`, the stored copy held `Z`, and the next load recomputed it as an edit.
  *
  * Canonicalising on the way in is the fix. An unparseable value is passed through rather than
- * dropped, so a bad timestamp stays visible instead of silently becoming *now* and re-marking the
- * record as edited on every read.
+ * dropped, so a bad timestamp stays visible instead of silently becoming *now*.
  */
 const timestamp = (value: unknown): string | undefined => {
   if (typeof value !== "string" || !value) return undefined;
@@ -242,150 +238,4 @@ export function companyLinkRowsFrom(problem: Problem): Row[] {
       company_id: companyId,
       position: index
     }));
-}
-
-// ============================================================ what may leave the browser
-
-/** Order-independent, key-order-independent, so two identical records compare equal. */
-function stable(value: unknown): string {
-  if (Array.isArray(value)) return `[${value.map(stable).join(",")}]`;
-  if (isRow(value)) {
-    return `{${Object.keys(value)
-      .sort()
-      .map((key) => `${JSON.stringify(key)}:${stable(value[key])}`)
-      .join(",")}}`;
-  }
-  return JSON.stringify(value ?? null);
-}
-
-/**
- * Both sides go through `normalizeProblem` before comparing, so an incidental shape difference
- * (a key order, a field the read path repairs) does not read as "somebody edited this".
- */
-const projection = (value: unknown): string => stable(normalizeProblem(value, 0));
-
-/**
- * True when this record is a seeded problem, untouched.
- *
- * This is the guard that keeps reference data out of the database. It compares against the seed
- * rather than against an id list, so the moment any field is edited — including `updatedAt`,
- * which every mutation rewrites — the record stops being pristine and becomes the user's.
- */
-export function isPristineSeed(problem: Problem, seeds: readonly Problem[] = seedProblems): boolean {
-  const seed = seeds.find((item) => item.id === problem.id);
-  return seed ? projection(seed) === projection(problem) : false;
-}
-
-/** Untouched seeds never leave the browser; everything else is the user's record. */
-export function shouldPersistToRemote(problem: Problem, seeds: readonly Problem[] = seedProblems): boolean {
-  return !isPristineSeed(problem, seeds);
-}
-
-/** Keeps `base`'s order and lets `overlay` win where the ids collide. */
-function mergeById(base: readonly Problem[], overlay: readonly Problem[]): Problem[] {
-  const merged = base.map((problem) => clone(problem));
-  for (const problem of overlay) {
-    const index = merged.findIndex((item) => item.id === problem.id);
-    if (index === -1) merged.push(clone(problem));
-    else merged[index] = clone(problem);
-  }
-  return merged;
-}
-
-export type FirstLoadPlan = {
-  /** What the screen should show once this browser's records have been reconciled. */
-  problems: Problem[];
-  /** Rows this browser holds that the database does not have yet. Written once, never again. */
-  upload: Problem[];
-};
-
-/**
- * The one-time cutover, decided in the same place every time.
- *
- * `remote === null` means the read did not produce a row set — unconfigured, denied, or failed.
- * That is NOT the same as an empty table, and the difference is the point: with the remote state
- * unknown, the browser's own records are still shown but nothing is uploaded. Pushing into a
- * table that could not be read is how a stale local copy overwrites a newer remote one.
- *
- * With `remote === []` the table really is empty, so local work is pushed up once. Untouched
- * seeds are never in that push, because `isPristineSeed` filters them out first.
- *
- * The seeds stay on the board in every case. A remote record replaces its own seed and adds to the
- * rest; it never takes the other seeds with it.
- */
-export function planFirstLoad({
-  remote,
-  local,
-  seeds = seedProblems
-}: {
-  remote: Problem[] | null;
-  local: Problem[] | null;
-  seeds?: readonly Problem[];
-}): FirstLoadPlan {
-  const remoteList = remote ?? [];
-
-  // The seeds are the board, not a placeholder that stops existing the moment something is stored.
-  // A remote record replaces its own seed by id and adds to the rest; it never removes the seeds
-  // nobody has touched.
-  //
-  // This was wrong on 2026-10-03 and visible: the database held five problems and the other five
-  // seeds disappeared from the screen, which read as five problems having been deleted. A record
-  // being stored is not a reason for the reference data to vanish, and the researched problems are
-  // the work itself, not scaffolding.
-  const base = mergeById(clone(seeds as Problem[]), remoteList);
-
-  const localList = local ?? [];
-  const localWork = localList.filter((problem) => !isPristineSeed(problem, seeds));
-
-  const overlay = remote === null ? localList : localWork;
-  const problems = mergeById(base, overlay);
-
-  const upload =
-    remote === null
-      ? []
-      : localWork.filter((problem) => {
-          const existing = remoteList.find((item) => item.id === problem.id);
-          return !existing || projection(existing) !== projection(problem);
-        });
-
-  return { problems, upload };
-}
-
-export type WritePlan = {
-  /** Whether this render may touch storage at all. False before hydration, always. */
-  shouldCache: boolean;
-  /** Records the user actually changed, seeds and repeats already removed. */
-  upload: Problem[];
-};
-
-/**
- * The write gate, as a rule rather than as an `if` inside an effect.
- *
- * Before `hydrated` nothing is written anywhere. That is the whole hydration contract: the first
- * client render is the seed (so it matches the server), and if it were ever the thing that got
- * persisted, it would replace the user's records with reference data.
- */
-export function planWrite({
-  hydrated,
-  dirty,
-  problems,
-  seeds = seedProblems
-}: {
-  hydrated: boolean;
-  dirty: readonly string[];
-  problems: readonly Problem[];
-  seeds?: readonly Problem[];
-}): WritePlan {
-  if (!hydrated) return { shouldCache: false, upload: [] };
-
-  const seen = new Set<string>();
-  const upload: Problem[] = [];
-  for (const id of dirty) {
-    if (seen.has(id)) continue;
-    seen.add(id);
-    const problem = problems.find((item) => item.id === id);
-    if (problem && shouldPersistToRemote(problem, seeds)) upload.push(problem);
-  }
-
-  return { shouldCache: true, upload };
 }

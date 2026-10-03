@@ -1,21 +1,16 @@
-// oppie.lab — client-only persistence for problem records.
+// oppie.lab — reading and repairing a problem record.
 //
-// React-free on purpose, so the storage rules can be exercised in plain Node by
-// `pnpm test`. `lib/problemStore.ts` is the thin React hook over this.
+// React-free on purpose, so the repair rules can be exercised in plain Node by `pnpm test`.
+//
+// There is no storage in this file any more. The database is the only store (`DECISIONS.md` #9), so
+// what is left is the part that was always doing the work: turning an unknown shape into a record
+// without inventing a value.
 //
 // The one rule that matters: a checked 0 and an unchecked blank are DIFFERENT.
 // 0 means "checked, and the answer is no". null means "not checked yet".
 // Collapsing them would silently turn a missing check into a zero score.
 
 import { blankSignals, emptyProblem, evidenceTypes, linkStatuses, seedProblems, signalDefs, type Evidence, type LinkStatus, type Problem, type Score, type Signal } from "./problems";
-
-export const PROBLEMS_STORAGE_KEY = "oppie.lab.problems";
-export const PROBLEMS_SCHEMA_VERSION = 1;
-
-export type PersistedProblems = {
-  version: number;
-  problems: Problem[];
-};
 
 const clone = <T,>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
 
@@ -117,37 +112,6 @@ export function normalizeProblem(raw: unknown, index: number): Problem | null {
     createdAt: typeof raw.createdAt === "string" ? raw.createdAt : base.createdAt,
     updatedAt: typeof raw.updatedAt === "string" ? raw.updatedAt : base.updatedAt
   };
-}
-
-/** null means "nothing usable stored", so callers can tell absent from an empty list. */
-export function readStoredProblems(): Problem[] | null {
-  if (typeof window === "undefined") return null;
-  let raw: string | null = null;
-  try {
-    raw = window.localStorage.getItem(PROBLEMS_STORAGE_KEY);
-  } catch {
-    return null;
-  }
-  if (!raw) return null;
-  try {
-    const parsed: unknown = JSON.parse(raw);
-    if (!isRecord(parsed)) return null;
-    if (parsed.version !== PROBLEMS_SCHEMA_VERSION) return null;
-    if (!Array.isArray(parsed.problems)) return null;
-    return parsed.problems.map((item, i) => normalizeProblem(item, i)).filter((item): item is Problem => item !== null);
-  } catch {
-    return null;
-  }
-}
-
-export function writeStoredProblems(problems: Problem[]): boolean {
-  try {
-    const payload: PersistedProblems = { version: PROBLEMS_SCHEMA_VERSION, problems };
-    window.localStorage.setItem(PROBLEMS_STORAGE_KEY, JSON.stringify(payload));
-    return true;
-  } catch {
-    return false;
-  }
 }
 
 export function nextProblemId(existing: Problem[]): string {

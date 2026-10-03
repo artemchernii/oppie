@@ -28,8 +28,8 @@ import { ConfidenceChip, GateChip, LinkChip, ReadinessPanel, VerdictChip, isBack
 
 const companyById = (id: string) => seedCompanies.find((company) => company.id === id);
 
-export default function ProblemDetail({ id, remote }: { id: string; remote: Problem[] | null }) {
-  const { problems, hydrated, updateProblem } = useProblems(remote);
+export default function ProblemDetail({ id, initial, readError }: { id: string; initial: Problem[]; readError: string | null }) {
+  const { problems, saveError, updateProblem } = useProblems(initial);
   const { proposals, acceptProposal, decideProposal } = useResearch();
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState<Problem | null>(null);
@@ -51,13 +51,11 @@ export default function ProblemDetail({ id, remote }: { id: string; remote: Prob
           <span>{id}</span>
         </div>
         <h1 className="page-head-title" style={{ fontSize: 26, letterSpacing: "-.03em", margin: "0 0 10px" }}>
-          {hydrated ? "No problem with that id" : "Loading…"}
+          No problem with that id
         </h1>
-        {hydrated && (
-          <p className="muted">
-            {id} is not in this browser&apos;s records. <Link href="/">Back to the list</Link>.
-          </p>
-        )}
+        <p className="muted">
+          {readError ? `The records could not be read: ${readError}` : <>{id} is not in the records. <Link href="/">Back to the list</Link>.</>}
+        </p>
       </main>
     );
   }
@@ -76,6 +74,12 @@ export default function ProblemDetail({ id, remote }: { id: string; remote: Prob
         <span className="crumb-sep">/</span>
         <span className="mono">{problem.id}</span>
       </div>
+
+      {saveError && (
+        <p className="storage-warn" role="alert" style={{ marginBottom: 12 }}>
+          Not saved: {saveError}
+        </p>
+      )}
 
       <header className="page-head">
         <div className="page-head-row">

@@ -470,6 +470,67 @@ competition a record claims becomes checkable rather than a claim about a list n
 
 ---
 
+## 9. One store, and it is the database
+
+**Date:** 2026-10-03
+**Status:** Decided and implemented.
+**Decided by:** the owner, in as many words: *"I don't want to worry about that. This is noise."*
+
+### What was wrong
+
+The problems screen had two stores. The database held the records, `localStorage` held a second copy,
+and the two were merged on every load — with a one-time push of the browser's work, a rule about which
+rows counted as untouched, and a footer telling the reader which store it was looking at.
+
+**Every defect of the last week came out of that merge, not out of the data:**
+
+- storing one problem hid the other nine (entry #8);
+- a saved record rewrote itself on every page load, because a `timestamptz` came back `+00:00` while the
+  browser copy held `Z` (#29);
+- two records were truncated to their first three evidence rows, and it took an interrogation of the
+  ids to tell a stale snapshot from an edit.
+
+None of it was load-bearing. It was a cache with a correctness obligation, which is the worst kind.
+
+### What was decided
+
+**One store: the database.** `localStorage` is gone from the problems path.
+
+- The server reads and passes the records in, so the first render already has them and there is nothing
+  to reconcile. `hydrated` is gone with it — the contract it enforced has no window to enforce.
+- An edit is written straight back. No cache to keep in step, no offline copy, no `storageError`.
+- The ten researched problems were loaded into `problems` once, additively, with `pnpm load:problems`,
+  so the board is complete in one place. An existing row is left exactly as it is; missing signal,
+  evidence and link rows were filled in, which is how the two truncations above were repaired.
+- **The seed file is no longer read at runtime.** It stays as the loader's source and as the record of
+  what the method was built against. `lib/data.ts` and the six seeded opportunities are untouched.
+- `resetToSeed` is gone. It reset a browser copy that no longer exists, and it was ambiguous about what
+  it wrote. `pnpm load:problems --force` is the destructive version, and it has to be typed on purpose.
+- **A failed read shows an error.** There is no fallback to something else, because a screen that
+  renders one thing while looking like another is worse than a screen that admits it could not load.
+
+### What this supersedes
+
+- The *"seeds are never uploaded"* line in entry #1's invariant table. It was right while there were two
+  stores and the seed file was the board; with one store, the board has to be complete inside it. Entry
+  #1's other invariants stand, and `lib/data.ts` is still intact and still not uploaded — this change is
+  about problems, not about the six opportunity candidates.
+- Entries #2, #6 and #8 insofar as they describe merging, the cutover, and which store wins.
+- `docs/handoffs/HANDOFF_SUPABASE.md`, whose body describes the two-store model.
+
+### Consequences
+
+- **17 assertions about the store that no longer exists are deleted, and 2 are added** for the payload
+  rules that survive. The suite goes from 126 to 95. That is a reduction in coverage of behaviour that
+  was removed, not of behaviour that remains, and it is said out loud rather than left to show up as a
+  smaller number.
+- `/inbox` and the legacy board still keep their own records in `localStorage`. That inconsistency is
+  the next one to close, and the legacy board is retiring anyway (entry #5).
+- Deleting a problem still has no control. When it lands it is a delete and not a tombstone, because
+  there is no second copy for a row to come back from.
+
+---
+
 ## 6. The engine is Python and local; ratings are blind
 
 **Date:** 2026-10-03

@@ -6,7 +6,7 @@
 // is admin work and runs from a terminal.
 
 import { companiesFromRows } from "./companySync";
-import { seedCompanies, type Company } from "./problems";
+import type { Company } from "./problems";
 import { supabaseForRoute } from "./supabase/server";
 import { supabaseConfig } from "./supabaseConfig";
 import { isNextControlFlow, messageOf, reason } from "./supabaseResult";
@@ -36,24 +36,17 @@ export async function readRemoteCompanies(): Promise<CompaniesRead> {
   }
 }
 
-/**
- * What the page renders from, and which store it came from.
- *
- * The fallback is the seeds, so a fresh clone with no migration applied still shows the researched
- * companies instead of a blank page. `source` is returned rather than inferred so the page can say
- * which one it is showing — a screen that quietly renders reference data while reading like the
- * database is the kind of thing this whole project keeps trying not to do.
- */
-export async function companiesForPage(): Promise<{ companies: Company[]; source: "database" | "seed" }> {
-  const result = await readRemoteCompanies();
+export type CompaniesPage = { companies: Company[]; error: string | null };
 
+/**
+ * What the page renders from. No fallback, for the same reason as problems: if the read fails, say
+ * so. The database is the only store (`DECISIONS.md` #9).
+ */
+export async function companiesForPage(): Promise<CompaniesPage> {
+  const result = await readRemoteCompanies();
   if (!result.ok) {
-    console.error(`[companies] remote read unavailable: ${result.error}`);
-    return { companies: seedCompanies, source: "seed" };
+    console.error(`[companies] read failed: ${result.error}`);
+    return { companies: [], error: result.error };
   }
-  if (result.companies.length === 0) {
-    console.error("[companies] the table is empty; run pnpm load:companies");
-    return { companies: seedCompanies, source: "seed" };
-  }
-  return { companies: result.companies, source: "database" };
+  return { companies: result.companies, error: null };
 }

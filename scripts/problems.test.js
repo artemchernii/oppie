@@ -26,44 +26,7 @@ const test = (name, fn) => {
   }
 };
 
-const makeWindow = () => {
-  const map = new Map();
-  return {
-    localStorage: {
-      getItem: (key) => (map.has(key) ? map.get(key) : null),
-      setItem: (key, value) => {
-        map.set(key, String(value));
-      },
-      removeItem: (key) => {
-        map.delete(key);
-      }
-    }
-  };
-};
-
-const withStorage = (run) => {
-  const previous = global.window;
-  global.window = makeWindow();
-  try {
-    run();
-  } finally {
-    global.window = previous;
-  }
-};
-
 const first = () => JSON.parse(JSON.stringify(problems.seedProblems[0]));
-
-test("a checked zero survives a round trip and stays zero, not blank", () => {
-  withStorage(() => {
-    const problem = first();
-    problem.signals = problem.signals.map((signal) => (signal.key === "moat" ? { ...signal, value: 0, note: "checked: no moat at all" } : signal));
-    assert.strictEqual(store.writeStoredProblems([problem]), true);
-    const read = store.readStoredProblems();
-    const moat = read[0].signals.find((signal) => signal.key === "moat");
-    assert.strictEqual(moat.value, 0);
-    assert.notStrictEqual(moat.value, null);
-  });
-});
 
 test("an unchecked signal stays null rather than becoming zero", () => {
   const blanks = problems.blankSignals();
@@ -150,32 +113,6 @@ test("an unrecognised gate falls back instead of rendering an empty chip", () =>
   const problem = store.normalizeProblem({ id: "x", gate: "G99-nonsense", verdict: "maybe" }, 0);
   assert.strictEqual(problem.gate, "G1-signal");
   assert.strictEqual(problem.verdict, "open");
-});
-
-test("corrupt JSON recovers to null instead of throwing", () => {
-  withStorage(() => {
-    global.window.localStorage.setItem(store.PROBLEMS_STORAGE_KEY, "{not json");
-    assert.strictEqual(store.readStoredProblems(), null);
-  });
-});
-
-test("a stale schema version is ignored rather than partially merged", () => {
-  withStorage(() => {
-    global.window.localStorage.setItem(store.PROBLEMS_STORAGE_KEY, JSON.stringify({ version: 99, problems: problems.seedProblems }));
-    assert.strictEqual(store.readStoredProblems(), null);
-  });
-});
-
-test("non-object entries are dropped while valid ones survive", () => {
-  withStorage(() => {
-    global.window.localStorage.setItem(
-      store.PROBLEMS_STORAGE_KEY,
-      JSON.stringify({ version: store.PROBLEMS_SCHEMA_VERSION, problems: [null, "nope", 7, { id: "kept", title: "Kept" }] })
-    );
-    const read = store.readStoredProblems();
-    assert.strictEqual(read.length, 1);
-    assert.strictEqual(read[0].id, "kept");
-  });
 });
 
 test("a partial record is repaired field by field, missing text becomes empty", () => {
@@ -300,69 +237,6 @@ const syncRow = (id, title) => ({
   updated_at: "2026-10-01T00:00:00.000Z"
 });
 
-test("nothing is written before hydration, so a pre-load render cannot replace records", () => {
-  const plan = sync.planWrite({ hydrated: false, dirty: ["P-001"], problems: [syncProblem("P-001", "pre-load render")] });
-  assert.strictEqual(plan.shouldCache, false);
-  assert.deepStrictEqual(plan.upload, []);
-});
-
-test("first load shows the database's copy of a record it has", () => {
-  const plan = sync.planFirstLoad({ remote: [syncProblem("P-001", "Read from the database")], local: null });
-  const shown = plan.problems.find((problem) => problem.id === "P-001");
-  assert.strictEqual(shown.title, "Read from the database");
-  assert.notStrictEqual(shown.title, problems.seedProblems[0].title);
-  assert.deepStrictEqual(plan.upload, []);
-});
-
-test("a failed read is not an empty table: it pushes nothing", () => {
-  const local = [...problems.seedProblems, syncProblem("P-011", "Local only")];
-  const plan = sync.planFirstLoad({ remote: null, local });
-  assert.deepStrictEqual(plan.upload, [], "a stale local copy must not be written into a table we could not read");
-  assert.ok(plan.problems.some((problem) => problem.id === "P-011"), "the browser's own work is still shown");
-});
-
-test("an empty table accepts the browser's own records, once", () => {
-  const local = [...problems.seedProblems, syncProblem("P-011", "Local only")];
-  const plan = sync.planFirstLoad({ remote: [], local });
-  assert.deepStrictEqual(plan.upload.map((problem) => problem.id), ["P-011"]);
-  assert.strictEqual(plan.problems.length, problems.seedProblems.length + 1);
-});
-
-test("the untouched seeds are never uploaded — they are reference data, not records", () => {
-  assert.ok(problems.seedProblems.every((problem) => !sync.shouldPersistToRemote(problem)));
-  const plan = sync.planFirstLoad({ remote: [], local: problems.seedProblems });
-  assert.deepStrictEqual(plan.upload, []);
-  assert.strictEqual(plan.problems.length, problems.seedProblems.length);
-});
-
-test("a seed becomes uploadable the moment somebody edits it", () => {
-  const edited = { ...problems.seedProblems[0], title: "Renamed by hand", updatedAt: "2026-10-02T10:00:00.000Z" };
-  assert.strictEqual(sync.shouldPersistToRemote(edited), true);
-  assert.deepStrictEqual(sync.planFirstLoad({ remote: [], local: [edited] }).upload.map((problem) => problem.id), [edited.id]);
-});
-
-test("a record the database already holds is not pushed again on every load", () => {
-  const one = { ...problems.seedProblems[0], title: "Renamed by hand", updatedAt: "2026-10-02T10:00:00.000Z" };
-  assert.deepStrictEqual(sync.planFirstLoad({ remote: [one], local: [one] }).upload, []);
-});
-
-test("a record the browser has never seen survives the merge and is not dropped", () => {
-  const mine = syncProblem("P-011", "Only in this browser");
-  const theirs = syncProblem("P-012", "Only in the database");
-  const plan = sync.planFirstLoad({ remote: [theirs], local: [mine] });
-  assert.ok(plan.problems.some((problem) => problem.id === "P-011"), "the browser's own record was dropped");
-  assert.ok(plan.problems.some((problem) => problem.id === "P-012"), "the database's record was dropped");
-});
-
-test("for the same id the browser's copy wins, and is written over the database copy", () => {
-  const plan = sync.planFirstLoad({
-    remote: [syncProblem("P-011", "Older database copy")],
-    local: [syncProblem("P-011", "Newer browser copy")]
-  });
-  assert.strictEqual(plan.problems.find((problem) => problem.id === "P-011").title, "Newer browser copy");
-  assert.deepStrictEqual(plan.upload.map((problem) => problem.id), ["P-011"]);
-});
-
 test("a blank signal read from the database stays blank, not a zero", () => {
   const read = sync.problemsFromRemote(
     [syncRow("P-900", "Remote")],
@@ -417,21 +291,6 @@ test("an untriaged link is written as nothing, not as a claim that it was checke
   assert.strictEqual(read.evidence[0].linkStatus, undefined);
 });
 
-test("a seed survives a storage round trip with its evidence type and link status intact", () => {
-  withStorage(() => {
-    assert.strictEqual(store.writeStoredProblems(problems.seedProblems), true);
-    const back = store.readStoredProblems();
-    assert.strictEqual(back.length, problems.seedProblems.length);
-    problems.seedProblems.forEach((seed, index) => {
-      assert.strictEqual(back[index].evidence.length, seed.evidence.length, seed.id + " lost evidence rows on read");
-      seed.evidence.forEach((item, position) => {
-        assert.strictEqual(back[index].evidence[position].type, item.type, seed.id + " had an evidence type rewritten");
-        assert.strictEqual(back[index].evidence[position].linkStatus, item.linkStatus, seed.id + " lost a link status");
-      });
-    });
-  });
-});
-
 test("the six required keys are rebuilt on every write, so a rename cannot orphan one", () => {
   const source = syncProblem("P-011", "Signals");
   source.signals = source.signals.map((signal, index) => (index === 0 ? { ...signal, value: 3, note: "because" } : signal));
@@ -440,23 +299,6 @@ test("the six required keys are rebuilt on every write, so a rename cannot orpha
   assert.deepStrictEqual(rowsWritten.map((row) => row.key), problems.signalDefs.map((def) => def.key));
   assert.strictEqual(rowsWritten[0].problem_id, "P-011");
   assert.strictEqual(rowsWritten[0].value, 3);
-});
-
-test("a Postgres timestamptz and the browser's ISO string are one instant, not an edit", () => {
-  // Measured against the live database: the row comes back with `+00:00`, the app writes `Z`,
-  // and a structural comparison reads that as a change. Left alone, every page load re-uploads
-  // the record it just saved.
-  const local = syncProblem("P-011", "Edited by hand");
-  local.createdAt = "2026-10-01T09:00:00.000Z";
-  local.updatedAt = "2026-10-03T09:28:10.122Z";
-  const row = sync.problemRowFrom(local);
-  row.created_at = "2026-10-01T09:00:00+00:00";
-  row.updated_at = "2026-10-03T09:28:10.122+00:00";
-
-  const read = sync.problemFromRemote({ problem: row, signals: sync.signalRowsFrom(local) }, 0);
-  assert.strictEqual(read.createdAt, "2026-10-01T09:00:00.000Z");
-  assert.strictEqual(read.updatedAt, "2026-10-03T09:28:10.122Z");
-  assert.deepStrictEqual(sync.planFirstLoad({ remote: [read], local: [local] }).upload, []);
 });
 
 test("an unreadable timestamp is kept rather than becoming now, which would mark it edited", () => {
@@ -512,23 +354,6 @@ test("what a figure means is not stored twice — kind already says it", () => {
   });
 });
 
-test("the seed problems stay on the board after one of them is edited", () => {
-  // Regression, found on 2026-10-03 with five problems stored: the other five seeds disappeared from
-  // the screen, which reads as five problems having been deleted. A record being stored is not a
-  // reason for the reference data to vanish.
-  const edited = { ...problems.seedProblems[2], title: "Edited by hand" };
-  const plan = sync.planFirstLoad({ remote: [edited], local: null });
-  assert.strictEqual(plan.problems.length, problems.seedProblems.length, "editing one problem hid the others");
-  assert.strictEqual(plan.problems.find((problem) => problem.id === edited.id).title, "Edited by hand");
-});
-
-test("a record the database has and the seeds do not is added, not substituted", () => {
-  const fresh = syncProblem("P-900", "Only in the database");
-  const plan = sync.planFirstLoad({ remote: [fresh], local: null });
-  assert.strictEqual(plan.problems.length, problems.seedProblems.length + 1);
-  assert.ok(plan.problems.some((problem) => problem.id === "P-900"));
-});
-
 test("company links are written in order, and an empty list means no links", () => {
   const source = syncProblem("P-011", "Links");
   source.companyIds = ["c-duco", "c-reconart"];
@@ -541,6 +366,23 @@ test("company links are written in order, and an empty list means no links", () 
   assert.deepStrictEqual(sync.companyLinkRowsFrom(source), []);
   source.companyIds = ["c-duco", "  ", ""];
   assert.strictEqual(sync.companyLinkRowsFrom(source).length, 1, "a blank company id was written as a link");
+});
+
+test("a junk payload reads as nothing rather than throwing", () => {
+  [null, undefined, "rows", 7, {}].forEach((value) => {
+    assert.deepStrictEqual(sync.problemsFromRemote(value, value, value, value), []);
+  });
+});
+
+test("a missing database column becomes an empty field, never a fabricated one", () => {
+  const read = sync.problemsFromRemote([{ id: "P-950" }], [], [], []);
+  assert.strictEqual(read.length, 1);
+  assert.strictEqual(read[0].title, "");
+  assert.strictEqual(read[0].killReason, "");
+  assert.strictEqual(read[0].gate, "G1-signal", "an absent gate must fall back, not guess");
+  assert.deepStrictEqual(read[0].evidence, []);
+  assert.deepStrictEqual(read[0].companyIds, []);
+  assert.ok(read[0].signals.every((signal) => signal.value === null), "an absent signal must be blank, not zero");
 });
 
 console.log(`\n${passed} passed, ${failed} failed`);

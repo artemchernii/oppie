@@ -1,5 +1,10 @@
 # Handoff — Supabase storage
 
+> **The storage model below is superseded.** `DECISIONS.md` #9 replaced it with one store, the
+database: no browser copy, no merging, no cutover, and the seed file no longer read at runtime.
+> Everything here about *merging*, *which store wins* and the *one-time push* describes how it used to
+> work and is kept only because the traps at the bottom are still current. Read #9 first.
+
 Written 2026-10-03 for the next session. Read alongside `DECISIONS.md` #1, which holds the
 decision itself, and `AGENTS.md`, which holds the rules for changing anything.
 

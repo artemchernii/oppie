@@ -17,9 +17,9 @@ import { LinkChip } from "./ui";
 /** The shared list, so the editor and the database CHECK cannot drift apart. */
 const LINK_OPTIONS: LinkStatus[] = linkStatuses;
 
-export default function Inbox({ remote }: { remote: Problem[] | null }) {
+export default function Inbox({ initial }: { initial: Problem[] }) {
   const { sources, proposals, hydrated, mark, discard, decideProposal, acceptProposal, resetResearch } = useResearch();
-  const { problems, updateProblem } = useProblems(remote);
+  const { problems, updateProblem } = useProblems(initial);
 
   const [showSpent, setShowSpent] = useState(false);
 
