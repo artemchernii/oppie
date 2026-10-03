@@ -1,8 +1,8 @@
 # oppie.lab — Claude handoff
 
-Date: 2026-10-03  
-Branch: `feat/discovery-engine` (stacked on `feat/problem-ratings-table`, PR #44)  
-Base commit: `71ba9dd docs: hand off the analysis surfaces, and point STATUS at something true`
+- Date: 2026-10-04
+- Branch: `feat/discovery-engine` (PR #45; #44 merged)
+- Base: `master` at `1a9458d`, the squash-merge of #44
 
 ## Read first
 
@@ -97,7 +97,7 @@ coverage.
 
 Remaining tasks:
 
-None. The work is in PR #44 (ratings) and the stacked `feat/discovery-engine` PR.
+None. Ratings merged in #44; discovery is PR #45.
 
 Do not start Python or broad scraping yet. Do not add a new market-size model. The next practical
 slice is UI persistence: finish `/discover`, then `/inbox`, then verify an accepted Problem.
@@ -136,5 +136,5 @@ market size, prices, or accepted Problems.
 ## Copy-paste prompt
 
 ```text
-Continue oppie.lab: #44 is merged, sync and land the discovery PR.
+Continue oppie.lab: fix the light-theme contrast on /inbox.
 ```

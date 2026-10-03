@@ -4,11 +4,9 @@ Last updated: 2026-10-04
 
 ## Branch and commit
 
-- PR [#44](https://github.com/artemchernii/oppie/pull/44) `feat/problem-ratings-table` → `master`: the
-  ratings table (4 commits).
-- `feat/discovery-engine`, stacked on #44: discovery engine v1 (OpenSpec 1.2, 2.5, 5.1–5.4, 6.4) and
-  the editorial redesign, in three commits (backend, interface, docs). Merge #44 first; GitHub then
-  retargets the stacked PR to `master`.
+- PR [#44](https://github.com/artemchernii/oppie/pull/44) (ratings table) merged to `master` 2026-10-04.
+- PR [#45](https://github.com/artemchernii/oppie/pull/45) `feat/discovery-engine` → `master`: discovery
+  engine v1 (OpenSpec `discovery-engine-v1`, complete) and the editorial redesign.
 - `pnpm build` passed 2026-10-04 with the dev server stopped (OpenSpec 6.4).
 - Never commit or push directly to `master`
 
@@ -314,12 +312,16 @@ GET  /api/companies/:id
 
 ## Owner action
 
-1. Review and squash-merge PR #44 (ratings) once CI is green.
-2. Then review the stacked discovery PR. After #44 merges, GitHub retargets it to `master`; it then
-   needs a sync with `master` before its CI can pass the up-to-date rule.
+Nothing is required. When #45 is merged, the open follow-ups are, in rough order of value:
+
+1. Create one real accepted Problem: `/discover` → save a real source → build a proposal → accept it
+   in `/inbox` with a reason. Nothing real has gone through the loop yet.
+2. Add Reddit credentials to `.env.local` (`REDDIT_CLIENT_ID`, `REDDIT_CLIENT_SECRET`,
+   `REDDIT_USER_AGENT`) to try live collection.
+3. Fix the light-theme contrast on `/inbox`, and the hardcoded "Fintech · reconciliation" label.
 
 ## Suggested next prompt
 
 ```text
-Continue oppie.lab: #44 is merged, sync and land the discovery PR.
+Continue oppie.lab: fix the light-theme contrast on /inbox.
 ```
