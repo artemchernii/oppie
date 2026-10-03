@@ -14,7 +14,8 @@
 // mapped explicitly here rather than derived. A rename that quietly starts reading `undefined`
 // is the failure this file exists to make impossible.
 
-import { type Evidence, type Problem, type Signal } from "./problems";
+import { type Evidence, type Problem, type ProblemRating, type Signal } from "./problems";
+import { DIVERGENCE_THRESHOLD } from "./analysis";
 import { normalizeProblem } from "./problemPersistence";
 
 export type Row = Record<string, unknown>;
@@ -238,4 +239,93 @@ export function companyLinkRowsFrom(problem: Problem): Row[] {
       company_id: companyId,
       position: index
     }));
+}
+
+// ============================================================ ratings
+
+// A rating is not part of a Problem. It is an event about one — a person's number, and the system's
+// number as it stood at that moment — so it has its own two directions here rather than being
+// threaded through `problemFromRemote` and `problemRowFrom`.
+
+/**
+ * A rating on its way into `problem_ratings`.
+ *
+ * Deliberately not a whole `ProblemRating`: `createdAt` is left to the column default, because the
+ * moment a rating was made is the moment the database accepted it, not whatever a clock in this
+ * process says. Everything else is set by the caller that derived it — the rubric version, the
+ * score, and the count it was computed over. None of it comes from the browser.
+ */
+export type NewRating = {
+  id: string;
+  problemId: string;
+  rubricVersion: number;
+  scoreAtRating: number;
+  answeredAtRating: number;
+  rating: number;
+  reason: string;
+};
+
+/**
+ * An integer from a row, or null when the value cannot be read as one.
+ *
+ * PostgREST hands a `smallint` back as a number, but a value that arrives as a string, as a float
+ * or as null is a row this code does not understand, and a wrong number in a rating is worse than a
+ * missing row: the whole point of the table is the arithmetic between the two numbers.
+ */
+const integerWithin = (value: unknown, min: number, max: number): number | null => {
+  const number = typeof value === "number" ? value : typeof value === "string" && value.trim() !== "" ? Number(value) : NaN;
+  if (!Number.isInteger(number) || number < min || number > max) return null;
+  return number;
+};
+
+/**
+ * One `problem_ratings` row as a `ProblemRating`, or null when the row cannot be read as one.
+ *
+ * Null rather than a repaired object, following `problemFromRemote`: guessing here would invent a
+ * person's number, or the system's, and the divergence between them is the only reason the table
+ * exists. A divergence with a blank reason is also rejected, because the CHECK in the migration
+ * keeps such a row from being written — its presence means the row is not trustworthy, not that the
+ * caller may read it as agreement.
+ */
+export function ratingFromRow(row: Row): ProblemRating | null {
+  const id = typeof row.id === "string" ? row.id : "";
+  const problemId = typeof row.problem_id === "string" ? row.problem_id : "";
+  if (!id || !problemId) return null;
+
+  const rubricVersion = integerWithin(row.rubric_version, 1, Number.MAX_SAFE_INTEGER);
+  const scoreAtRating = integerWithin(row.score_at_rating, 0, 10);
+  const answeredAtRating = integerWithin(row.answered_at_rating, 1, 7);
+  const rating = integerWithin(row.rating, 0, 10);
+  const reason = typeof row.reason === "string" ? row.reason : null;
+
+  if (rubricVersion === null || scoreAtRating === null || answeredAtRating === null || rating === null || reason === null) {
+    return null;
+  }
+  if (Math.abs(rating - scoreAtRating) > DIVERGENCE_THRESHOLD && reason.trim() === "") return null;
+
+  return {
+    id,
+    problemId,
+    rubricVersion,
+    scoreAtRating,
+    answeredAtRating,
+    rating,
+    reason,
+    // The column is NOT NULL with a `now()` default, so an unreadable one is a row this code does
+    // not understand rather than one to date with today.
+    createdAt: timestamp(row.created_at) ?? ""
+  };
+}
+
+/** The `problem_ratings` row. No `created_at`: the timestamp is the database's to stamp. */
+export function ratingRowFrom(rating: NewRating): Row {
+  return {
+    id: rating.id,
+    problem_id: rating.problemId,
+    rubric_version: rating.rubricVersion,
+    score_at_rating: rating.scoreAtRating,
+    answered_at_rating: rating.answeredAtRating,
+    rating: rating.rating,
+    reason: rating.reason
+  };
 }

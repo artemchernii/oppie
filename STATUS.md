@@ -1,5 +1,12 @@
 # oppie.lab — current state and next steps
 
+> **Read `docs/handoffs/HANDOFF_ANALYSIS_SURFACES.md` instead for anything current.** This file is
+> 16 commits behind `master` and wrong in four places: the allowlist migration **has** been applied
+> and is live; `lib/auth.ts` no longer exists (deleted in #22); `pnpm test` is 100 assertions across
+> five suites, not 81 across four; and the browser is no longer a store (`DECISIONS.md` #9), so every
+> paragraph about merging, cutover or a `localStorage` fallback describes how it used to work. The
+> research next steps at the bottom are still the owner's own and are not covered by the handoff.
+
 Last updated: 2026-10-03 · master `8cf977a`
 
 ## Where it is

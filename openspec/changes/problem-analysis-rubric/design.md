@@ -65,9 +65,10 @@ version; it never mutates the old one.
 problem_ratings (
   id                    text primary key,
   problem_id            text not null references problems(id) on delete cascade,
-  rubric_version        integer not null,
+  rubric_version        integer not null check (rubric_version >= 1),
   score_at_rating       smallint not null check (score_at_rating between 0 and 10),
   rating                smallint not null check (rating between 0 and 10),
+  answered_at_rating    smallint not null check (answered_at_rating between 1 and 7),
   reason                text not null default '',
   created_at            timestamptz not null default now(),
   constraint rating_reason_required_on_divergence check (
@@ -79,6 +80,23 @@ problem_ratings (
 `score_at_rating` is stored rather than derived because the score is recomputed on read: after any
 edit to the record it is a different number, and the divergence that prompted the reason would no
 longer be reproducible. The divergence is a fact about a moment.
+
+`answered_at_rating` is stored with it for the same reason, and it is not an extra: the score is a
+proportion over the dimensions that were answered, so "4 over 5" and "4 over 7" are different claims
+about the same digit. Storing the score without its base would store a number whose inputs cannot be
+recovered afterwards, which is the one thing `docs/RULES.md` § 5 forbids, and it would leave the
+reading-paths requirement — a score is never shown without the count it was computed over —
+unsatisfiable on any surface that renders a past rating. `between 1 and 7` also makes "nobody has
+looked at this record yet" unratable in the database rather than only in the caller.
+
+`reason` at `''` means the rating agreed and no reason was asked for. That is a decided value, not a
+missing one, and a surface says "no reason needed" rather than "Not added yet".
+
+The write derives `score_at_rating`, `answered_at_rating` and `rubric_version` server-side from the
+record and `lib/analysis.ts`, rather than accepting them from the browser. A stored row claims to be
+what the system said, so the system has to be the one that said it — nothing about a rating's
+provenance is the caller's to assert. The score is recomputed on submit, so a rating made against a
+record that has since been edited is recorded against the rubric that is current when it arrives.
 
 Both numbers sit on 0–10 so they can be compared at all. An earlier draft of this design stored the
 signed sum and a rating on different scales, which would have made "do these disagree?" a comparison
