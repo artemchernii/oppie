@@ -17,3 +17,7 @@ HANDOFF_DEMAND_SEARCH.md
 # stay *after* `.env*`: within one file the last matching pattern wins, so moving it
 # back above silently re-blocks the file.
 !.env.example
+
+# Playwright output
+test-results/
+playwright-report/

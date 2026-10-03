@@ -21,6 +21,11 @@ const isOpen = (pathname: string) =>
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });
 
+  // Only the isolated local Playwright server may bypass OAuth. This is never enabled in a
+  // production build, and keeps browser tests focused on the discovery workflow rather than a
+  // live GitHub callback.
+  if (process.env.PLAYWRIGHT_TEST === "1" && process.env.NODE_ENV !== "production") return response;
+
   const { userConfigured, url, publishable } = supabaseConfig();
   // Unconfigured: let the pages explain themselves rather than redirecting in a loop.
   if (!userConfigured) return response;
