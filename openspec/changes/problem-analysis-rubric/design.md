@@ -66,12 +66,12 @@ problem_ratings (
   id                    text primary key,
   problem_id            text not null references problems(id) on delete cascade,
   rubric_version        integer not null,
-  score_at_rating       smallint not null,     -- the engine's score when the rating was made
+  score_at_rating       smallint not null check (score_at_rating between 0 and 10),
   rating                smallint not null check (rating between 0 and 10),
   reason                text not null default '',
   created_at            timestamptz not null default now(),
   constraint rating_reason_required_on_divergence check (
-    abs(rating * 10 - score_at_rating * 10) <= 30 or btrim(reason) <> ''
+    abs(rating - score_at_rating) <= 3 or btrim(reason) <> ''
   )
 )
 ```
@@ -80,10 +80,13 @@ problem_ratings (
 edit to the record it is a different number, and the divergence that prompted the reason would no
 longer be reproducible. The divergence is a fact about a moment.
 
+Both numbers sit on 0–10 so they can be compared at all. An earlier draft of this design stored the
+signed sum and a rating on different scales, which would have made "do these disagree?" a comparison
+of nothing; `docs/ENGINE.md` § v1 arithmetic maps the sum onto 0–10 instead.
+
 The CHECK is the same shape as `proposal_acceptance_carries_its_reason`, and for the same reason: the
 rule is worth holding in the database rather than trusting the caller, because a violation is silent.
-The threshold is 3 points on a 0–10 scale, expressed in tenths so the comparison needs no floating
-point.
+The threshold is 3 points, the same constant as `DIVERGENCE_THRESHOLD` in `lib/analysis.ts`.
 
 RLS: the allowlist policy, identical to the nine existing tables. The table is added to
 `openspec/specs/` when the spec is captured.

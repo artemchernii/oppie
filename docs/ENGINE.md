@@ -7,6 +7,26 @@ One picture of where the engine goes, what it looks for, and where scoring sits.
 fixed. The normative version of the analysis behaviour is
 `openspec/changes/problem-analysis-rubric/specs/problem-analysis/spec.md`.
 
+## The short version
+
+If the rest of this file is too dense, this is the whole thing:
+
+1. **The engine goes looking for proof that someone already pays** for a piece of work. Job ads are
+the best source, because one page shows the budget and describes the work. Government tender notices
+are better still. Software price pages show a price is already accepted. Reddit and forums show that
+it hurts — but they are **not** proof of money, and the engine must never treat them as if they were.
+2. **It keeps the quote**, not a summary, with the link.
+3. **It suggests an answer.** Nothing reaches a record until you click accept.
+4. **Then each problem gets seven questions**, each answered yes, no, or not-checked-yet, each with
+the quote or the field that decided it.
+5. **Those seven answers become one number from 0 to 10**, always shown beside three things: how many
+questions were checked, how many were not, and which question is blocking the record.
+6. **You rate the problem yourself, 0 to 10, before you see the machine's number.** Where the two
+disagree you say why, and that disagreement is what moves the weights later.
+
+A **no** pulls the number down. A **not checked yet** is left out and makes the base smaller instead.
+Those two are different on purpose: a question nobody has looked at is not a question that failed.
+
 ## The whole loop
 
 ```mermaid
@@ -145,29 +165,36 @@ record (fields + accepted answers + evidence)
              blind rating 0–10 ──▶ divergence log ──▶ weights v2 (later, Python)
 ```
 
-### Proposed v1 arithmetic
+### v1 arithmetic — agreed 2026-10-03
 
-Deliberately the least inventive thing that ranks: **every dimension weighted 1**, `yes` counts
-`+1`, `no` counts `−1`, `unknown` counts nothing and leaves the base.
+Deliberately the least inventive thing that ranks: **every dimension weighted 1**, `yes` counts `+1`,
+`no` counts `−1`, `unknown` counts nothing and shrinks the base. The signed sum is then mapped onto
+**0–10**, the same scale as a person's rating, so that "does your rating disagree with the machine?"
+is a question with an answer. Comparing `+3 of ±5` against `7 out of 10` would have compared nothing.
 
 ```text
-score = Σ over answered dimensions of  (yes ? +weight : −weight)
+raw   = Σ over answered dimensions of  (yes ? +weight : −weight)
 max   = Σ over answered dimensions of   weight
-shown as   +2 of ±5   ·   scored over 5 of 7   ·   2 unknown
+score = round( (raw + max) / (2 × max) × 10 )            null when max is 0
+
+shown as   7 / 10   ·   checked 5 of 7   ·   2 not checked   ·   4 yes · 1 no
+           4 went yes, 1 went no, 2 were never looked at
+           blocking: paid today
 ```
 
-Three consequences worth stating, because each one is a way the number could lie:
+Four things worth stating, because each one is a way the number could lie:
 
-- **`no` is counted, not ignored.** A score of `yes − no` distinguishes three yes and two no from
-  three yes and nothing. A yes-only sum cannot, and would rank a record with known deficits above an
-  equally strong record with none.
-- **Blanks shrink the base rather than the score.** `+2 of ±5` and `+2 of ±7` are different claims.
-  The base is always shown, so a record with two dimensions answered cannot outrank a record with
-  seven answered and the same sum.
-- **Equal weights in v1 means nobody has invented a weighting yet.** The tally in `PAIN_FUNNEL` §
-  *The readiness tally* earns its equal weights the same way. A weight other than 1 is earned from
-  the divergence log, not from a feeling — and when it is earned, it becomes a new rubric version
-  rather than an edit.
+- **`no` is counted.** `yes` and `no` cancel, so three good answers with two known holes scores below
+  three good answers with nothing else known. A yes-only sum cannot tell those two apart.
+- **Blanks shrink the base, not the score.** The score is a proportion, so 10 over 5 answers and 10
+  over 7 answers are the same number. That is exactly why `checked N of 7` and the not-checked count
+  always travel with it — a surface showing the score without the base is showing a number that
+  cannot be read.
+- **Sorting by score breaks ties by more checked.** Same proportion, more evidence, first. Otherwise
+  a barely-examined record ties with a fully-examined one.
+- **Equal weights means nobody has invented a weighting yet.** The tally in `PAIN_FUNNEL.md` §
+  *The readiness tally* earns its equal weights the same way. A weight other than 1 has to be earned
+  from the divergence log, and arrives as a new rubric version rather than as an edit.
 
 The default **order** on the board stays the cited one (`PAIN_FUNNEL` § Part 2 — Ordering): furthest
 gate, then fewest unanswered, then the tally. Ordering by the score is available and labelled as this
