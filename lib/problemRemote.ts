@@ -13,25 +13,10 @@ import { problemsFromRemote, evidenceRowsFrom, problemRowFrom, signalRowsFrom } 
 import type { Problem } from "./problems";
 import { supabaseForRoute } from "./supabase/server";
 import { supabaseConfig } from "./supabaseConfig";
+import { isNextControlFlow, messageOf, reason } from "./supabaseResult";
 
 export type ProblemsRead = { ok: true; problems: Problem[] } | { ok: false; error: string };
 export type ProblemSave = { ok: true } | { ok: false; error: string };
-
-/**
- * Next signals "this route cannot be static" by throwing out of `cookies()` with a `digest` of
- * DYNAMIC_SERVER_USAGE. Swallowing that here would look harmless and is not: the route would be
- * prerendered once at build time and every signed-in person would be served whatever that build
- * happened to contain. Control-flow digests are rethrown so Next sees them.
- */
-function isNextControlFlow(error: unknown): boolean {
-  const digest = (error as { digest?: unknown } | null)?.digest;
-  return typeof digest === "string" && /^(DYNAMIC_SERVER_USAGE|NEXT_)/.test(digest);
-}
-
-function reason(error: { code?: string | null; message?: string } | null): string {
-  if (!error) return "unknown Supabase error";
-  return [error.code, error.message].filter(Boolean).join(" ");
-}
 
 /**
  * Every problem, with its signals, evidence and company links.
@@ -69,7 +54,7 @@ export async function readRemoteProblems(): Promise<ProblemsRead> {
     };
   } catch (error) {
     if (isNextControlFlow(error)) throw error;
-    return { ok: false, error: error instanceof Error ? error.message : "unknown read failure" };
+    return { ok: false, error: messageOf(error, "unknown read failure") };
   }
 }
 
@@ -127,7 +112,7 @@ export async function saveRemoteProblem(problem: Problem): Promise<ProblemSave> 
     return { ok: true };
   } catch (error) {
     if (isNextControlFlow(error)) throw error;
-    return { ok: false, error: error instanceof Error ? error.message : "unknown write failure" };
+    return { ok: false, error: messageOf(error, "unknown write failure") };
   }
 }
 

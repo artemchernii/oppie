@@ -8,8 +8,8 @@
 // placeholders, so they belong in the table. This is the one-way door: afterwards the database is
 // the record and `lib/problems.ts` is only the starting point. `DECISIONS.md` #7.
 //
-// It reads the compiled model rather than repeating the rows in SQL, so there is one copy of the
-// data and nothing to drift. Without `--force` an existing row is left exactly as it is, so running
+// It reads the compiled model rather than repeating the rows in SQL, and uses the same row mapping
+// the read path uses, so there is one copy of the mapping and nothing to drift. Without `--force` an existing row is left exactly as it is, so running
 // this twice cannot undo an edit made in the app.
 //
 // Needs SUPABASE_SECRET_KEY. Admin work only — never call this from anything a browser drives.
@@ -19,6 +19,8 @@ const path = require("path");
 
 const ROOT = path.join(__dirname, "..");
 const MODEL = path.join(ROOT, ".tmp-test", "problems.js");
+
+const { companyRowFrom } = require(path.join(ROOT, ".tmp-test", "companySync.js"));
 
 function loadEnvLocal() {
   const file = path.join(ROOT, ".env.local");
@@ -31,22 +33,8 @@ function loadEnvLocal() {
   }
 }
 
-/** The `companies` row for a Company. Explicit, like lib/problemSync.ts, so a rename cannot hide. */
-const rowFrom = (company) => ({
-  id: company.id,
-  name: company.name,
-  kind: company.kind,
-  location: company.location,
-  country: company.country,
-  role: company.role,
-  amount: company.amount,
-  amount_note: company.amountNote,
-  currency: company.currency,
-  basis: company.basis,
-  url: company.url,
-  confidence: company.confidence,
-  link_status: company.linkStatus
-});
+/** The same mapping the read path uses, so a rename cannot make the loader and the reader disagree. */
+const rowFrom = companyRowFrom;
 
 async function main() {
   loadEnvLocal();
