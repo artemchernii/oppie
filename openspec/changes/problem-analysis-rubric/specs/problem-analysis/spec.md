@@ -38,7 +38,13 @@ business will work.
 A dimension whose verdict is `unknown` SHALL NOT contribute a value to a score. Every score SHALL
 state how many dimensions it was computed over. An answer of zero SHALL contribute zero and SHALL
 remain distinguishable from a dimension that was never answered. If no dimension has an answer, no
-score SHALL be produced.
+score SHALL be produced. A checked answer SHALL NEVER be reported as `unknown`.
+
+#### Scenario: A checked answer is never discarded
+- **WHEN** a question a person answered — including the lowest answer available — is read by the
+  dimension or part that reads it
+- **THEN** that dimension or part carries a verdict, and beyond `unknown`
+- **AND** it carries the reason the person gave with it
 
 #### Scenario: Some dimensions are unknown
 - **WHEN** a score is computed over a problem with unknown dimensions
@@ -144,8 +150,10 @@ Adding, removing or redefining a dimension SHALL require a change to this spec.
 
 #### Scenario: Competition is judged
 - **WHEN** the competition dimension is evaluated
-- **THEN** it reports separately how many relevant companies exist, what they charge, and whether a
-  wedge is named at all
+- **THEN** it reports separately how many relevant companies are known, what they charge, and whether
+  the wedge is hard to copy
+- **AND** a checked `moat` below 2 is a `no` rather than an `unknown`, because a checked answer is
+  never discarded and a wedge copied in weeks is not defended
 - **AND** it does not conclude that competition makes the problem good or bad
 
 ### Requirement: A person's rating is stored beside the score that prompted it
