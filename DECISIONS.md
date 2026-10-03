@@ -287,9 +287,10 @@ person disagree.
    person framed. The owner's answer was "evidence and so on", which reads as the latter, but a
    clustering step is not ruled out. It needs its own entry, and a shape to store a proposed problem
    in, before any code.
-2. Whether the person rates **before** seeing the machine's score. If the score is visible first,
-   the rating anchors on it and the disagreement signal is destroyed — which is the only thing the
-   loop produces at this scale.
+2. ~~Whether the person rates **before** seeing the machine's score.~~ **Answered** 2026-10-03 by
+   entry #6: the reveal is blind. The score is withheld until a rating exists for the current rubric
+   version, on the list as well as on the detail surface, because a list showing scores would spoil
+   every subsequent rating.
 
 ---
 
@@ -363,3 +364,61 @@ data for the method, not the screen that displays them.
 
 - No CSS work on `/opportunities`. It stays in the nav until its replacement exists.
 - The nav label "Legacy board" is honest and stays until then.
+
+---
+
+## 6. The engine is Python and local; ratings are blind
+
+**Date:** 2026-10-03
+**Status:** Decided. Nothing built.
+**Decided by:** the owner.
+
+### What was decided
+
+**The engine is a separate Python process.** `engine/`, with `uv`, `pyproject.toml` and `pytest`,
+talking to Supabase with the secret key. The app stays TypeScript and reads results from the
+database. `scripts/research.js` is **not** ported: it works, Node handles a search API fine, and it
+moves the day it needs something Node cannot do.
+
+**The engine runs locally, on demand**, like `pnpm research` does today. No secret in CI, no hosting
+bill, no scraper running from a cloud IP. Scheduling is a later decision.
+
+**Ratings are blind.** A person rates a problem before seeing the score it was given, and the score
+is revealed after. This resolves open question 2 of entry #3.
+
+**The database is the interface.** That is what the migrations are for, so the engine does not need
+TypeScript types to be correct. The engine writes to the collection and proposal tables, not to the
+UI's `Problem` shape, so `lib/problemSync.ts` does not need a Python twin and the two cannot drift.
+
+**Scoring arithmetic stays in the app for now.** The engine *extracts* — reading a source and
+proposing a verdict with its citation — and later *fits* weights. It does not compute the score. The
+reason is that a score is a deterministic function of a record and one versioned weight constant, the
+app has to render each dimension's contribution anyway, and the existing `pnpm test` harness covers
+it with no new toolchain. If fitting lands and the fitting code should own the applying too, that is
+a change to this entry, not a silent divergence.
+
+### Why not put the rubric in Python as well
+
+It was the first instinct and it is the wrong first increment. It would make a pure function depend
+on a toolchain that does not exist yet, and it would not remove the arithmetic from the app, because
+the count of computed-over dimensions and the per-dimension breakdown have to be on screen.
+
+The exception is extraction, and that is not a preference: reading an RFP and proposing "paid today:
+yes, cite this, here is the clause" needs a model, and that is the engine's job. It arrives as a
+proposal through `proposals`, so the existing acceptance guard is unchanged.
+
+### Consequences
+
+- A second toolchain and a second CI job. Real cost, accepted for the extraction work.
+- A rating is stored with the score it was made against, because a score recomputed on read is a
+different number after any edit — see `openspec/changes/problem-analysis-rubric/design.md` § 4.
+- Blind reveal is a discipline, not a boundary. A single-user app does not need server-side
+  enforcement, and pretending otherwise would add a second source of truth about what has been seen.
+
+### Open
+
+1. Scheduling, once there is something worth watching.
+2. Which sources beyond a web search API are worth the per-source work. `docs/RULES.md` § 10 says
+   public procurement documents beat job boards, so that is the likely first one.
+3. Open question 1 of entry #3 is untouched: whether the engine may propose *candidate problems*,
+   rather than only evaluating problems a person framed.

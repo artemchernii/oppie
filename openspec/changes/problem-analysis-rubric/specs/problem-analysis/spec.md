@@ -206,3 +206,18 @@ together in one action.
 #### Scenario: Nobody acts
 - **WHEN** no person accepts anything
 - **THEN** nothing is applied on load, on ingest, or on a schedule, and nothing is applied in bulk
+
+### Requirement: A record with no analysis stays visible
+
+The board SHALL keep analysed and unanalysed records visibly apart, and SHALL NOT let the absence of a
+score sort a record out of reach.
+
+#### Scenario: Some records have not been analysed
+- **WHEN** the board is displayed
+- **THEN** records with no answered dimension appear in a distinct lane that ignores the ordering
+- **AND** they are reachable without a search
+
+#### Scenario: The board is sorted by score
+- **WHEN** problems are ordered by score
+- **THEN** a record with no score is not ranked as though it had scored zero
+- **AND** the count of records with no score is stated on the surface, next to the ordering control
