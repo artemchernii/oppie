@@ -32,8 +32,13 @@ The advisor buyer is unproven and moves to P-009.
 
 ## Ordering
 
-Ordered per `docs/PAIN_FUNNEL.md` § Ordering: furthest gate passed, then cited pain severity, then the
-largest already-paid amount.
+Ordered per `docs/PAIN_FUNNEL.md` § Part 2 — Ordering: furthest gate passed, then fewest unanswered
+questions, then the readiness tally.
+
+**Note on this table.** It was ranked on an older paraphrase of that rule — "then cited pain severity,
+ then the largest already-paid amount" — which is not what `PAIN_FUNNEL.md` says. The columns are
+still useful evidence; the rank order may not be the rule's order. Re-ranking is a research decision,
+not a docs fix, so it is left as it stands on purpose.
 
 | Rank | ID | Gate | Pain severity (cited) | Already paid (cited) | Path |
 |---|---|---|---|---|---|
