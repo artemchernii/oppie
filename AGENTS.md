@@ -161,3 +161,27 @@ pnpm install     # runs `prepare`, which sets core.hooksPath to .githooks
 ```
 
 If hooks appear to do nothing, check `git config core.hooksPath` — it should print `.githooks`.
+
+## 9. Explaining things: two registers, plain one first
+
+This project's method is dense on purpose — gates, three axes, a rubric, a no-composite rule with
+four conditions. That density is the point, and it is also why writing about it goes wrong.
+
+**Every explanation carries two registers, and the plain one comes first.** Somebody should be able
+to follow the plain one having read nothing else here.
+
+- **Plain.** Short sentences. No jargon without a gloss in the same breath. One concrete example,
+  with real numbers from this project. The answer first, the reasoning after. Written for a person
+  who is tired and has already read a lot today.
+- **Precise.** Straight after it. Exact names, file paths, counts, trade-offs, what was verified and
+  what was assumed.
+
+The rule exists because both readers are the same person. The owner wrote this method and still wants
+the plain version at the end of a long day, and an agent reading the precise version needs the plain
+one to check that the claim means something.
+
+**Forbidden:** precise prose with no plain version. Jargon used as though it were shared.
+An explanation that only works if the reader already agrees. Making the reader feel behind for asking.
+
+**Not licensed:** simplifying the substance. Simplify the telling, never the numbers. If a value, a
+verdict or a count changes, say the number, plain and precise both.
