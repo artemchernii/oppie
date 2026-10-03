@@ -27,6 +27,7 @@ the method, the product, and the history.
 ## Product
 
 - `MVP_SPEC.md` — product scope and acceptance criteria
+- `PRODUCT_DIRECTION.md` — the larger product thesis, data reset and handoff brief for the next build
 - `RESEARCH_CONTEXT.md` — lessons from the Business Idea Session
 
 ## History

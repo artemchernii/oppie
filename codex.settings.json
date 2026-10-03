@@ -1,0 +1,13 @@
+{
+  "agentHandoff": {
+    "responseFooter": ["Summary", "Done", "Now", "Next", "You"],
+    "youLineMustContainOwnerAction": true,
+    "suggestedNextPromptRequired": true,
+    "manualExternalActionInstructions": "When the owner must do something outside the repository, give numbered step-by-step instructions under You. Never say only 'do nothing' when another prompt is required to continue."
+  },
+  "workflow": {
+    "sourceOfTruth": "STATUS.md",
+    "continueWithoutAsking": true,
+    "preserveBranch": "feat/problem-ratings-table"
+  }
+}

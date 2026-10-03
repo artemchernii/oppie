@@ -185,3 +185,22 @@ An explanation that only works if the reader already agrees. Making the reader f
 
 **Not licensed:** simplifying the substance. Simplify the telling, never the numbers. If a value, a
 verdict or a count changes, say the number, plain and precise both.
+
+## 10. Agent handoff format
+
+Every agent response ends with this five-line handoff, even when the task is small:
+
+📝 Summary — what this turn is about
+✅ Done — what was completed
+📍 Now — the current repository state
+🚀 Next — the next action the agent will take
+🙋 You — the explicit next action for the owner; if none is required, say so plainly
+
+The repository is the source of truth for longer status. Keep `STATUS.md` current and put durable
+implementation plans in `openspec/` or `docs/`, not only in chat. When there is an obvious next
+implementation task, include a suggested-next prompt so the owner can continue in a fresh chat. Keep
+it to one short line naming the task (for example `Continue oppie.lab: OpenSpec 5.3.`); the agent
+reads `STATUS.md`, `docs/CLAUDE_HANDOFF.md` and this file itself, so the prompt does not restate
+rules, guardrails or the footer format. These preferences are also recorded in the root
+`codex.settings.json`. When the owner must perform a manual or external action, the `🙋 You` section
+gives numbered, step-by-step instructions before that one-line prompt.

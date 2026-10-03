@@ -232,6 +232,9 @@ function evaluateWedge(problem: Problem): Dimension {
  * paying, so it wins over a piece of evidence that might be about a different firm. Anything else
  * with a matching source is a `yes`. Nothing at all is `unknown` — never `no`.
  */
+/** Evidence of these types answers "Paid today" on its own. Shared so Inbox can warn before acceptance. */
+export const PAID_TODAY_EVIDENCE_TYPES: Evidence["type"][] = ["job", "procurement", "price"];
+
 function evaluatePaid(problem: Problem): Dimension {
   const pay = signalOf(problem, "pay");
   const base = { key: "paid" as DimensionKey, label: "Paid today", rule: "docs/RULES.md § 11, docs/PAIN_FUNNEL.md § G2" };
@@ -240,7 +243,7 @@ function evaluatePaid(problem: Problem): Dimension {
     return { ...base, verdict: "no", citation: citeField("signals.pay", pay.note || "checked: nobody pays") };
   }
 
-  const money = evidenceOfType(problem, ["job", "procurement", "price"]);
+  const money = evidenceOfType(problem, PAID_TODAY_EVIDENCE_TYPES);
   if (money) return { ...base, verdict: "yes", citation: citeEvidence(money) };
 
   if (pay && pay.value !== null && pay.value >= 1) {
