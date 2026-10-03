@@ -129,9 +129,18 @@ Adding, removing or redefining a dimension SHALL require a change to this spec.
 
 #### Scenario: Kill-reason quality is judged
 - **WHEN** the kill-reason dimension is evaluated
-- **THEN** a verdict of `yes` requires the recorded reason to name crowding, trust, regulation,
-  distribution, switching cost, willingness to pay, or economics
-- **AND** a reason equivalent to "needs more research" is `no`
+- **THEN** a verdict of `no` requires the recorded reason to be a deferral rather than a reason —
+  something equivalent to "needs more research"
+- **AND** an empty reason is `unknown`, because nobody having written one is not the same as having
+  written a bad one
+
+#### Scenario: A real reason written in unexpected words
+- **WHEN** a reason names a real obstacle — a procurement committee, or payers who churn — without
+  using the vocabulary `docs/RULES.md` § 4 lists
+- **THEN** it is `yes`
+- **AND** the reason is shown beside the verdict, so a person judges its quality rather than a
+  word list doing it, because a word list cannot tell a well-argued reason from a badly-argued one
+  either — only whether the reader guessed the word
 
 #### Scenario: Competition is judged
 - **WHEN** the competition dimension is evaluated
@@ -184,6 +193,9 @@ system's judgement rather than by cited facts.
 #### Scenario: The list is sorted by score
 - **WHEN** problems are ordered by the system's score
 - **THEN** the surface says the order is this system's judgement, not a cited fact
+- **AND** records with more dimensions answered sort above records with fewer, before the score is
+  compared at all, because the score is a proportion over what was checked and a barely-checked
+  record would otherwise top the list
 
 ### Requirement: The score never decides by itself
 

@@ -319,18 +319,40 @@ function evaluateCompetition(problem: Problem): Dimension {
 /**
  * Kill reason — `docs/RULES.md` § 4: it has to name the strongest reason not to build this today.
  *
- * "Needs more research" is not a reason and comes back `no`, which is where most of the honest
- * negatives in a young record come from. An empty kill reason is `unknown`: nobody has written one
- * yet, which is different from having written a bad one.
+ * "Needs more research" is not a reason and comes back `no`. An empty kill reason is `unknown`:
+ * nobody has written one yet, which is different from having written a bad one.
+ *
+ * A substantive reason is `yes` whatever words it uses, including ones this file never thought of
+ * — see the comment on `evaluateKill` for why the vocabulary list was removed.
  */
-const KILL_CATEGORIES = ["crowd", "compet", "trust", "regulat", "distribut", "switch", "willing", "econom", "margin", "price", "licen", "commodit"];
+/**
+ * Kill reason — `docs/RULES.md` § 4: it has to name the strongest reason not to build this today.
+ *
+ * The rule lists the kinds of reason that count, but a keyword allowlist is the wrong way to check
+ * it. Measured against the seeded records on 2026-10-03, the allowlist called two of the three
+ * written reasons a `no`: "Fund administrators buy through procurement … needs a committee" and
+ * "Retail buyer. Individuals pay least and churn fastest." Both are real reasons that happen not to
+ * use the words on the list. A false `no` costs a point and mis-ranks the record, and a vocabulary
+ * check cannot tell a good reason from a bad one anyway — only whether I guessed the word.
+ *
+ * So the check looks for the failure the rule actually names, in its own words: a *deferral* instead
+ * of a reason. "Needs more research" is not enough, and that is the whole of the check. `no` for a
+ * deferral, `yes` for anything else somebody wrote, `unknown` when the field is empty — because
+ * nobody having written one is not the same as having written a bad one.
+ *
+ * This is deliberately weaker than a vocabulary list, and the trade is on purpose: a reason is shown
+ * beside its verdict for a person to judge. What it must never do is punish a record for a reason
+ * that is better than the words I happened to think of.
+ */
+const KILL_DEFERRALS = ["more research", "needs research", "to be determined", "tbd", "unclear", "not sure", "no idea", "look into", "need to check"];
 
 function evaluateKill(problem: Problem): Dimension {
   const base = { key: "kill" as DimensionKey, label: "Kill reason", rule: "docs/RULES.md § 4" };
-  const reason = text(problem.killReason).toLowerCase();
+  const reason = text(problem.killReason);
   if (!reason) return { ...base, verdict: "unknown" };
-  const named = KILL_CATEGORIES.some((category) => reason.indexOf(category) !== -1);
-  return { ...base, verdict: named ? "yes" : "no", citation: citeField("killReason", problem.killReason) };
+  const lowered = reason.toLowerCase();
+  const deferral = KILL_DEFERRALS.some((phrase) => lowered.indexOf(phrase) !== -1);
+  return { ...base, verdict: deferral ? "no" : "yes", citation: citeField("killReason", reason) };
 }
 
 /**
@@ -379,6 +401,11 @@ export function summarise(dimensions: Dimension[]): Analysis {
   const max = answeredDimensions.reduce((sum, dimension) => sum + WEIGHTS[dimension.key], 0);
   const firstUnmet = dimensions.find((dimension) => dimension.verdict !== "yes");
 
+  // `score` is the proportion of met dimensions **over the dimensions actually answered**, and the
+  // base is reported beside it. It deliberately does not fold completeness in: doing that would make
+  // an `unknown` contribute a discounted value, which is treating it as a midpoint between yes and
+  // no, and an unknown is neither. Completeness is its own quantity, shown and sorted on — see
+  // `compareByScore`.
   return {
     rubricVersion: RUBRIC_VERSION,
     dimensions,
@@ -405,4 +432,23 @@ export function analyse(problem: Problem): Analysis {
 export function requiresReason(rating: number, score: number | null): boolean {
   if (score === null) return false;
   return Math.abs(rating - score) > DIVERGENCE_THRESHOLD;
+}
+
+/**
+ * The order a board should use when sorting by the machine's judgement.
+ *
+ * **Completeness first, then the score.** Not a tie-break — first. The same rule
+ * `docs/PAIN_FUNNEL.md` § Part 2 already uses for the cited ordering, where fewest unanswered
+ * questions sorts above the tally.
+ *
+ * It has to be first because the score is a proportion, so an almost untouched record scores 10 when
+ * the two dimensions anybody has looked at both hold up. Measured over the seeded records on
+ * 2026-10-03: P-002, two of seven checked, scored 10/10 — the same as P-001 with six of seven checked
+ * and one known hole. Sorted by score alone the least-examined record wins, which is backwards. The
+ * base is always shown beside the number as well, but a number and a caveat can be read apart, and
+ * an order cannot.
+ */
+export function compareByScore(a: Analysis, b: Analysis): number {
+  if (b.answered !== a.answered) return b.answered - a.answered;
+  return (b.score === null ? -1 : b.score) - (a.score === null ? -1 : a.score);
 }
