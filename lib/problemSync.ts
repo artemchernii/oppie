@@ -226,6 +226,24 @@ export function evidenceRowsFrom(problem: Problem): Row[] {
   }));
 }
 
+/**
+ * The `problem_companies` rows, in the order the record lists them.
+ *
+ * This used to be deliberately left unwritten, because the foreign key points at `companies` and
+ * that table was empty — a link row would either violate the constraint or need the reference
+ * companies uploaded. They are uploaded now (`DECISIONS.md` #7), so a link row resolves and the
+ * competition a record claims is real rather than a claim about a list nobody else can see.
+ */
+export function companyLinkRowsFrom(problem: Problem): Row[] {
+  return problem.companyIds
+    .filter((companyId: string) => typeof companyId === "string" && companyId.trim().length > 0)
+    .map((companyId: string, index: number) => ({
+      problem_id: problem.id,
+      company_id: companyId,
+      position: index
+    }));
+}
+
 // ============================================================ what may leave the browser
 
 /** Order-independent, key-order-independent, so two identical records compare equal. */
@@ -291,6 +309,9 @@ export type FirstLoadPlan = {
  *
  * With `remote === []` the table really is empty, so local work is pushed up once. Untouched
  * seeds are never in that push, because `isPristineSeed` filters them out first.
+ *
+ * The seeds stay on the board in every case. A remote record replaces its own seed and adds to the
+ * rest; it never takes the other seeds with it.
  */
 export function planFirstLoad({
   remote,
@@ -302,7 +323,16 @@ export function planFirstLoad({
   seeds?: readonly Problem[];
 }): FirstLoadPlan {
   const remoteList = remote ?? [];
-  const base = remoteList.length > 0 ? remoteList : clone(seeds as Problem[]);
+
+  // The seeds are the board, not a placeholder that stops existing the moment something is stored.
+  // A remote record replaces its own seed by id and adds to the rest; it never removes the seeds
+  // nobody has touched.
+  //
+  // This was wrong on 2026-10-03 and visible: the database held five problems and the other five
+  // seeds disappeared from the screen, which read as five problems having been deleted. A record
+  // being stored is not a reason for the reference data to vanish, and the researched problems are
+  // the work itself, not scaffolding.
+  const base = mergeById(clone(seeds as Problem[]), remoteList);
 
   const localList = local ?? [];
   const localWork = localList.filter((problem) => !isPristineSeed(problem, seeds));
