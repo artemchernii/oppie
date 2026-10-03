@@ -2,12 +2,13 @@
 
 ## 1. The rubric as a pure function
 
-- [ ] 1.1 Add `lib/analysis.ts` with the seven dimensions of the rubric, each carrying its key, its label, and the `docs/` rule it derives from. Verify with `pnpm exec tsc --noEmit`, and by checking the module imports nothing outside `lib/problems.ts` — no Supabase, no React, no clock.
-- [ ] 1.2 Implement the per-dimension verdict: `yes` / `no` / `unknown`, each carrying either a `{ field }` or a `{ sourceUrl, passage }` citation, or nothing. Verify with assertions in `scripts/problems.test.js` that a record with no evidence and no signals returns seven `unknown` verdicts and never a `no`.
-- [ ] 1.3 Implement the score from verdicts and the exported `WEIGHTS`, returning `score`, `computedOver`, `unknown[]` and `blocking`. Verify with assertions that (a) three unknown dimensions out of seven report "computed over 4 of 7", (b) a checked `0` contributes `0` while an `unknown` contributes nothing at all, and (c) a record with every dimension unknown produces no score rather than `0`.
-- [ ] 1.4 Give each dimension a `rule` reference and export `RUBRIC_VERSION`. Verify with an assertion that every dimension names a rule, and that changing `RUBRIC_VERSION` is the only way a score's provenance can change.
-- [ ] 1.5 Add `lib/analysis.ts` to the `tsc` file list in `package.json` so `pnpm test` exercises it. Verify: `pnpm test` compiles the module and the new assertions run in the problems suite.
-- [ ] 1.6 Add the rubric's dimensions and their rules to `docs/PAIN_FUNNEL.md`, referencing `openspec/changes/problem-analysis-rubric/specs/problem-analysis/spec.md` as the normative version. Verify by reading the section: a reader can tell which document is normative.
+- [x] 1.1 Add `lib/analysis.ts` with the seven dimensions of the rubric, each carrying its key, its label, and the `docs/` rule it derives from. Verify with `pnpm exec tsc --noEmit`, and by checking the module imports nothing outside `lib/problems.ts` — no Supabase, no React, no clock.
+- [x] 1.2 Implement the per-dimension verdict: `yes` / `no` / `unknown`, each carrying either a `{ field }` or a `{ sourceUrl, passage }` citation, or nothing. Verify with assertions in `scripts/analysis.test.js` that a record with no evidence and no signals returns seven `unknown` verdicts and never a `no`.
+- [x] 1.3 Implement the score from verdicts and the exported `WEIGHTS`, returning `score`, `computedOver`, `unknown[]` and `blocking`. Verify with assertions that (a) five answered dimensions report `checked 5 of 7`, (b) a checked `0` contributes `−1` while an `unknown` contributes nothing and shrinks the base, and (c) a record with every dimension unknown produces no score rather than `0`.
+- [x] 1.4 Give each dimension a `rule` reference and export `RUBRIC_VERSION`. Verify with an assertion that every dimension names a rule, and that changing `RUBRIC_VERSION` is the only way a score's provenance can change.
+- [x] 1.5 Add `lib/analysis.ts` to the `tsc` file list in `package.json` so `pnpm test` exercises it, with its own suite rather than appended to the problems suite. Verify: `pnpm test` runs five suites and the analysis one passes.
+- [x] 1.6 Point `docs/PAIN_FUNNEL.md` § Where a score sits at `docs/ENGINE.md` and at the spec as normative, rather than restating the seven dimensions in a third place.
+- [x] 1.7 Document the two-way mapping the rubric depends on — that a signal answered `0` is where a `no` legitimately comes from, and that an empty field is `unknown` rather than a quieter `no`. Verify: the header of `lib/analysis.ts` states both, and two assertions fail if either is reversed.
 
 ## 2. Ratings at the storage boundary
 
