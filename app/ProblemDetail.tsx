@@ -28,8 +28,8 @@ import { ConfidenceChip, GateChip, LinkChip, ReadinessPanel, VerdictChip, isBack
 
 const companyById = (id: string) => seedCompanies.find((company) => company.id === id);
 
-export default function ProblemDetail({ id }: { id: string }) {
-  const { problems, hydrated, updateProblem } = useProblems();
+export default function ProblemDetail({ id, remote }: { id: string; remote: Problem[] | null }) {
+  const { problems, hydrated, updateProblem } = useProblems(remote);
   const { proposals, acceptProposal, decideProposal } = useResearch();
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState<Problem | null>(null);

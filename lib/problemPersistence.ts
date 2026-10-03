@@ -7,7 +7,7 @@
 // 0 means "checked, and the answer is no". null means "not checked yet".
 // Collapsing them would silently turn a missing check into a zero score.
 
-import { blankSignals, emptyProblem, seedProblems, signalDefs, type Evidence, type Problem, type Score, type Signal } from "./problems";
+import { blankSignals, emptyProblem, evidenceTypes, linkStatuses, seedProblems, signalDefs, type Evidence, type LinkStatus, type Problem, type Score, type Signal } from "./problems";
 
 export const PROBLEMS_STORAGE_KEY = "oppie.lab.problems";
 export const PROBLEMS_SCHEMA_VERSION = 1;
@@ -55,14 +55,26 @@ export function normalizeEvidence(raw: unknown, fallbackId: string): Evidence | 
   if (!isRecord(raw)) return null;
   const type = typeof raw.type === "string" ? raw.type : "";
   const confidence = typeof raw.confidence === "string" ? raw.confidence : "";
-  return {
+  const linkStatus = typeof raw.linkStatus === "string" ? raw.linkStatus : "";
+  const evidence: Evidence = {
     id: typeof raw.id === "string" && raw.id ? raw.id : fallbackId,
-    type: (["job", "price", "community", "report", "personal"].includes(type) ? type : "personal") as Evidence["type"],
+    // Two types were being rewritten on every read until the remote path went in: `procurement`
+    // was missing from this list, so a procurement document came back as a personal
+    // observation. The column's CHECK in the init migration lists the same six values as
+    // `evidenceTypes`, which is now what this reads.
+    type: (evidenceTypes.includes(type as Evidence["type"]) ? type : "personal") as Evidence["type"],
     observation: typeof raw.observation === "string" ? raw.observation : "",
     url: typeof raw.url === "string" ? raw.url : "",
     date: typeof raw.date === "string" ? raw.date : "",
     confidence: (["direct", "reported", "inferred"].includes(confidence) ? confidence : "inferred") as Evidence["confidence"]
   };
+  // Set only when it is a real status, because `linkStatus: undefined` and an absent key are not
+  // the same thing to a structural comparison, and because "nobody opened this link" must not be
+  // indistinguishable from "the link was opened and found dead".
+  if (linkStatuses.includes(linkStatus as LinkStatus)) {
+    evidence.linkStatus = linkStatus as LinkStatus;
+  }
+  return evidence;
 }
 
 export function normalizeProblem(raw: unknown, index: number): Problem | null {
