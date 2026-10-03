@@ -256,10 +256,10 @@ export default function ProblemDetail({ id, remote }: { id: string; remote: Prob
                     <span>
                       <b>{company.name}</b>
                       <br />
-                      <span className="faint" style={{ fontSize: 11.5 }}>{company.where}</span>
+                      <span className="faint" style={{ fontSize: 11.5 }}>{company.location}</span>
                     </span>
                     <span style={{ textAlign: "right" }}>
-                      <span className="num" style={{ fontSize: 12.5 }}>{company.number || "—"}</span>
+                      <span className="num" style={{ fontSize: 12.5 }}>{company.amount || "—"}</span>
                       <br />
                       <LinkChip status={company.linkStatus} />
                     </span>

@@ -106,15 +106,57 @@ export const SIGNAL_MAX = 15;
 
 export const blankSignals = (): Signal[] => signalDefs.map((def) => ({ key: def.key, question: def.question, value: null, note: "" }));
 
+/** How often the money recurs, and on what footing. Empty means nobody has said. */
+export type MoneyBasis = "" | "per_year" | "per_user_month" | "per_project" | "percent_of_aum" | "one_off";
+
+export const moneyBases: MoneyBasis[] = ["", "per_year", "per_user_month", "per_project", "percent_of_aum", "one_off"];
+
+export const moneyBasisCopy: Record<MoneyBasis, string> = {
+  "": "",
+  per_year: "per year",
+  per_user_month: "per user / month",
+  per_project: "per project",
+  percent_of_aum: "% of AUM",
+  one_off: "one-off"
+};
+
+/** The currencies in play. Empty when the figure carries no symbol at all. */
+export const currencies: Company["currency"][] = ["USD", "GBP", "EUR", ""];
+
 export type Company = {
   id: string;
   name: string;
+  /**
+   * Who is being paid, which is also what `amount` means: an `employer` pays a salary, a `vendor`
+   * charges for software, a `bespoke` supplier charges for the work done by hand.
+   *
+   * There is deliberately no separate "money kind" field. It would be a second copy of this one, and
+   * a second copy is what drifts.
+   */
   kind: "employer" | "vendor" | "bespoke";
-  where: string;
+  /** Location as written on the source. Free text, and never grouped on. */
+  location: string;
+  /**
+   * Two letters, so a count by country is exact: `US`, `GB`, `PT`, `IE`, `HU`, `CO`, or `EU` for the
+   * region, or `""` when it has not been established. Deliberately not free text — "UK" and "United
+   * Kingdom" in one column is how a location overview silently becomes two half-answers. `location`
+   * keeps the original wording beside it.
+   */
+  country: string;
   role: string;
-  /** The money, verbatim. Empty string renders as "Not added yet". */
-  number: string;
-  numberLabel: string;
+  /**
+   * The money, **verbatim and never parsed**. Empty renders "Not added yet".
+   *
+   * The figures this holds are not the same kind of thing as each other — a salary in pounds and a
+   * licence in dollars, per year against per user against per project against a share of AUM. They
+   * may be listed together and never summed, averaged, or put on one axis.
+   */
+  amount: string;
+  /** Where the figure came from, in the source's own terms. */
+  amountNote: string;
+  /** Empty whenever `amount` is empty, because a figure with no currency is not a figure. */
+  currency: "" | "USD" | "GBP" | "EUR";
+  basis: MoneyBasis;
   url: string;
   confidence: Confidence;
   linkStatus: LinkStatus;
@@ -231,10 +273,13 @@ export const seedCompanies: Company[] = [
     id: "c-duco",
     name: "Duco",
     kind: "vendor",
-    where: "London / global",
+    location: "London / global",
+    country: "GB",
     role: "Cloud reconciliation for financial markets — no-code, AI-assisted exception handling, specifically positioned at structured and unstructured data",
-    number: "$80,000/yr",
-    numberLabel: "third-party report for a capacity package of 100k daily records / 50 process inputs, with reported $40k per additional 100k records — a sizing reference, not a quote",
+    amount: "$80,000/yr",
+    amountNote: "third-party report for a capacity package of 100k daily records / 50 process inputs, with reported $40k per additional 100k records — a sizing reference, not a quote",
+    currency: "USD",
+    basis: "per_year",
     url: "https://idp-software.com/vendors/duco/",
     confidence: "reported",
     linkStatus: "unverified"
@@ -243,10 +288,13 @@ export const seedCompanies: Company[] = [
     id: "c-reconart",
     name: "ReconArt",
     kind: "vendor",
-    where: "US / global",
+    location: "US / global",
+    country: "US",
     role: "Reconciliation and financial close — securities, positions, trades and custody, with private-cloud and on-premises options",
-    number: "$300/user/month",
-    numberLabel: "published by Capterra and Software Advice as a starting price; Essentials tier is 25M transactions/year. Enterprise is fixed-licence with no transaction pricing",
+    amount: "$300/user/month",
+    amountNote: "published by Capterra and Software Advice as a starting price; Essentials tier is 25M transactions/year. Enterprise is fixed-licence with no transaction pricing",
+    currency: "USD",
+    basis: "per_user_month",
     url: "https://www.reconart.com/plans/",
     confidence: "reported",
     linkStatus: "unverified"
@@ -255,10 +303,13 @@ export const seedCompanies: Company[] = [
     id: "c-advisor-stack",
     name: "The advisor platform stack (Orion, Tamarac, Black Diamond)",
     kind: "vendor",
-    where: "US (sells to RIAs)",
+    location: "US (sells to RIAs)",
+    country: "US",
     role: "Portfolio management and performance reporting — the software category that also performs custodian reconciliation",
-    number: "$8,000–$25,000/yr",
-    numberLabel: "reported range for this category; the same source puts CRM at $2,400–18,000 and financial planning at $2,400–9,600, and says portfolio accounting is the most expensive category advisors buy",
+    amount: "$8,000–$25,000/yr",
+    amountNote: "reported range for this category; the same source puts CRM at $2,400–18,000 and financial planning at $2,400–9,600, and says portfolio accounting is the most expensive category advisors buy",
+    currency: "USD",
+    basis: "per_year",
     url: "https://www.techvera.com/resources/blog/what-it-costs-to-run-compliant-ria-technology-stack-in-2026",
     confidence: "reported",
     linkStatus: "unverified"
@@ -267,10 +318,13 @@ export const seedCompanies: Company[] = [
     id: "c-jjsearch",
     name: "JJ Search Ltd (agency, for a City firm)",
     kind: "employer",
-    where: "City of London, UK",
+    location: "City of London, UK",
+    country: "GB",
     role: "Reconciliations Analyst, Custody Services, CASS 6 & 7 — daily and periodic cash and asset reconciliations, including Unit Trust reconciliations",
-    number: "£35,000–£50,000/yr",
-    numberLabel: "advertised salary, on the posting",
+    amount: "£35,000–£50,000/yr",
+    amountNote: "advertised salary, on the posting",
+    currency: "GBP",
+    basis: "per_year",
     url: "https://www.totaljobs.com/job/jj-search-ltd-job107248594",
     confidence: "reported",
     linkStatus: "unverified"
@@ -279,10 +333,13 @@ export const seedCompanies: Company[] = [
     id: "c-lgt",
     name: "LGT Wealth Management UK",
     kind: "employer",
-    where: "London, UK",
+    location: "London, UK",
+    country: "GB",
     role: "Reconciliations & Custody Control Analyst — daily and periodic cash and asset reconciliations",
-    number: "£80,000–£100,000/yr",
-    numberLabel: "advertised salary, on the posting",
+    amount: "£80,000–£100,000/yr",
+    amountNote: "advertised salary, on the posting",
+    currency: "GBP",
+    basis: "per_year",
     url: "https://gb.trabajo.org/job-3364-d6f10d7b6557f6788bdd8641149b4c3c",
     confidence: "reported",
     linkStatus: "unverified"
@@ -291,10 +348,13 @@ export const seedCompanies: Company[] = [
     id: "c-optio",
     name: "Optio Incentives",
     kind: "employer",
-    where: "London, UK",
+    location: "London, UK",
+    country: "GB",
     role: "Senior Reconciliation Analyst — the firm says it is *establishing* a dedicated Reconciliation & Operations function, which is someone deciding to spend money on this now",
-    number: "£80,000–£100,000/yr",
-    numberLabel: "advertised salary, on the posting",
+    amount: "£80,000–£100,000/yr",
+    amountNote: "advertised salary, on the posting",
+    currency: "GBP",
+    basis: "per_year",
     url: "https://gb.trabajo.org/job-3364-5e2016724caaf455c1d02404a1d58039",
     confidence: "reported",
     linkStatus: "unverified"
@@ -303,10 +363,13 @@ export const seedCompanies: Company[] = [
     id: "c-rbc",
     name: "RBC Global Asset Management UK",
     kind: "employer",
-    where: "London, UK",
+    location: "London, UK",
+    country: "GB",
     role: "Reconciliations Analyst — cash balances, transactions, positions (stock and listed derivatives) and intra-system reconciliations",
-    number: "",
-    numberLabel: "budget restated as a role, salary not published",
+    amount: "",
+    amountNote: "budget restated as a role, salary not published",
+    currency: "",
+    basis: "",
     url: "https://www.sercanto.co.uk/detail/a/reconciliations-analyst_london_442139932",
     confidence: "reported",
     linkStatus: "unverified"
@@ -315,10 +378,13 @@ export const seedCompanies: Company[] = [
     id: "c-janus",
     name: "Janus Henderson",
     kind: "employer",
-    where: "Budapest, HU",
+    location: "Budapest, HU",
+    country: "HU",
     role: "Reconciliation Analyst — custody (IBOR), performance (PBOR), ABOR vs IBOR, client market value",
-    number: "",
-    numberLabel: "budget restated as a role, salary not published",
+    amount: "",
+    amountNote: "budget restated as a role, salary not published",
+    currency: "",
+    basis: "",
     url: "https://jobs.janushenderson.com/job/Budapest-Reconciliation-Analyst-1133/1392859800/",
     confidence: "reported",
     linkStatus: "checked"
@@ -327,10 +393,13 @@ export const seedCompanies: Company[] = [
     id: "c-exalt",
     name: "eXalt-Fi",
     kind: "employer",
-    where: "Lisbon, PT",
+    location: "Lisbon, PT",
+    country: "PT",
     role: "Funds Reconciliation Specialist",
-    number: "€30–45k/yr",
-    numberLabel: "typical Lisbon band, not stated on the posting",
+    amount: "€30–45k/yr",
+    amountNote: "typical Lisbon band, not stated on the posting",
+    currency: "EUR",
+    basis: "per_year",
     url: "https://pt.linkedin.com/jobs/view/4444368636",
     confidence: "inferred",
     linkStatus: "unverified"
@@ -339,10 +408,13 @@ export const seedCompanies: Company[] = [
     id: "c-nordea",
     name: "Nordea Investment Banking",
     kind: "employer",
-    where: "Portugal",
+    location: "Portugal",
+    country: "PT",
     role: "Operational Analyst, Backoffice Reconciliation",
-    number: "",
-    numberLabel: "budget restated as a role, salary not published",
+    amount: "",
+    amountNote: "budget restated as a role, salary not published",
+    currency: "",
+    basis: "",
     url: "https://www.canarywharfian.co.uk/jobs/nordea-investment-banking/operational-analyst-in-reconciliation-nam-portugal/3476c9ca-97ae-48e1-a285-0d2f7f013e7b",
     confidence: "reported",
     linkStatus: "unverified"
@@ -351,10 +423,13 @@ export const seedCompanies: Company[] = [
     id: "c-mediolanum",
     name: "Mediolanum International",
     kind: "employer",
-    where: "Dublin, IE",
+    location: "Dublin, IE",
+    country: "IE",
     role: "Senior Portfolio Operations Analyst — reconciliation and transaction exceptions across asset classes",
-    number: "",
-    numberLabel: "budget restated as a role, salary not published",
+    amount: "",
+    amountNote: "budget restated as a role, salary not published",
+    currency: "",
+    basis: "",
     url: "https://workfinder.ie/senior-portfolio_dublin-c275009/2026-09-mediolanum-international-ireland_i4189872755",
     confidence: "reported",
     linkStatus: "unverified"
@@ -363,10 +438,13 @@ export const seedCompanies: Company[] = [
     id: "c-simcorp",
     name: "SimCorp",
     kind: "employer",
-    where: "Europe",
+    location: "Europe",
+    country: "EU",
     role: "Senior Operations Analyst (Reconciliations) — middle office and investment accounting",
-    number: "",
-    numberLabel: "budget restated as a role, salary not published",
+    amount: "",
+    amountNote: "budget restated as a role, salary not published",
+    currency: "",
+    basis: "",
     url: "https://simcorp.wd3.myworkdayjobs.com/en-US/SimCorp_Jobs/job/Senior-Operations-Analyst--Reconciliations-_R-211490",
     confidence: "reported",
     linkStatus: "unverified"
@@ -375,10 +453,13 @@ export const seedCompanies: Company[] = [
     id: "c-dodgecox",
     name: "Dodge & Cox",
     kind: "employer",
-    where: "San Francisco, US",
+    location: "San Francisco, US",
+    country: "US",
     role: "Reconciliation Analyst / Investment Operations Process Analyst — custodian reconciliation **and** building Python, SQL and AI-enabled automation for the same workflows. This is a firm paying six figures for the person who removes the manual step",
-    number: "$125,000–$170,000/yr",
-    numberLabel: "budget restated as a role, salary not published",
+    amount: "$125,000–$170,000/yr",
+    amountNote: "budget restated as a role, salary not published",
+    currency: "USD",
+    basis: "per_year",
     url: "https://builtin.com/job/reconciliation-analyst-investment-operations-process-analyst/11290458",
     confidence: "reported",
     linkStatus: "unverified"
@@ -387,10 +468,13 @@ export const seedCompanies: Company[] = [
     id: "c-ares",
     name: "Ares Management",
     kind: "employer",
-    where: "New York, US",
+    location: "New York, US",
+    country: "US",
     role: "Senior Associate, Investment Operations — Reconciliations. “Proactively research, resolve and prevent all cash and par breaks with custodian banks and third-party administrators”",
-    number: "$130,000–$150,000/yr",
-    numberLabel: "advertised salary range, on the posting",
+    amount: "$130,000–$150,000/yr",
+    amountNote: "advertised salary range, on the posting",
+    currency: "USD",
+    basis: "per_year",
     url: "https://hiring.camp/job/dg2p1X",
     confidence: "reported",
     linkStatus: "unverified"
@@ -399,10 +483,13 @@ export const seedCompanies: Company[] = [
     id: "c-blackboard",
     name: "European private bank (via Blackboardjob)",
     kind: "employer",
-    where: "Lisbon, PT",
+    location: "Lisbon, PT",
+    country: "PT",
     role: "Senior Fund Reconciliation Analyst — trade settlement matching, cash and stock breaks against external custodians",
-    number: "€30–45k/yr",
-    numberLabel: "typical Lisbon band, not stated on the posting",
+    amount: "€30–45k/yr",
+    amountNote: "typical Lisbon band, not stated on the posting",
+    currency: "EUR",
+    basis: "per_year",
     url: "https://pt.blackboardjob.com/detail/a/senior-fund-reconciliation-analyst-advanced-asset-servicing_lisboa_21301896",
     confidence: "inferred",
     linkStatus: "dead"
@@ -411,10 +498,13 @@ export const seedCompanies: Company[] = [
     id: "c-citi",
     name: "Citi",
     kind: "employer",
-    where: "Bogotá, CO",
+    location: "Bogotá, CO",
+    country: "CO",
     role: "Custody Portfolio Reconciliation Analyst — client and fiduciary balances across local and international custodians",
-    number: "",
-    numberLabel: "budget restated as a role, salary not published",
+    amount: "",
+    amountNote: "budget restated as a role, salary not published",
+    currency: "",
+    basis: "",
     url: "https://jobs.citi.com/job/bogota/custody-portfolio-reconciliation-analyst/287/98742239840",
     confidence: "reported",
     linkStatus: "dead"
@@ -423,10 +513,13 @@ export const seedCompanies: Company[] = [
     id: "c-clearstream",
     name: "Deutsche Börse / Clearstream",
     kind: "employer",
-    where: "Cork, IE",
+    location: "Cork, IE",
+    country: "IE",
     role: "Analyst, Securities Reconciliations — positions held against external custodians",
-    number: "",
-    numberLabel: "budget restated as a role, salary not published",
+    amount: "",
+    amountNote: "budget restated as a role, salary not published",
+    currency: "",
+    basis: "",
     url: "https://careers.deutsche-boerse.com/offer/analyst-securities-reconciliations/0fc7b8c9-f5f4-4ec2-a906-7410eb534435",
     confidence: "reported",
     linkStatus: "dead"
@@ -435,10 +528,13 @@ export const seedCompanies: Company[] = [
     id: "c-panoramix",
     name: "Panoramix",
     kind: "vendor",
-    where: "US (sells to RIAs)",
+    location: "US (sells to RIAs)",
+    country: "US",
     role: "Portfolio management, performance reporting and billing",
-    number: "$5,000–$7,000/yr",
-    numberLabel: "published firm licence: $7,000/yr at $175M AUM is visible on the page; the lower tiers come from the same price list",
+    amount: "$5,000–$7,000/yr",
+    amountNote: "published firm licence: $7,000/yr at $175M AUM is visible on the page; the lower tiers come from the same price list",
+    currency: "USD",
+    basis: "per_year",
     url: "https://www.panoramixfinancial.com/account/pricing/",
     confidence: "direct",
     linkStatus: "checked"
@@ -447,10 +543,13 @@ export const seedCompanies: Company[] = [
     id: "c-panoramix-import",
     name: "Panoramix (import service)",
     kind: "vendor",
-    where: "US (sells to RIAs)",
+    location: "US (sells to RIAs)",
+    country: "US",
     role: "Historical and transactional data import",
-    number: "up to tens of thousands",
-    numberLabel: "charged by effort — the step the licence does NOT cover",
+    amount: "up to tens of thousands",
+    amountNote: "charged by effort — the step the licence does NOT cover",
+    currency: "",
+    basis: "per_project",
     url: "https://www.panoramixfinancial.com/account/pricing/",
     confidence: "direct",
     linkStatus: "checked"
@@ -459,10 +558,13 @@ export const seedCompanies: Company[] = [
     id: "c-orion",
     name: "Orion Advisor Tech",
     kind: "vendor",
-    where: "US (sells to RIAs)",
+    location: "US (sells to RIAs)",
+    country: "US",
     role: "Portfolio accounting — claims #1 market share, direct custodian reconciliation overnight",
-    number: "",
-    numberLabel: "price not published; competitors cite 0.05–0.15% of AUM per year",
+    amount: "",
+    amountNote: "price not published; competitors cite 0.05–0.15% of AUM per year",
+    currency: "",
+    basis: "",
     url: "https://orion.com/advisor-tech/portfolio-accounting",
     confidence: "inferred",
     linkStatus: "unverified"
@@ -471,10 +573,13 @@ export const seedCompanies: Company[] = [
     id: "c-bespoke-dev",
     name: "Freelance developer (r/fintech)",
     kind: "bespoke",
-    where: "Unknown",
+    location: "Unknown",
+    country: "",
     role: "Built custodian-statement ingestion, normalisation and FX for a solo RIA",
-    number: "one bespoke build",
-    numberLabel: "says it is a one-off for one client, not a product",
+    amount: "one bespoke build",
+    amountNote: "says it is a one-off for one client, not a product",
+    currency: "",
+    basis: "one_off",
     url: "https://www.reddit.com/r/fintech/comments/1w1y3ms/developing_internal_portfolio_tooling_for_a_solo/",
     confidence: "reported",
     linkStatus: "unverified"
