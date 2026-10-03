@@ -3,13 +3,13 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
-import { emptyProblem, gates, gateCopy, rankProblems, seedCompanies, type Gate } from "../lib/problems";
+import { emptyProblem, gates, gateCopy, rankProblems, seedCompanies, type Gate, type Problem } from "../lib/problems";
 import { nextProblemId } from "../lib/problemPersistence";
 import { useProblems } from "../lib/problemStore";
 import { GateChip, ReadinessNumber, VerdictChip, isBacklog } from "./ui";
 
-export default function ProblemsList() {
-  const { problems, hydrated, insertProblem, resetToSeed } = useProblems();
+export default function ProblemsList({ remote }: { remote: Problem[] | null }) {
+  const { problems, hydrated, storageError, remoteError, insertProblem, resetToSeed } = useProblems(remote);
   const router = useRouter();
 
   const [query, setQuery] = useState("");
@@ -152,6 +152,15 @@ export default function ProblemsList() {
           tally with blanks beside it is a guess, and is labelled as one.
         </span>
         <div className="footer-right">
+          {remoteError ? (
+            <b className="storage-warn">Not saved to the database — your edits are still in this browser only ({remoteError})</b>
+          ) : storageError ? (
+            <b className="storage-warn">Local storage unavailable — the offline copy will not persist</b>
+          ) : remote ? (
+            <span>Stored in the database{hydrated ? "" : " · loading…"}</span>
+          ) : (
+            <b className="storage-warn">Database unreachable — showing this browser&apos;s copy</b>
+          )}
           <button className="link-button" onClick={resetToSeed}>
             Reset to seed data
           </button>

@@ -1,11 +1,16 @@
-import { seedProblems } from "../../../lib/problems";
 import ProblemDetail from "../../ProblemDetail";
+import { problemsForPage } from "../../../lib/problemRemote";
 
-/** Every seeded problem gets a real URL. Records created in the browser still resolve, they just render after hydration. */
-export function generateStaticParams() {
-  return seedProblems.map((problem) => ({ id: problem.id }));
-}
+/**
+ * No `generateStaticParams` any more.
+ *
+ * It listed the seeded problem ids so each got a prerendered URL. That was right while the
+ * records lived in the browser and were read after hydration; now the page is rendered per
+ * request as the signed-in person, and a prerendered page would be one person's records baked
+ * into a file. Records created in the browser still resolve — see the merge in lib/problemSync.ts.
+ */
+export const dynamic = "force-dynamic";
 
-export default function Page({ params }: { params: { id: string } }) {
-  return <ProblemDetail id={params.id} />;
+export default async function Page({ params }: { params: { id: string } }) {
+  return <ProblemDetail id={params.id} remote={await problemsForPage()} />;
 }

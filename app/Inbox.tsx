@@ -8,17 +8,18 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { confidences, evidenceTypes, type Confidence, type EvidenceType, type LinkStatus } from "../lib/problems";
+import { confidences, evidenceTypes, linkStatuses, type Confidence, type EvidenceType, type LinkStatus, type Problem } from "../lib/problems";
 import { sourceToEvidence, type CollectedSource, type Proposal } from "../lib/research";
 import { useProblems } from "../lib/problemStore";
 import { useResearch } from "../lib/researchStore";
 import { LinkChip } from "./ui";
 
-const LINK_OPTIONS: LinkStatus[] = ["unverified", "checked", "dead"];
+/** The shared list, so the editor and the database CHECK cannot drift apart. */
+const LINK_OPTIONS: LinkStatus[] = linkStatuses;
 
-export default function Inbox() {
+export default function Inbox({ remote }: { remote: Problem[] | null }) {
   const { sources, proposals, hydrated, mark, discard, decideProposal, acceptProposal, resetResearch } = useResearch();
-  const { problems, updateProblem } = useProblems();
+  const { problems, updateProblem } = useProblems(remote);
 
   const [showSpent, setShowSpent] = useState(false);
 

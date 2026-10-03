@@ -28,6 +28,8 @@ export const actions: Action[] = ["idle", "researching", "interviewing", "hand-r
 export const verdicts: Verdict[] = ["open", "parked", "killed"];
 export const confidences: Confidence[] = ["direct", "reported", "inferred"];
 export const evidenceTypes: EvidenceType[] = ["job", "price", "procurement", "community", "report", "personal"];
+/** Mirrors the CHECK on `problem_evidence.link_status`. Order is the editor's, not alphabetical. */
+export const linkStatuses: LinkStatus[] = ["unverified", "checked", "dead"];
 
 /** Plain-English names, because the user should not have to hold a legend in their head. */
 export const gateCopy: Record<Gate, { short: string; label: string; ask: string }> = {
