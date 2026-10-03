@@ -298,3 +298,52 @@ test("a company linked to a discovery proposal shows its stored figure verbatim 
   const gaps = detail.locator(".company-row").filter({ hasText: "Fixture Gaps GmbH" });
   await expect(gaps.getByText("Not added yet")).toHaveCount(3);
 });
+
+// ---- Light theme: every redesigned page stays readable. Contrast is measured, not eyeballed.
+
+async function contrastOf(page, selector) {
+  return page.evaluate((sel) => {
+    const el = document.querySelector(sel);
+    if (!el) return null;
+    const parse = (c) => (c.match(/[\d.]+/g) || []).map(Number);
+    const lum = ([r, g, b]) => {
+      const f = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; };
+      return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
+    };
+    let bg = null;
+    for (let node = el; node; node = node.parentElement) {
+      const c = parse(getComputedStyle(node).backgroundColor);
+      if (c.length === 3 || (c.length === 4 && c[3] > 0.5)) { bg = c.slice(0, 3); break; }
+    }
+    bg = bg ?? parse(getComputedStyle(document.body).backgroundColor).slice(0, 3);
+    const fg = parse(getComputedStyle(el).color).slice(0, 3);
+    const [a, b] = [lum(fg), lum(bg)].sort((x, y) => y - x);
+    return Math.round(((a + 0.05) / (b + 0.05)) * 100) / 100;
+  }, selector);
+}
+
+test("light theme: headings and labels meet 4.5:1 contrast on every redesigned page", async ({ page }) => {
+  await page.route("**/api/inbox", (r) => r.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ sources: [], proposals: [], citedSources: [], decided: [] }) }));
+  const checks = [
+    ["/", ["h1", ".eyebrow"]],
+    ["/inbox", ["h1", ".inbox-section-head h2", ".inbox-section-label", ".inbox-head p"]],
+    ["/companies", ["h1", ".block-title"]],
+    ["/companies/c-e2e-vendor", ["h1", ".company-detail-label"]],
+    ["/problems/p-e2e-trail", ["h1", ".section-label"]],
+    ["/discover", ["h1", ".hero-copy p"]]
+  ];
+  const failures = [];
+  for (const [url, selectors] of checks) {
+    await page.goto(url);
+    if (url === "/inbox") {
+      await page.getByRole("button", { name: "Reload from database" }).click();
+      await page.getByRole("heading", { name: "Sources waiting for a decision" }).waitFor();
+    }
+    for (const selector of selectors) {
+      const ratio = await contrastOf(page, selector);
+      if (ratio === null) failures.push(`${url} ${selector}: not found`);
+      else if (ratio < 4.5) failures.push(`${url} ${selector}: ${ratio}:1`);
+    }
+  }
+  expect(failures).toEqual([]);
+});
