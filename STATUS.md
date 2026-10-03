@@ -1,12 +1,18 @@
 # oppie.lab — current state and next steps
 
-Last updated: 2026-10-01 · master `ce255e2`
+Last updated: 2026-10-03 · master `8cf977a`
 
 ## Where it is
 
-A working, local-only MVP: an evidence-first opportunity research board that turns business
-research into compact, comparable decision objects instead of long reports. Records are editable
-and persist in the browser. There is no backend, account, or sync.
+An evidence-first opportunity research board that turns business research into compact, comparable
+records instead of long reports. Records are editable. The **problem** records live in Supabase,
+read and written as the signed-in person under a one-person allowlist; the opportunity board and
+the research inbox still persist in the browser.
+
+**The allowlist migration is merged but has not been run yet.** Until it is pasted into the
+Supabase dashboard, the problems screen falls back to the seed plus whatever this browser holds.
+`docs/handoffs/HANDOFF_SUPABASE.md` is current; the rest of this file lags on the auth and
+Supabase work.
 
 Runs at <http://localhost:3000> via `pnpm dev`.
 
@@ -28,9 +34,17 @@ Runs at <http://localhost:3000> via `pnpm dev`.
   effort, at up to tens of thousands, so messy statement ingestion is the part nobody has
   productised.
 - **The Problems screen is built and is the default view.** Funnel by stage, ranked list, editable
-detail, evidence rows, and a Companies & numbers tab. Stored under `oppie.lab.problems`.
-- **Every problem has its own page** at `/problems/<id>`, prerendered. Routes: `/` list ·
+detail, evidence rows, and a Companies & numbers tab.
+- **Every problem has its own page** at `/problems/<id>`. Routes: `/` list ·
   `/problems/[id]` detail · `/companies` the numbers · `/opportunities` the legacy board.
+- **Sign in with GitHub**, replacing the hand-rolled password gate. Middleware is the boundary, so
+  a new screen cannot accidentally be an unguarded one.
+- **The Supabase schema and the one-person allowlist.** Nine tables with RLS denying everything by
+default, a `security definer` `public.is_allowed()` that a policy can call without being subject
+to `allowed_users`' own RLS, and policies keyed to it.
+- **The problems screen is off `localStorage`.** It reads as the signed-in person on the server —
+so the first client render already has the records — and writes through a server action. The
+browser's records are pushed up once and the seeds never are; `localStorage` stays as a cache.
 - **Second research pass from new sources.** Public procurement documents (buyers stating the
   workflow as a contract requirement), the FCA CASS daily-reconciliation obligation, F2 Strategy's
   market survey (67% multi-custodian), and enterprise price points (Duco $80k/yr, ReconArt
@@ -58,8 +72,9 @@ detail, evidence rows, and a Companies & numbers tab. Stored under `oppie.lab.pr
 
 | Command | Covers |
 |---|---|
-| `pnpm test` | 24 assertions across two suites: 16 on opportunity storage, 8 on problem storage and source labelling — checked-zero vs unchecked-blank, blank counting, ranking, signal repair, corrupt and stale records, id collisions, seed immutability, and the rule that nothing can be labelled “direct” on a link that was never opened |
+| `pnpm test` | 81 assertions across four suites: 16 on opportunity storage, 41 on problem records — the hydration contract, the first-load merge, what may be uploaded, checked-zero vs unchecked-blank, blank counting, ranking, signal and evidence repair, corrupt and stale records, id collisions, seed immutability — 17 on research, and 7 on the Supabase credential rules |
 | `pnpm build` | Production build, includes typechecking |
+| In the dashboard | The SQL in `supabase/migrations/` — there is no `psql` or `supabase` CLI on this machine |
 
 CI runs both on every pull request (`build`) and validates Conventional Commits on the PR title
 and every commit in the branch (`commits`). A local `commit-msg` hook catches messages earlier,
@@ -90,6 +105,7 @@ deletion.
 
 - `AGENTS.md` — branch, commit, review, and product-invariant rules
 - `DECISIONS.md` — decisions with a date, and what each one overrides
+- `supabase/migrations/` — the schema and the allowlist, applied by pasting into the dashboard
 - `docs/README.md` — index of the method, product and history docs
 - `docs/PAIN_FUNNEL.md` — the gates, the ordering rule, and the problem record shape
 - `docs/PROBLEM_LIST.md` — the research queue, plus the G2 evidence
