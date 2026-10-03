@@ -444,5 +444,29 @@ test("the six required keys are rebuilt on every write, so a rename cannot orpha
   assert.strictEqual(rowsWritten[0].value, 3);
 });
 
+test("a Postgres timestamptz and the browser's ISO string are one instant, not an edit", () => {
+  // Measured against the live database: the row comes back with `+00:00`, the app writes `Z`,
+  // and a structural comparison reads that as a change. Left alone, every page load re-uploads
+  // the record it just saved.
+  const local = syncProblem("P-011", "Edited by hand");
+  local.createdAt = "2026-10-01T09:00:00.000Z";
+  local.updatedAt = "2026-10-03T09:28:10.122Z";
+  const row = sync.problemRowFrom(local);
+  row.created_at = "2026-10-01T09:00:00+00:00";
+  row.updated_at = "2026-10-03T09:28:10.122+00:00";
+
+  const read = sync.problemFromRemote({ problem: row, signals: sync.signalRowsFrom(local) }, 0);
+  assert.strictEqual(read.createdAt, "2026-10-01T09:00:00.000Z");
+  assert.strictEqual(read.updatedAt, "2026-10-03T09:28:10.122Z");
+  assert.deepStrictEqual(sync.planFirstLoad({ remote: [read], local: [local] }).upload, []);
+});
+
+test("an unreadable timestamp is kept rather than becoming now, which would mark it edited", () => {
+  const row = syncRow("P-900", "Remote");
+  row.created_at = "not a date";
+  const read = sync.problemFromRemote({ problem: row }, 0);
+  assert.strictEqual(read.createdAt, "not a date");
+});
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

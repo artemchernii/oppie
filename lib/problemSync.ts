@@ -31,6 +31,25 @@ const positionOf = (row: Row): number =>
 
 const byPosition = (a: Row, b: Row): number => positionOf(a) - positionOf(b);
 
+/**
+ * Postgres hands a `timestamptz` back as `2026-10-01T09:00:00+00:00`; the app writes
+ * `new Date().toISOString()`, which is `...000Z`. They are the same instant and different strings.
+ *
+ * Left alone, that difference is not cosmetic: the `isPristineSeed` / re-upload comparison is
+ * structural, so a saved record would never match the row it had just become and **every page
+ * load would write it again**. Measured against the live project on 2026-10-03, before this fix:
+ * the row came back `+00:00`, the cache held `Z`, and the next load recomputed it as an upload.
+ *
+ * Canonicalising on the way in is the fix. An unparseable value is passed through rather than
+ * dropped, so a bad timestamp stays visible instead of silently becoming *now* and re-marking the
+ * record as edited on every read.
+ */
+const timestamp = (value: unknown): string | undefined => {
+  if (typeof value !== "string" || !value) return undefined;
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? value : parsed.toISOString();
+};
+
 // ============================================================ remote -> record
 
 const signalFromRow = (row: Row): Row => ({
@@ -100,8 +119,8 @@ export function problemFromRemote(parts: RemoteProblemParts, index: number): Pro
       signals: rows(parts.signals).map(signalFromRow),
       evidence: evidence.map(evidenceFromRow),
       companyIds: companies.map((row) => row.company_id).filter((id): id is string => typeof id === "string"),
-      createdAt: problem.created_at,
-      updatedAt: problem.updated_at
+      createdAt: timestamp(problem.created_at),
+      updatedAt: timestamp(problem.updated_at)
     },
     index
   );
