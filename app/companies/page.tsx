@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { moneyBasisCopy, type Company } from "../../lib/problems";
 import { companiesForPage } from "../../lib/companyRemote";
+import { playwrightCompanies, playwrightFixturesActive } from "../../lib/playwrightFixtures";
 import { ConfidenceChip, LinkChip } from "../ui";
 
 export const metadata = { title: "oppie.lab — who pays, and how much" };
@@ -39,7 +40,7 @@ function Bar({ value, max }: { value: number; max: number }) {
         minWidth: value === 0 ? 0 : 6,
         height: 8,
         borderRadius: 2,
-        background: "var(--accent, #4b7bec)",
+        background: "var(--bar, #b8a7ff)",
         verticalAlign: "middle"
       }}
     />
@@ -78,6 +79,7 @@ function MoneyTable({ rows, empty }: { rows: Company[]; empty: string }) {
             <tr key={company.id}>
               <td>
                 <strong>{company.name}</strong>
+                <Link href={`/companies/${company.id}`} style={{ fontSize: 12, marginLeft: 8 }}>record ↗</Link>
                 {company.url && (
                   <>
                     {" "}
@@ -92,7 +94,7 @@ function MoneyTable({ rows, empty }: { rows: Company[]; empty: string }) {
                 </div>
               </td>
               <td>
-                {company.location}
+                {company.location || <span className="not-added">Not added yet</span>}
                 {company.country && <div className="faint" style={{ fontSize: 11.5 }}>{company.country}</div>}
               </td>
               <td>
@@ -101,7 +103,7 @@ function MoneyTable({ rows, empty }: { rows: Company[]; empty: string }) {
               <td>
                 {moneyBasisCopy[company.basis] ? <span className="faint">{moneyBasisCopy[company.basis]}</span> : <span className="not-added">not stated</span>}
               </td>
-              <td className="faint" style={{ fontSize: 12 }}>{company.amountNote}</td>
+              <td className="faint" style={{ fontSize: 12 }}>{company.amountNote || <span className="not-added">Not added yet</span>}</td>
             </tr>
           ))}
         </tbody>
@@ -111,16 +113,17 @@ function MoneyTable({ rows, empty }: { rows: Company[]; empty: string }) {
 }
 
 export default async function CompaniesPage() {
-  const { companies, error } = await companiesForPage();
+  const { companies, error } = playwrightFixturesActive() ? { companies: playwrightCompanies(), error: null } : await companiesForPage();
   const priced = companies.filter(withAmount);
   const salaries = priced.filter((company) => company.kind === "employer");
   const prices = priced.filter((company) => company.kind !== "employer");
   const opened = companies.filter((company) => company.linkStatus === "checked");
   const countries = countBy(companies, (company) => company.country || "not established");
+  const kinds = countBy(companies, (company) => company.kind);
   const widest = countries[0]?.count ?? 0;
 
   return (
-    <main className="wrap">
+    <main className="wrap companies-page">
       <header className="page-head">
         <div className="eyebrow">Evidence, not opinion</div>
         <h1>Who pays, and how much</h1>
@@ -157,6 +160,45 @@ export default async function CompaniesPage() {
           <span>links actually opened</span>
         </div>
       </div>
+
+      <section className="market-evidence-section">
+        <div className="market-evidence-heading">
+          <div>
+            <div className="eyebrow">Fintech · reconciliation</div>
+            <h2 className="block-title">Market evidence so far</h2>
+            <p className="block-sub">
+              This is the current evidence set—not a market-size estimate. We can show who is hiring,
+              who is selling, and which figures are published. We do not yet have revenue, transaction
+              volume, market share, or growth data.
+            </p>
+          </div>
+          <span className="market-evidence-status">dataset boundary · current records</span>
+        </div>
+        <div className="market-evidence-grid">
+          <div className="market-evidence-card">
+            <span className="market-evidence-label">Observed business models</span>
+            <div className="market-bars">
+              {kinds.map(({ key, count }) => (
+                <div className="market-bar-row" key={key}>
+                  <span>{key === "employer" ? "Hiring" : key === "vendor" ? "Software" : "Bespoke"}</span>
+                  <div className="market-bar-track"><i style={{ width: `${companies.length ? Math.round((count / companies.length) * 100) : 0}%` }} /></div>
+                  <b>{count}</b>
+                </div>
+              ))}
+            </div>
+            <p className="market-evidence-note">Counts are rows in this research set, not market share.</p>
+          </div>
+          <div className="market-evidence-card market-evidence-gap">
+            <span className="market-evidence-label">Still missing</span>
+            <strong>No market dataset yet</strong>
+            <p>
+              Before we call this a market, the engine needs sources for company revenue, customer or
+              transaction volume, comparable pricing, and regional differences.
+            </p>
+            <Link href="/discover">Find the next source ↗</Link>
+          </div>
+        </div>
+      </section>
 
       <section>
         <h2 className="block-title">Where they are</h2>
@@ -248,13 +290,14 @@ export default async function CompaniesPage() {
                         <tr key={company.id}>
                           <td>
                             <strong>{company.name}</strong>
+                            <Link href={`/companies/${company.id}`} style={{ fontSize: 12, marginLeft: 8 }}>record ↗</Link>
                           </td>
                           <td>
-                            {company.location}
+                            {company.location || <span className="not-added">Not added yet</span>}
                             {company.country && <div className="faint" style={{ fontSize: 11.5 }}>{company.country}</div>}
                           </td>
                           <td>
-                            {company.role}
+                            {company.role || <span className="not-added">Not added yet</span>}
                             {company.url && (
                               <>
                                 {" "}

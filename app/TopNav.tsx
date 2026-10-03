@@ -7,8 +7,7 @@ import ThemeToggle from "./ThemeToggle";
 const LINKS = [
   { href: "/", label: "Problems" },
   { href: "/inbox", label: "Inbox" },
-  { href: "/companies", label: "Companies & numbers" },
-  { href: "/opportunities", label: "Legacy board" }
+  { href: "/companies", label: "Companies & numbers" }
 ];
 
 export default function TopNav() {
@@ -19,7 +18,12 @@ export default function TopNav() {
     <nav className="nav">
       <div className="nav-inner">
         <Link href="/" className="nav-brand">
-          <span className="nav-mark">o</span>
+          <span className="nav-mark" aria-hidden="true">
+            <svg viewBox="0 0 32 32" focusable="false">
+              <circle className="logo-ring" cx="16" cy="16" r="8.5" />
+              <circle className="logo-signal" cx="16" cy="16" r="3" />
+            </svg>
+          </span>
           oppie.lab
         </Link>
         <div className="nav-links">

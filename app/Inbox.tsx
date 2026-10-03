@@ -2,148 +2,127 @@
 
 // oppie.lab — the triage inbox.
 //
-// The engine collects. It does not conclude. Everything on this screen is raw until a
-// person does something with it: attach a source to a problem, or throw it away. The
-// proposals at the bottom are suggestions, and they stay suggestions until accepted.
+// The engine collects. It does not conclude. Everything on this screen is read from the database
+// and stays raw until a person does something with it: keep a source or throw it away, accept a
+// proposal with a reason and the sources that support it, or reject it with a reason.
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { confidences, evidenceTypes, linkStatuses, type Confidence, type EvidenceType, type LinkStatus, type Problem } from "../lib/problems";
-import { sourceToEvidence, type CollectedSource, type Proposal } from "../lib/research";
-import { useProblems } from "../lib/problemStore";
-import { useResearch } from "../lib/researchStore";
-import { LinkChip } from "./ui";
+import type { DiscoverySource } from "../lib/discovery";
+import { acceptanceBody, answersPaidToday, acceptanceDraftError, inboxCounts, proposalCardView, rejectionDraftError, type DiscoveryInboxData, type ProposalCardView } from "../lib/discoveryInbox";
 
-/** The shared list, so the editor and the database CHECK cannot drift apart. */
-const LINK_OPTIONS: LinkStatus[] = linkStatuses;
+type ProblemOption = { id: string; title: string };
 
-export default function Inbox({ initial }: { initial: Problem[] }) {
-  const { sources, proposals, hydrated, mark, discard, decideProposal, acceptProposal, resetResearch } = useResearch();
-  const { problems, updateProblem } = useProblems(initial);
+const NOT_ADDED = "Not added yet";
 
-  const [showSpent, setShowSpent] = useState(false);
+async function postJson(url: string, body: unknown): Promise<{ ok: boolean; payload: Record<string, unknown> }> {
+  const response = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+  const payload = await response.json().catch(() => ({})) as Record<string, unknown>;
+  return { ok: response.ok, payload };
+}
 
-  const counts = useMemo(
-    () => ({
-      fresh: sources.filter((source) => source.status === "new").length,
-      kept: sources.filter((source) => source.status === "kept").length,
-      spent: sources.filter((source) => source.status === "spent").length,
-      proposals: proposals.filter((proposal) => proposal.status === "proposed").length
-    }),
-    [sources, proposals]
-  );
+export default function Inbox({ initial, initialError, problems }: { initial: DiscoveryInboxData | null; initialError: string | null; problems: ProblemOption[] }) {
+  const [data, setData] = useState<DiscoveryInboxData | null>(initial);
+  const [loadError, setLoadError] = useState(initialError ?? "");
+  const [notice, setNotice] = useState("");
 
-  const visible = sources.filter((source) => source.status !== "spent" || showSpent);
-  const pending = proposals.filter((proposal) => proposal.status === "proposed");
-  const decided = proposals.filter((proposal) => proposal.status !== "proposed");
-
-  const attach = (source: CollectedSource, problemId: string, type: EvidenceType, confidence: Confidence, linkStatus: LinkStatus) => {
-    const problem = problems.find((item) => item.id === problemId);
-    if (!problem) return;
-    const evidence = { ...sourceToEvidence({ ...source, evidenceType: type, confidence, linkStatus }) };
-    updateProblem(problemId, { evidence: [...problem.evidence, evidence] });
-    mark(source.id, { status: "kept", attachTo: problemId, evidenceType: type, confidence, linkStatus });
+  /** Re-read after every decision, so the screen shows what the database holds. */
+  const reload = async () => {
+    const response = await fetch("/api/inbox", { cache: "no-store" });
+    const payload = await response.json().catch(() => ({})) as Partial<DiscoveryInboxData> & { error?: string };
+    if (!response.ok) { setLoadError(payload.error || "Could not read the inbox"); return; }
+    setLoadError("");
+    setData({ sources: payload.sources ?? [], proposals: payload.proposals ?? [], citedSources: payload.citedSources ?? [], decided: payload.decided ?? [] });
   };
 
+  const triage = async (source: DiscoverySource, next: "attached" | "discarded") => {
+    const { ok, payload } = await postJson(`/api/discovery-sources/${encodeURIComponent(source.id)}/triage`, { triage: next });
+    setNotice(ok ? `${next === "attached" ? "Kept" : "Discarded"}: ${source.title || source.url}` : String(payload.error ?? "Could not triage the source"));
+    await reload();
+  };
+
+  const counts = useMemo(() => data ? inboxCounts(data) : null, [data]);
+  const cards = useMemo(() => data ? data.proposals.map((proposal) => proposalCardView(proposal, data.citedSources)) : [], [data]);
+
   return (
-    <main className="wrap">
-      <header className="page-head">
-        <div className="eyebrow">The engine collects · you decide</div>
-        <h1>Inbox</h1>
+    <main className="wrap inbox-page">
+      <header className="page-head inbox-head">
+        <div className="eyebrow">Research queue · human review</div>
+        <h1>What did the engine find?</h1>
         <p>
-          Sources the research engine found and nobody has judged yet. Nothing here is attached to a
-          record or counted anywhere until you attach it. Proposals at the bottom are suggestions —
-          they are not in any tally, and they are never applied on their own.
+          Raw sources wait here until you decide what they mean. Keep useful ones, discard what does
+          not help, and accept a proposal only when its reason and sources are clear.
         </p>
       </header>
 
-      <div className="summary">
-        <div className="summary-item">
-          <b>{counts.fresh}</b>
-          <span>unjudged</span>
+      {loadError && <div className="empty inbox-error" role="alert">The inbox could not be read: {loadError}. Nothing is shown in its place.</div>}
+
+      {counts && (
+        <div className="summary inbox-summary">
+          <div className="summary-item"><b>{counts.untriaged}</b><span>sources to judge</span></div>
+          <div className="summary-item"><b>{counts.waiting}</b><span>proposals waiting</span></div>
+          <div className="summary-item"><b>{counts.accepted}</b><span>recently accepted</span></div>
+          <div className="summary-item"><b>{counts.rejected}</b><span>recently rejected</span></div>
         </div>
-        <div className="summary-item">
-          <b>{counts.kept}</b>
-          <span>attached to a problem</span>
-        </div>
-        <div className="summary-item">
-          <b>{counts.spent}</b>
-          <span>thrown away</span>
-        </div>
-        <div className="summary-item">
-          <b>{counts.proposals}</b>
-          <span>suggested answers</span>
-        </div>
+      )}
+
+      <div className="toolbar inbox-toolbar">
+        <button className="btn btn-sm" onClick={reload}>Reload from database</button>
+        <span className="toolbar-note inbox-toolbar-note" role="status">{notice}</span>
       </div>
 
-      <div className="toolbar">
-        <button className="btn btn-sm" onClick={() => setShowSpent((current) => !current)}>
-          {showSpent ? "Hide discarded" : "Show discarded"}
-        </button>
-        <span className="toolbar-note">
-          {hydrated ? "Local to this browser" : "Loading…"}
-        </span>
-      </div>
-
-      <div className="stack">
-        {visible.map((source) => (
-          <SourceCard
-            key={source.id}
-            source={source}
-            problems={problems.map((problem) => ({ id: problem.id, title: problem.title }))}
-            onAttach={attach}
-            onDiscard={() => discard(source.id)}
-          />
-        ))}
-        {visible.length === 0 && <div className="empty">Nothing left to judge. Run another pass and ingest it.</div>}
-      </div>
-
-      {pending.length > 0 && (
-        <section style={{ marginTop: 44 }}>
-          <h2 className="block-title">Suggested answers</h2>
-          <p className="block-sub">
-            One per question, each with the reason and the source it came from. Accepting writes the
-            score <em>and</em> the reason into the record, so the number never loses its trail.
-          </p>
-          <div className="stack">
-            {pending.map((proposal) => {
-              const problem = problems.find((item) => item.id === proposal.problemId);
-              return (
-                <ProposalCard
-                  key={proposal.id}
-                  proposal={proposal}
-                  problemTitle={problem?.title ?? proposal.problemId}
-                  canAccept={Boolean(problem)}
-                  onAccept={() => problem && acceptProposal(proposal.id, problem, (next) => updateProblem(next.id, next))}
-                  onReject={() => decideProposal(proposal.id, "rejected")}
-                />
-              );
-            })}
+      {data && (
+        <section className="inbox-queue" aria-labelledby="source-queue-title">
+          <div className="inbox-section-head">
+            <div>
+              <span className="inbox-section-label">01 · raw material</span>
+              <h2 id="source-queue-title">Sources waiting for a decision</h2>
+              <p>Read the passage first. Kept sources can be cited when you accept a proposal; they count toward nothing until then.</p>
+            </div>
+            <span className="inbox-section-count">{data.sources.length} to review</span>
+          </div>
+          <div className="stack inbox-source-stack">
+            {data.sources.map((source) => <SourceCard key={source.id} source={source} onKeep={() => triage(source, "attached")} onDiscard={() => triage(source, "discarded")} />)}
+            {data.sources.length === 0 && <div className="empty">Nothing left to judge. Capture sources from a run on <Link href="/discover">Discover</Link>.</div>}
           </div>
         </section>
       )}
 
-      {decided.length > 0 && (
-        <section style={{ marginTop: 36 }}>
-          <h2 className="block-title">Already decided</h2>
+      {data && (
+        <section className="inbox-proposals" aria-labelledby="proposal-queue-title">
+          <div className="inbox-section-head">
+            <div>
+              <span className="inbox-section-label">02 · suggestions</span>
+              <h2 id="proposal-queue-title">Proposals waiting for a decision</h2>
+              <p>These are proposals, not facts. Accepting one writes your reason and the sources you chose into a Problem. Readiness answers stay blank.</p>
+            </div>
+            <span className="inbox-section-count">{cards.length} waiting</span>
+          </div>
+          <div className="stack inbox-proposal-stack">
+            {cards.map((card) => <ProposalCard key={card.proposal.id} card={card} problems={problems} onDecided={async (message) => { setNotice(message); await reload(); }} />)}
+            {cards.length === 0 && <div className="empty">No proposal is waiting. Build one from a run on <Link href="/discover">Discover</Link>.</div>}
+          </div>
+        </section>
+      )}
+
+      {data && data.decided.length > 0 && (
+        <section className="inbox-decided" aria-labelledby="decided-title">
+          <div className="inbox-section-head compact">
+            <div>
+              <span className="inbox-section-label">03 · history</span>
+              <h2 id="decided-title">Recently decided</h2>
+            </div>
+            <span className="inbox-section-count">{data.decided.length} decisions</span>
+          </div>
           <div className="list">
-            {decided.map((proposal) => (
-              <div className="row" key={proposal.id} style={{ gridTemplateColumns: "1fr 120px 110px" }}>
+            {data.decided.map((proposal) => (
+              <div className="row" key={proposal.id} style={{ gridTemplateColumns: "1fr 120px 130px" }}>
                 <div>
-                  <p className="row-title">
-                    <span className="row-id">{proposal.problemId}</span>
-                    {proposal.signalKey} · suggested {proposal.value}/3
-                  </p>
-                  <div className="row-meta">{proposal.reason.slice(0, 130)}…</div>
+                  <p className="row-title">{proposal.title}</p>
+                  <div className="row-meta">{proposal.decisionReason || NOT_ADDED}</div>
                 </div>
-                <div>
-                  <span className={`chip ${proposal.status === "accepted" ? "chip-ok" : "chip-plain"}`}>{proposal.status}</span>
-                </div>
-                <div>
-                  <button className="link-button" onClick={() => decideProposal(proposal.id, "proposed")}>
-                    Undo
-                  </button>
-                </div>
+                <div><span className={`chip ${proposal.status === "accepted" ? "chip-ok" : "chip-plain"}`}>{proposal.status}</span></div>
+                <div>{proposal.problemId ? <Link className="link-button" href={`/problems/${proposal.problemId}`}>open {proposal.problemId.slice(0, 12)}</Link> : <span className="row-meta">no Problem</span>}</div>
               </div>
             ))}
           </div>
@@ -155,140 +134,126 @@ export default function Inbox({ initial }: { initial: Problem[] }) {
           The engine may collect and may suggest. It may not conclude. Drawing a conclusion
           automatically is forbidden by <span className="mono">AGENTS.md</span> §6.
         </span>
-        <div className="footer-right">
-          <button className="link-button" onClick={resetResearch}>
-            Reset inbox
-          </button>
-        </div>
       </div>
     </main>
   );
 }
 
-function SourceCard({
-  source,
-  problems,
-  onAttach,
-  onDiscard
-}: {
-  source: CollectedSource;
-  problems: { id: string; title: string }[];
-  onAttach: (source: CollectedSource, problemId: string, type: EvidenceType, confidence: Confidence, linkStatus: LinkStatus) => void;
-  onDiscard: () => void;
-}) {
-  const [problemId, setProblemId] = useState(source.attachTo ?? source.suggests ?? problems[0]?.id ?? "");
-  const [type, setType] = useState<EvidenceType>((source.evidenceType as EvidenceType) ?? "report");
-  const [confidence, setConfidence] = useState<Confidence>((source.confidence as Confidence) ?? "reported");
-  const [linkStatus, setLinkStatus] = useState<LinkStatus>(source.linkStatus ?? "unverified");
-
-  const spent = source.status === "spent";
-
+function SourceCard({ source, onKeep, onDiscard }: { source: DiscoverySource; onKeep: () => void; onDiscard: () => void }) {
+  const [busy, setBusy] = useState(false);
+  const act = async (fn: () => void | Promise<void>) => { setBusy(true); try { await fn(); } finally { setBusy(false); } };
   return (
-    <article className="aside-card" style={spent ? { opacity: 0.6 } : undefined}>
-      <div className="chip-row" style={{ marginBottom: 10 }}>
-        <span className={`chip ${source.status === "kept" ? "chip-ok" : "chip-plain"}`}>{source.status === "kept" ? "attached" : source.status}</span>
-        {source.suggests && <span className="chip chip-plain">looks like {source.suggests}</span>}
-        <span className="faint mono" style={{ fontSize: 11 }}>
-          found by: {source.foundFor}
-        </span>
+    <article className="inbox-source-card">
+      <div className="inbox-source-topline">
+        <div className="chip-row">
+          <span className="chip chip-plain">{source.signalType}</span>
+          <span className="chip chip-plain">{source.sourceType}</span>
+          <span className="chip chip-plain">link {source.linkStatus}</span>
+        </div>
+        <span className="inbox-source-origin">found by · {source.foundFor || NOT_ADDED}</span>
       </div>
-
-      <h3 style={{ fontFamily: "var(--sans)", fontSize: 15, textTransform: "none", letterSpacing: 0, color: "var(--text)", margin: "0 0 8px" }}>{source.title}</h3>
-
-      <p className="quote" style={{ fontSize: 13, color: "var(--text-muted)", margin: "0 0 10px", lineHeight: 1.6 }}>
-        {source.finding}
-      </p>
-
-      <a href={source.url} target="_blank" rel="noreferrer" style={{ fontSize: 12, wordBreak: "break-all" }}>
-        {source.url.replace(/^https?:\/\//, "").slice(0, 88)} ↗
-      </a>
-
-      <div className="chip-row" style={{ marginTop: 14, gap: 8 }}>
-        <select className="input" style={{ width: "auto" }} value={problemId} onChange={(event) => setProblemId(event.target.value)} aria-label="Attach to problem">
-          {problems.map((problem) => (
-            <option key={problem.id} value={problem.id}>
-              {problem.id} — {(problem.title || "untitled").slice(0, 40)}
-            </option>
-          ))}
-        </select>
-        <select className="input" style={{ width: "auto" }} value={type} onChange={(event) => setType(event.target.value as EvidenceType)} aria-label="Evidence type">
-          {evidenceTypes.map((option) => (
-            <option key={option} value={option}>
-              {option}
-            </option>
-          ))}
-        </select>
-        <select className="input" style={{ width: "auto" }} value={confidence} onChange={(event) => setConfidence(event.target.value as Confidence)} aria-label="Confidence">
-          {confidences.map((option) => (
-            <option key={option} value={option}>
-              {option}
-            </option>
-          ))}
-        </select>
-        <select className="input" style={{ width: "auto" }} value={linkStatus} onChange={(event) => setLinkStatus(event.target.value as LinkStatus)} aria-label="Link status">
-          {LINK_OPTIONS.map((option) => (
-            <option key={option} value={option}>
-              link {option}
-            </option>
-          ))}
-        </select>
-        <button className="btn btn-primary btn-sm" onClick={() => onAttach(source, problemId, type, confidence, linkStatus)}>
-          Attach as evidence
-        </button>
-        {!spent && (
-          <button className="btn btn-sm" onClick={onDiscard}>
-            Discard
-          </button>
-        )}
-        {source.status === "kept" && source.attachTo && (
-          <Link className="link-button" href={`/problems/${source.attachTo}`}>
-            open {source.attachTo}
-          </Link>
-        )}
+      <div className="inbox-source-body">
+        <div>
+          <h3>{source.title || NOT_ADDED}</h3>
+          <p className="quote">{source.excerpt}</p>
+          <a href={source.url} target="_blank" rel="noreferrer" className="inbox-source-url">{source.url.replace(/^https?:\/\//, "").slice(0, 88)} ↗</a>
+        </div>
+        <div className="inbox-source-intent">
+          <span>Publisher</span>
+          <strong>{source.publisher || NOT_ADDED}</strong>
+          <small>{source.citation || "No citation stored."}</small>
+        </div>
+      </div>
+      <div className="inbox-source-actions">
+        <div className="inbox-action-buttons">
+          <button className="btn btn-primary btn-sm inbox-attach-button" disabled={busy} onClick={() => act(onKeep)}>Keep source</button>
+          <button className="btn btn-sm" disabled={busy} onClick={() => act(onDiscard)}>Discard</button>
+        </div>
       </div>
     </article>
   );
 }
 
-function ProposalCard({
-  proposal,
-  problemTitle,
-  canAccept,
-  onAccept,
-  onReject
-}: {
-  proposal: Proposal;
-  problemTitle: string;
-  canAccept: boolean;
-  onAccept: () => void;
-  onReject: () => void;
-}) {
+function ProposalCard({ card, problems, onDecided }: { card: ProposalCardView; problems: ProblemOption[]; onDecided: (message: string) => Promise<void> }) {
+  const { proposal } = card;
+  // Nothing is pre-selected: choosing the supporting sources is part of the decision.
+  const [selected, setSelected] = useState<string[]>([]);
+  const [reason, setReason] = useState("");
+  const [target, setTarget] = useState("new");
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const toggle = (id: string) => setSelected((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id]);
+
+  const accept = async () => {
+    const draft = { reason, sourceIds: selected, target };
+    const invalid = acceptanceDraftError(draft, card);
+    if (invalid) return setError(invalid);
+    setBusy(true);
+    const { ok, payload } = await postJson(`/api/discovery-proposals/${encodeURIComponent(proposal.id)}/accept`, acceptanceBody(draft));
+    setBusy(false);
+    if (!ok) return setError(String(payload.error ?? "Could not accept the proposal"));
+    await onDecided(payload.warning ? String(payload.warning) : `Accepted into Problem ${String(payload.problemId)}.`);
+  };
+  const reject = async () => {
+    const invalid = rejectionDraftError(reason);
+    if (invalid) return setError(invalid);
+    setBusy(true);
+    const { ok, payload } = await postJson(`/api/discovery-proposals/${encodeURIComponent(proposal.id)}/reject`, { reason });
+    setBusy(false);
+    if (!ok) return setError(String(payload.error ?? "Could not reject the proposal"));
+    await onDecided(`Rejected: ${proposal.title}`);
+  };
+
   return (
-    <article className="aside-card">
-      <div className="chip-row" style={{ marginBottom: 10 }}>
-        <span className="chip chip-warn">suggested</span>
-        <span className="chip chip-plain">
-          {proposal.problemId} · {proposal.signalKey}
-        </span>
-        <span className="chip">{proposal.value}/3</span>
+    <article className="inbox-proposal-card" aria-label={proposal.title}>
+      <div className="inbox-proposal-topline">
+        <div className="chip-row">
+          <span className="chip chip-warn">waiting</span>
+          <span className="chip chip-plain">{card.selectable.length} citable source{card.selectable.length === 1 ? "" : "s"}</span>
+        </div>
+        <span className="inbox-proposal-label">needs your reasoning</span>
       </div>
-      <p className="faint" style={{ margin: "0 0 8px", fontSize: 12.5 }}>
-        {problemTitle}
-      </p>
-      <p style={{ margin: "0 0 10px", fontSize: 13, color: "var(--text-muted)", lineHeight: 1.6 }}>{proposal.reason}</p>
-      <a href={proposal.sourceUrl} target="_blank" rel="noreferrer" style={{ fontSize: 12 }}>
-        {proposal.sourceUrl.replace(/^https?:\/\//, "").slice(0, 80)} ↗
-      </a>
-      <div className="chip-row" style={{ marginTop: 14 }}>
-        <button className="btn btn-primary btn-sm" disabled={!canAccept} onClick={onAccept}>
-          Accept — writes the score and the reason
-        </button>
-        <button className="btn btn-sm" onClick={onReject}>
-          Reject
-        </button>
-        <span className="faint" style={{ fontSize: 11.5 }}>
-          Accepting replaces the current answer and its note for this question.
-        </span>
+      <p className="inbox-proposal-problem">{proposal.title}</p>
+      <p className="inbox-proposal-reason">{proposal.workflow || NOT_ADDED}</p>
+      <dl className="inbox-proposal-fields">
+        <dt>Does the work</dt><dd>{proposal.actor || NOT_ADDED}</dd>
+        <dt>Pays</dt><dd>{proposal.payer || NOT_ADDED}</dd>
+        <dt>Workaround today</dt><dd>{proposal.workaround || NOT_ADDED}</dd>
+      </dl>
+      <div className="inbox-proposal-unknowns">
+        <span className="inbox-section-label">Still unknown</span>
+        {proposal.unknowns.length ? <ul>{proposal.unknowns.map((item) => <li key={item}>{item}</li>)}</ul> : <p>{NOT_ADDED}</p>}
+      </div>
+
+      <fieldset className="inbox-proposal-sources">
+        <legend>Sources that support accepting it</legend>
+        {card.selectable.map((source) => (
+          <label key={source.id}>
+            <input type="checkbox" checked={selected.includes(source.id)} onChange={() => toggle(source.id)} />
+            <span><strong>{source.title || source.url}</strong> · {source.signalType} · <em>“{source.excerpt}”</em>{answersPaidToday(source) && <span className="paid-warning"> · Accepting this can answer “Paid today” with yes, citing this {source.sourceType === "job" ? "job post" : "price"}.</span>}</span>
+          </label>
+        ))}
+        {card.selectable.length === 0 && <p>No citable source. This proposal cannot be accepted.</p>}
+        {card.discarded.length > 0 && <p>{card.discarded.length} cited source{card.discarded.length === 1 ? " was" : "s were"} discarded and cannot be cited.</p>}
+        {card.missingIds.length > 0 && <p className="inbox-error-text">Cited but missing: {card.missingIds.join(", ")}</p>}
+      </fieldset>
+
+      <label className="inbox-proposal-reason-field">Your reason (required to accept or reject)
+        <textarea className="input" value={reason} onChange={(event) => setReason(event.target.value)} placeholder="What in the selected sources justifies this decision, and what is still unknown?" />
+      </label>
+      <label className="inbox-proposal-target">Accept into
+        <select className="input" value={target} onChange={(event) => setTarget(event.target.value)} aria-label="Accept into">
+          <option value="new">A new Problem</option>
+          {problems.map((problem) => <option key={problem.id} value={problem.id}>{problem.id} — {(problem.title || "untitled").slice(0, 48)}</option>)}
+        </select>
+      </label>
+
+      {error && <p className="inbox-error-text" role="alert">{error}</p>}
+      <div className="inbox-proposal-actions">
+        <button className="btn btn-primary btn-sm" disabled={busy || card.selectable.length === 0} onClick={accept}>Accept proposal <span>↗</span></button>
+        <button className="btn btn-sm" disabled={busy} onClick={reject}>Reject</button>
+        <span className="inbox-proposal-warning">Accepting writes the selected sources as evidence. It never fills a readiness answer.</span>
       </div>
     </article>
   );
