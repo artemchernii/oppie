@@ -290,19 +290,27 @@ function evaluateBuyer(problem: Problem): Dimension {
  * Competition — `docs/RULES.md` § 2. Three parts, answered separately and never merged.
  *
  * `moat` is the only part here that can come back `no`, and it does so from a signal a person
- * answered `0` — "copied in weeks". A `0` is an answer; a blank is not.
+ * answered. **Below 2 is a `no`** — the tally's own scale puts `0` at "copied in weeks" and `3` at
+ * "two advantages, compounding", so `1` is a wedge that is not defended. A checked `1` used to come
+ * back as `unknown`, which discarded somebody's answer: the one thing this project forbids is a
+ * checked value behaving like a blank.
  */
 function evaluateCompetition(problem: Problem): Dimension {
   const moat = signalOf(problem, "moat");
   const price = evidenceOfType(problem, ["price"]);
   const companies = problem.companyIds.filter((id) => text(id).length > 0);
 
+  const moatValue = moat && moat.value !== null ? moat.value : null;
+  const moatVerdict: Verdict = moatValue === null ? "unknown" : moatValue >= 2 ? "yes" : "no";
+  const moatCitation =
+    moatValue === null
+      ? undefined
+      : citeField("signals.moat", moat && moat.note ? moat.note : moatValue >= 2 ? "checked: hard to copy" : "checked: not hard to copy");
+
   const parts: Part[] = [
     part("companies", "Relevant companies are known", companies.length > 0 ? "yes" : "unknown", companies.length > 0 ? citeField("companyIds", `${companies.length} linked`) : undefined),
     part("prices", "What they charge is known", price ? "yes" : "unknown", price ? citeEvidence(price) : undefined),
-    moat && moat.value === 0
-      ? part("moat", "Hard to copy", "no", citeField("signals.moat", moat.note || "checked: copied in weeks"))
-      : part("moat", "Hard to copy", moat && moat.value !== null && moat.value >= 2 ? "yes" : "unknown", moat && moat.value !== null && moat.value >= 2 ? citeField("signals.moat", moat.note) : undefined)
+    part("moat", "Hard to copy", moatVerdict, moatCitation)
   ];
 
   const verdict = verdictFromParts(parts);

@@ -259,5 +259,31 @@ test("the same record always produces the same number, twice", () => {
   assert.deepStrictEqual(first.unknown, second.unknown);
 });
 
+test("a checked moat of 1 is a weak moat, not a blank", () => {
+  // Found by running the rubric over the seeds on 2026-10-03: P-001, P-003 and P-006 all answer moat as
+  // 1, and a checked 1 came back as `unknown`, discarding the answer. Below 2 is a wedge that is not
+  // defended, which is a `no` rather than a shrug.
+  const setMoat = (value) => {
+    const problem = problems.emptyProblem("P-913");
+    problem.companyIds = ["c-one"];
+    problem.signals = problem.signals.map((signal) => (signal.key === "moat" ? { ...signal, value, note: "checked" } : signal));
+    return find(problem, "competition").parts.find((item) => item.key === "moat");
+  };
+  assert.strictEqual(setMoat(0).verdict, "no");
+  assert.strictEqual(setMoat(1).verdict, "no", "a checked 1 was discarded as unknown");
+  assert.strictEqual(setMoat(2).verdict, "yes");
+  assert.strictEqual(setMoat(3).verdict, "yes");
+  assert.strictEqual(setMoat(null).verdict, "unknown");
+  [0, 1, 2, 3].forEach((value) => assert.ok(setMoat(value).citation && setMoat(value).citation.field, "moat=" + value + " has no reason beside it"));
+});
+
+test("a checked signal is never reported as a blank by the dimension that reads it", () => {
+  [0, 1, 2, 3].forEach((value) => {
+    const problem = problems.emptyProblem("P-914");
+    problem.signals = problem.signals.map((signal) => (signal.key === "pay" ? { ...signal, value, note: "checked" } : signal));
+    assert.notStrictEqual(find(problem, "paid").verdict, "unknown", "pay=" + value + " was discarded by the paid dimension");
+  });
+});
+
 console.log("\n" + passed + " passed, " + failed + " failed");
 if (failed > 0) process.exit(1);
