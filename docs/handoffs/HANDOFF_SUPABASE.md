@@ -5,26 +5,27 @@ decision itself, and `AGENTS.md`, which holds the rules for changing anything.
 
 ## Where `master` stands
 
-Auth and the schema are wired, and **the problems screen now reads and writes through Supabase**.
-Two things landed since the last handoff:
+**The whole first slice is live and proven against the real database.** Four things landed:
 
-- **#26 — the allowlist.** `supabase/migrations/20261002000000_allowlist.sql` exists and is
-  merged. **It has not been run.** Until it is, `authenticated` still holds nothing and every
-  read is denied.
-- **#27 — the first vertical slice.** `/`, `/problems/[id]` and `/inbox` render from a
-  server-side read as the signed-in person, and writes go through a server action.
+- **#26 — the allowlist.** `supabase/migrations/20261002000000_allowlist.sql`, merged and run in
+  the dashboard on 2026-10-03.
+- **#27 — the first vertical slice.** `/`, `/problems/[id]` and `/inbox` render from a server-side
+  read as the signed-in person, and writes go through a server action.
+- **#29 — a round-trip fix** found only by verifying a real save: a `timestamptz` comes back
+  `+00:00` and the app writes `Z`, so every load re-uploaded the record it had just saved.
+- **#28 — the docs catch-up.** This file is its latest revision.
 
-The app is **not locked any more, but also not yet open**: with the allowlist unapplied the read
-fails, the screen falls back to the seed plus whatever this browser holds, and the footer says
-"Database unreachable". Nothing is lost in that state and nothing is written.
+The app is **unlocked for the one allowlisted person, and unchanged for everyone else**. A
+signed-in stranger gets an empty list rather than an error, which is what RLS is for; the only way
+to tell the two apart is to be the owner or to run the check in step 2.
 
 ## Next, in order
 
-### 1. Run the allowlist migration — this is the only thing blocking everything
+### 1. The allowlist is applied — this is the record of how
 
-Paste `supabase/migrations/20261002000000_allowlist.sql` into the Supabase dashboard's SQL editor
-and run it. There is no `psql`, `supabase` CLI or docker on this machine, so the dashboard is the
-only route. Every statement is guarded; running it twice is harmless.
+`supabase/migrations/20261002000000_allowlist.sql` was pasted into the Supabase dashboard's SQL
+editor and run on 2026-10-03. There is no `psql`, `supabase` CLI or docker on this machine, so the
+dashboard is the only route, and every statement is guarded so re-running is harmless.
 
 It adds `allowed_users`, the `security definer` function `public.is_allowed()`, grants and
 policies on the nine record tables, and the one row for
@@ -42,9 +43,11 @@ the app renders empty rather than erroring — it looks like lost records, not l
 problem. The read goes through `public.is_allowed()`, which is `security definer` and therefore
 not subject to the policy it is checking.
 
-### 2. Prove it, rather than assuming it
+### 2. Re-run these after any change to the access model
 
-Four checks, all in the dashboard's SQL editor or against the running app:
+A permissions mistake here looks like missing records rather than an error, so these are worth
+repeating whenever the policies, the grants or the function change. The first four are dashboard
+SQL; the last is the app.
 
 ```sql
 select user_id, note from public.allowed_users;                        -- exactly one row
@@ -95,8 +98,15 @@ so a policy would be the answer to that question and not the preamble to it.
 - **One user is registered**: `f95e6591-a47f-4f2e-8f59-93b44ccebff6`, created 2026-10-01T23:35Z.
 - **81 assertions across 4 suites, 0 failed**, and `pnpm build` is clean with every problem route
   dynamic. CI green on both PRs.
-- **Not verified: the policy itself.** `is_allowed()` has never been evaluated as the owner, so the
-  first live read after step 1 is the real test.
+- **The policy actually grants the owner.** Verified live on 2026-10-03, first by the app (the
+  footer reads "Stored in the database", which only happens when the read returned `[]` rather
+  than failing), then by the field-by-field save below.
+- **A saved record round-trips losslessly.** A field-by-field diff of the first real save against
+  its seed came back with only the intended `title`, one trailing space in `competition` (which
+  correctly makes the record the user's rather than a seed), and the timestamp format below. All
+  five signals kept `null` as `null`, and the evidence row kept its `type` and `link_status`.
+- **No pristine seed has ever reached the database.** Checked directly against the live rows with
+  the same `isPristineSeed` the app uses.
 
 ## The hydration contract, and why it is shaped this way
 
@@ -122,10 +132,12 @@ Three rules live in `lib/problemSync.ts`, React-free so they can be tested witho
 - **The seeds are never uploaded.** `isPristineSeed` compares a record against the seed it came
   from, so reference data stays in the browser and a seed becomes a user record the moment any
   field is edited.
-- **`problem_companies` is read but not written.** Its foreign key points at `companies`, which is
-  still seed-only data; a link row would need the reference companies uploaded, which
-  `DECISIONS.md` #1 forbids. Company attribution is read-only in the UI, so nothing reachable was
-  lost. It moves with the companies screen.
+- **`problem_companies` is read but not written, and the gap is measured.** Its foreign key points
+  at `companies`, which is still seed-only data; a link row would need the reference companies
+  uploaded, which `DECISIONS.md` #1 forbids. Company attribution is read-only in the UI. The
+  measured consequence: an edited problem whose seed carried company ids **loses them on a browser
+  that has no local copy** — P-002's seed list was empty so this was not exercised, but P-001
+  carries seven. It moves with the companies screen.
 
 ## What already happened to `localStorage`
 
@@ -134,6 +146,12 @@ database is authoritative.** The push happens on the first successful load, only
 database does not already have, and only for records that are not pristine seeds. A failed push is
 recomputed on the next load, so nothing is stranded. `localStorage` stays as an offline cache and
 is written on every change, but it is never read as the source of truth again.
+
+**Measured on the first live load: it pushed nothing.** The database was empty and the browser
+held only the pristine seed list, so there was nothing uploadable — which is the "seeds are never
+uploaded" rule doing its job rather than a failure. The problems screen has always rendered
+`lib/problems.ts` reference data; nobody had ever typed a record into it, so the first user record
+in the database is the P-002 edit made to test the write path.
 
 `resetToSeed` is now **local-only**: it puts the seed back on screen for this browser and writes
 nothing. It is not a delete, and the recorded problems are the user's.
@@ -149,7 +167,7 @@ nothing. It is not a delete, and the recorded problems are the user's.
 | Node | 22+ required — `engines.node` says so because `@supabase/supabase-js` needs a global `WebSocket` |
 | Package manager | `pnpm` only |
 | SQL | pasted into the Supabase dashboard's SQL editor |
-| Test command | `pnpm test` — 81 assertions, no framework. Add to `scripts/problems.test.js` for anything in `lib/problemSync.ts`, and add the file to the `tsc` list in `package.json` if it is new |
+| Test command | `pnpm test` — 83 assertions, no framework. Add to `scripts/problems.test.js` for anything in `lib/problemSync.ts`, and add the file to the `tsc` list in `package.json` if it is new |
 
 **No `NEXT_PUBLIC_` variable is needed, and that is deliberate.** Sign-in, the code exchange,
 sign-out, reads and writes are all server-side, so no Supabase key is ever inlined into a browser
@@ -158,6 +176,12 @@ from that design.
 
 ## Traps that have already cost time
 
+- **A `timestamptz` and `toISOString()` are the same instant and different strings.** Postgres
+  returns `2026-10-03T09:28:10.122+00:00`; the app writes `...122Z`. The re-upload comparison is
+  structural, so before #29 a record never matched the row it had just become and *every page load
+  wrote it again* — idempotent, so nothing was corrupted, and invisible to every test because the
+  tests had never seen data that came back from Postgres. The read path canonicalises now. If you
+  add another date-shaped column, put it through `timestamp()` in `lib/problemSync.ts`.
 - **`.next` is shared between `pnpm build` and `pnpm dev`.** Whichever writes last breaks the
   other. The second time it bit, production artefacts were sitting in `.next` while a dev server
   served from it: the stylesheet 404'd with an HTML body and every page rendered as unstyled HTML,
@@ -189,7 +213,7 @@ leave it. It grants nothing: RLS denies `authenticated` unless the id is on the 
 What attachments are; multi-device conflicts; whether the research collector moves server-side;
 whether the legacy opportunity board is migrated into problem records or retired; whether
 `companies` is ever writable rather than seed-only. All listed at the end of `DECISIONS.md` #1.
-None of them block step 1.
+None of them block the next screen.
 
-`STATUS.md` is behind on the auth and Supabase work — it still describes `lib/auth.ts`, which was
-deleted in #22. This file is the accurate one.
+`STATUS.md` lags the auth and Supabase work — it still describes `lib/auth.ts`, deleted in #22.
+This file is the accurate one, and the one to update first.
