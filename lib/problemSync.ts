@@ -77,11 +77,11 @@ export type RemoteProblemParts = {
  *
  * The assembled object is handed to `normalizeProblem` rather than trusted, so a column that is
  * null, a string where a number belongs, or a `confidence` nobody recognises degrades to "empty"
- * exactly as it does on the localStorage path. One read path, one set of repair rules.
+ * rather than to a value. One read path, one set of repair rules.
  *
  * Returns null when the row has no usable id. `normalizeProblem` would otherwise synthesise
- * `recovered-<n>`, which is the right repair for a browser's own storage and the wrong one here:
- * it would invent a database record that does not exist and then offer to write it back.
+ * `recovered-<n>`, which is the right repair for a record somebody typed and the wrong one here: it
+ * would invent a database record that does not exist and then offer to write it back.
  */
 export function problemFromRemote(parts: RemoteProblemParts, index: number): Problem | null {
   const { problem } = parts;
