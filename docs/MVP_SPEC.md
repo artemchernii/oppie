@@ -11,8 +11,9 @@ The MVP should help answer two questions, in this order:
 >
 > Which of the survivors deserves the next small test?
 
-It is not a prediction engine. It has no overall score, no weighted total, and no index — see
-`docs/RULES.md` §5 and `docs/PAIN_FUNNEL.md`.
+It is not a prediction engine: it never presents a number as a measurement, a probability or a
+forecast. It may score and rank problems from an explicitly stated rubric, whose dimensions, weights
+and citations are visible next to the number — see `docs/RULES.md` § 5 and `docs/PAIN_FUNNEL.md`.
 
 ## Status
 
@@ -93,7 +94,7 @@ method, not a shortlist, and they are not deleted.
 - notifications
 - complex financial modelling
 - choosing a final business automatically
-- any composite score, weighted total, or ranking beyond `docs/PAIN_FUNNEL.md` § Ordering
+- any score, grade or ranking whose dimensions, weights or inputs are not visible next to it
 
 ## Acceptance criteria
 
@@ -103,5 +104,5 @@ method, not a shortlist, and they are not deleted.
 - Every problem has a visible kill reason and next test.
 - Source links are one click away.
 - Search, filtering, and detail view work without a page reload.
-- The UI never presents an invented number as a conclusion.
+- The UI never presents a number as a measurement, and every score shows its inputs.
 - The six seeded opportunities stay intact and reachable.

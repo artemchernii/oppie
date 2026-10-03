@@ -210,7 +210,7 @@ not be read is how a stale copy overwrites a newer one.
 
 ---
 
-## 3. The engine analyses; it does not score
+## 3. The engine analyses, scores and ranks; the score shows its inputs
 
 **Date:** 2026-10-03
 **Status:** Decided. The capability is specified as
@@ -220,49 +220,76 @@ not be read is how a stale copy overwrites a newer one.
 ### What was decided
 
 The app stops being a place where a person types a problem and reads it back. It becomes an evidence
-engine: it collects sources, and it evaluates a problem record against the method's dimensions. The
-engine's job is to **find the citation**, not to rate the idea.
+engine: it collects sources, evaluates a problem against the method's dimensions, and **scores and
+ranks** the result.
 
-`docs/RULES.md` § 5 and `AGENTS.md` § 6 are **not** relaxed. There is no overall score, no weighted
-total and no index. What is allowed, and what this entry authorises:
+**This amends `docs/RULES.md` § 5, which previously banned an overall score outright.** A first draft
+of this entry enforced that ban. It was wrong, and the owner reversed it: ranking is a real need, and
+a rule that forbids it is not protecting anything, it is refusing to define the thing. "How can I
+rank it" has to have an answer.
 
-- one verdict per dimension, each carrying the record field or source that decided it;
-- a named dimension identified as the one blocking the record;
-- counts of records, and figures quoted verbatim with their source.
+The rule that replaces it is narrower and about honesty rather than arithmetic. A score is allowed
+when all four of these hold:
 
-What stays forbidden: any value computed from two or more dimensions.
+- its dimensions and weights are stated in one place, written down, and visible next to the number;
+- every dimension's contribution, and the citation behind it, is reachable from the number;
+- it states how many dimensions it was computed over, and a blank never counts as zero;
+- it is labelled as this system's judgement, never as a measurement, a probability or a forecast.
 
-### Why the boundary is drawn there
+Still banned: a number that hides how it was made, and any figure dressed up as a measurement.
+Weights remain invented, and that is fine — an invented weight you can see is a position you can
+argue with; one you cannot see is a claim you cannot check. What no weight fixes is putting
+quantities on different scales into one sum.
 
-An engine that returns a blended number is unfalsifiable — it will feel productive and settle
-nothing. An engine that returns "paid today: yes, cite: this job posting, whose description *is* the
-workflow" can be checked in one click, and it is `docs/RULES.md` § 11 read literally. That is the
-whole difference between this and an idea generator.
+### Why the boundary moved, and what did not move
 
-A second, harder reason: the verdict vocabulary is `yes` / `no` / `unknown` rather than the
-readiness tally's `0–3`, precisely because `0–3` is summable and `yes` / `no` / `unknown` is not.
-The no-composite rule becomes a property of the data rather than something someone has to remember.
-The cost is a second scale in the product, accepted deliberately.
+The original objection was that an engine returning a blended number is unfalsifiable. That objection
+applies to a *hidden* number, not to a scored judgement whose inputs are on screen. What survives
+unchanged is the part that was doing the work: the engine's first job is still to **find the
+citation**, and a score with no citation behind any dimension is not a score worth showing.
+
+The per-dimension verdict vocabulary stays `yes` / `no` / `unknown` even though a score now exists.
+A dimension can be unknown, and an unknown is never summed as zero.
+
+### The rating loop
+
+A person's own rating is stored beside the machine's, with the version of the rubric that produced
+the machine's score, and a reason is required only where the two diverge by more than a stated
+threshold. Divergence is the informative label; demanding a reason for every rating would make the
+labelling too expensive to ever produce enough of them, and the disagreements are the ones worth
+explaining anyway.
+
+This is a calibration record first and a training set second. **With one user and a handful of
+records there is no training signal** — a fitted weight over ten labels is noise, and worse than a
+hand-set weight because it looks earned. Weights stay hand-written and visible until there are enough
+ratings to justify fitting them, and the thing to read in the meantime is where the rubric and the
+person disagree.
 
 ### What this overrides
 
-`docs/MVP_SPEC.md` "Out of scope: **automated web crawling**" — the engine may now collect from more
-than one search API. Its sibling line, "AI-generated conclusions", is **not** overridden: the engine
-offers cited verdicts as suggestions, and a person still decides. `docs/RULES.md` § 12 is unchanged.
+- `docs/RULES.md` § 5, as above, and the matching lines in `AGENTS.md` § 6 and `docs/MVP_SPEC.md`.
+- `docs/MVP_SPEC.md` "Out of scope: **automated web crawling**" — the engine may collect from more
+  than one search API. Its sibling line, "AI-generated conclusions", is **not** overridden: the
+  engine offers cited verdicts and scores as suggestions, and a person still decides.
+- `docs/RULES.md` § 12 is not overridden in any respect.
 
 ### Consequences
 
-- Analysis output is proposal-shaped, so the existing accept-with-reason guard applies unchanged.
-- Anything that could put a verdict in a record without a click and a reason is a violation of this
-  entry, not an optimisation of it.
-- `docs/PAIN_FUNNEL.md` § Ordering may not consume verdicts as weights, tie-breakers or inputs.
+- Analysis output stays proposal-shaped, so the existing accept-with-reason guard applies unchanged.
+- Anything that could put a verdict or a score in a record without a click and a reason is a
+  violation of this entry, not an optimisation of it.
+- The default list order remains the cited ordering in `docs/PAIN_FUNNEL.md` § Ordering. Sorting by
+  the score is available and must be labelled as sorting by the system's judgement.
 
 ### Open
 
-Whether the engine may propose *candidate problems* from raw sources, or only evaluate problems a
-person framed. The owner's answer was "evidence and so on", which reads as the latter, but a
-clustering step for candidate problems is not ruled out. It needs its own entry, and a new shape to
-store a proposed problem in, before any code.
+1. Whether the engine may propose *candidate problems* from raw sources, or only evaluate problems a
+   person framed. The owner's answer was "evidence and so on", which reads as the latter, but a
+   clustering step is not ruled out. It needs its own entry, and a shape to store a proposed problem
+   in, before any code.
+2. Whether the person rates **before** seeing the machine's score. If the score is visible first,
+   the rating anchors on it and the disagreement signal is destroyed — which is the only thing the
+   loop produces at this scale.
 
 ---
 

@@ -118,10 +118,12 @@ if one of them shows up in `git status`, fix the ignore rather than adding it de
 
 These are not style preferences; a PR that breaks one should be rejected.
 
-- No weighted total, no invented index, no numeric conclusion dressed up as a measurement.
-  The readiness tally in `docs/PAIN_FUNNEL.md` § Ordering is permitted: five questions at **equal**
-  weight, every answer stored with its reason, blanks counted and shown rather than summed as
-  zero, and completeness sorted above the tally. It is labelled a judgement, never a probability.
+- No hidden aggregation, and no number dressed up as a measurement or a probability. A score is
+  permitted: the rubric's dimensions and weights are stated and visible, every contribution is
+  traceable to a citation, and the number says how many dimensions it was computed over with blanks
+  never summed as zero. It is labelled a judgement, never a forecast. See `docs/RULES.md` § 5. The
+  readiness tally in `docs/PAIN_FUNNEL.md` § The readiness tally is one such score: five questions
+  at **equal** weight, every answer stored with its reason, blanks counted and shown.
 - Evidence, unknowns, assumptions, and kill reasons stay visibly separate.
 - A problem does not advance past the paid-today test on enthusiasm. Complaints, upvotes, and
   "would you use this" are not evidence that money is already moving.

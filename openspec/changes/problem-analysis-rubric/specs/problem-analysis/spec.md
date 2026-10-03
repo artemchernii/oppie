@@ -1,27 +1,63 @@
 ## ADDED Requirements
 
-### Requirement: One verdict per dimension, never a composite
+### Requirement: A score is computed from stated inputs, and shows them
 
-The system SHALL evaluate a problem against each dimension of the rubric separately and SHALL
-return exactly one verdict per dimension. It SHALL NOT produce, store or display any value
-computed from two or more dimensions, including but not limited to a score, a percentage, a grade,
-a star rating, a rank position derived from verdicts, or a readiness total.
+The system SHALL score a problem from the dimensions of the rubric, using weights that are stated in
+the system rather than hidden, and SHALL expose the contribution of every dimension. Every score
+SHALL be shown with the inputs that produced it and SHALL be labelled as this system's judgement. A
+score SHALL NOT be presented as a measurement, a probability, a forecast, or a verdict on whether the
+business will work.
 
 #### Scenario: An analysis completes
 - **WHEN** a problem is analysed
-- **THEN** the result contains exactly one entry per dimension of the rubric
-- **AND** no entry is computed from any other entry
+- **THEN** the result contains exactly one verdict per dimension of the rubric
+- **AND** it contains a score derived only from those verdicts and their stated weights
 
-#### Scenario: A composite is requested
-- **WHEN** a caller asks for an overall score, grade, percentage or single summary verdict
-- **THEN** the request is refused rather than approximated or rounded
-- **AND** the refusal names `docs/RULES.md` § 5 as the reason
+#### Scenario: A score is displayed
+- **WHEN** a score appears on a surface
+- **THEN** every dimension's contribution to it is reachable from that surface, together with the
+  dimension's verdict and the citation behind the verdict
+- **AND** the score is labelled as this system's judgement rather than as a property of the problem
 
-#### Scenario: The analysis is rendered
-- **WHEN** an analysis is displayed
-- **THEN** every dimension appears with its own verdict
-- **AND** no total, average, percentage, count of met dimensions, or star rating appears anywhere on
-  the surface, including in a tooltip, a page title, or a colour that encodes a threshold
+#### Scenario: The scale is stated
+- **WHEN** a score is shown
+- **THEN** its scale and range are stated on the surface, and the same scale is used everywhere a
+  score appears
+
+#### Scenario: The weights change
+- **WHEN** a dimension or a weight changes
+- **THEN** the rubric version that produced each existing score stays recorded with it
+- **AND** existing scores are not silently recomputed
+
+#### Scenario: A score is shown without its inputs
+- **WHEN** a surface displays a score with no reachable breakdown of how it was reached
+- **THEN** that is a defect of this requirement, not a simplification to accept
+
+### Requirement: An unknown dimension is shown, never summed as zero
+
+A dimension whose verdict is `unknown` SHALL NOT contribute a value to a score. Every score SHALL
+state how many dimensions it was computed over. An answer of zero SHALL contribute zero and SHALL
+remain distinguishable from a dimension that was never answered. If no dimension has an answer, no
+score SHALL be produced.
+
+#### Scenario: Some dimensions are unknown
+- **WHEN** a score is computed over a problem with unknown dimensions
+- **THEN** the score states how many dimensions it was computed over and how many were unknown
+- **AND** the unknown dimensions are not treated as zero, as a half, or as a neutral midpoint
+
+#### Scenario: An answer is genuinely zero
+- **WHEN** a dimension is answered as zero
+- **THEN** it contributes zero to the score
+- **AND** the surface distinguishes that from a dimension that was never answered
+
+#### Scenario: Nothing is answered
+- **WHEN** no dimension has an answer
+- **THEN** no score is produced and the surface says so, rather than showing zero
+
+#### Scenario: The blocking dimension is named
+- **WHEN** an analysis completes
+- **THEN** the system names the dimension that most obstructs the record, as a named dimension with
+  its citation, and not only as a number
 
 ### Requirement: Every verdict carries what decided it
 
@@ -65,7 +101,7 @@ by interpretation SHALL NOT be presented as observed.
 - **WHEN** a verdict is shown
 - **THEN** its category is shown next to it, and an unlabelled verdict is not treated as observed
 
-### Requirement: The rubric is the method, not a new one
+### Requirement: The rubric's dimensions and weights are inspectable
 
 The dimensions SHALL be exactly these seven, and each SHALL name the rule it derives from:
 
@@ -103,52 +139,70 @@ Adding, removing or redefining a dimension SHALL require a change to this spec.
   wedge is named at all
 - **AND** it does not conclude that competition makes the problem good or bad
 
-### Requirement: Unknown is reported, never absorbed
+### Requirement: A person's rating is stored beside the score that prompted it
 
-The system SHALL report which dimensions are `unknown` and how many, and SHALL keep that count
-visibly separate from any other number. It SHALL NOT treat an unknown as `no` or as `0`.
+The system SHALL store a person's own rating of a problem alongside the score the system proposed for
+it, together with the version of the rubric that produced that score. Where the rating diverges from
+the system's score by more than a stated threshold, the rating SHALL carry the person's reason before
+it is stored.
 
-#### Scenario: Several dimensions are unknown
-- **WHEN** a problem has unknown dimensions
-- **THEN** the analysis names each one and reports the count
-- **AND** the count of unknown dimensions is never added to, subtracted from or averaged with any
-  other value
+#### Scenario: A person rates a problem
+- **WHEN** a person submits a rating
+- **THEN** the rating, the system's score and the rubric version are stored together
 
-#### Scenario: The blocking dimension is named
-- **WHEN** an analysis completes
-- **THEN** the system names the dimension that most obstructs the record per
-  `docs/PAIN_FUNNEL.md` § Ordering, as a named dimension rather than as a number
+#### Scenario: The rating agrees with the score
+- **WHEN** the rating is within the threshold of the system's score
+- **THEN** no reason is required and the rating is stored immediately
 
-### Requirement: Analysis suggests; a person decides
+#### Scenario: The rating diverges
+- **WHEN** the rating diverges from the system's score by more than the threshold
+- **THEN** a reason is required before the rating is stored, and is stored with it
+- **AND** the divergence is what makes this rating worth keeping
 
-Running an analysis SHALL NOT change any stored record. A verdict SHALL reach a record only when a
-person accepts it, and acceptance SHALL write the verdict, its reason and its source together in one
-action.
+#### Scenario: The rubric is revised
+- **WHEN** the rubric's dimensions or weights change
+- **THEN** existing ratings keep the rubric version they were made against and are not discarded,
+  because a rating against an old rubric is still a statement about the problem
+
+#### Scenario: The agreement is summarised
+- **WHEN** the person's ratings are summarised against the system's scores
+- **THEN** the summary reports the distribution of the differences between them
+- **AND** it does not report an accuracy, a hit rate, or a percentage of correct predictions that the
+  system has achieved
+
+### Requirement: Ordering by judgement is labelled as such
+
+The default order of problems SHALL remain the cited ordering in `docs/PAIN_FUNNEL.md` § Ordering.
+Sorting by the system's score SHALL be available, and SHALL be labelled as sorting by the system's
+judgement rather than by cited facts.
+
+#### Scenario: The list is sorted by default
+- **WHEN** problems are ordered without anyone having chosen an order
+- **THEN** the order is furthest gate passed, then the cited answer on pain severity, then the largest
+  already-paid amount
+
+#### Scenario: The list is sorted by score
+- **WHEN** problems are ordered by the system's score
+- **THEN** the surface says the order is this system's judgement, not a cited fact
+
+### Requirement: The score never decides by itself
+
+Running an analysis SHALL NOT change any stored record. A verdict, a score or a rating SHALL reach a
+record only when a person accepts it, and acceptance SHALL write the value, its reason and its source
+together in one action.
 
 #### Scenario: An analysis runs
 - **WHEN** an analysis completes
 - **THEN** the problem record is unchanged, field for field
 
-#### Scenario: A verdict is accepted
-- **WHEN** a person accepts a verdict
-- **THEN** the verdict, its reason and its source are written together
+#### Scenario: A person accepts
+- **WHEN** a person accepts a verdict, a score or a rating
+- **THEN** the accepted value, its reason and its source are written together
 
 #### Scenario: Acceptance carries no reason
-- **WHEN** an acceptance arrives with an empty reason or an empty source
+- **WHEN** an acceptance arrives with an empty reason or an empty source, where a reason is required
 - **THEN** it is rejected and nothing is written
 
 #### Scenario: Nobody acts
 - **WHEN** no person accepts anything
-- **THEN** nothing is applied on load, on ingest, or on a schedule, and no analysis is ever applied
-  in bulk
-
-### Requirement: Ordering does not consume the analysis
-
-The order in which problems are listed SHALL remain the cited ordering in `docs/PAIN_FUNNEL.md`
-§ Ordering. Verdicts SHALL NOT be used as weights, tie-breakers or inputs to it.
-
-#### Scenario: The list is sorted
-- **WHEN** problems are ordered for display
-- **THEN** the order is determined by furthest gate passed, then the cited answer on pain severity,
-  then the largest already-paid amount
-- **AND** no verdict from the rubric participates in the comparison
+- **THEN** nothing is applied on load, on ingest, or on a schedule, and nothing is applied in bulk

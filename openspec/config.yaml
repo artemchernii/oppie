@@ -9,10 +9,13 @@ context: |
   The product invariants in `AGENTS.md` § 6 and `docs/RULES.md` are requirements, not style. The
   two that shape almost every spec:
 
-  **No composite number.** No overall score, no weighted total, no index, no `83/100`. Cited
-  inputs do not rescue an invented aggregation. What is allowed: one verdict per dimension,
-  orderings fully determined by cited facts, and counts of records. What is not: any value
-  computed from two or more dimensions.
+  **A score is a judgement, and shows its inputs.** The engine may score and rank problems. A score
+  must be computed from stated dimensions with stated weights, must expose every dimension's
+  contribution and the citation behind it, must say how many dimensions it was computed over with
+  blanks never summed as zero, and must be labelled as the system's judgement rather than as a
+  measurement, a probability or a forecast. Banned: a number that hides how it was made, and any
+  figure dressed up as a measurement. A person's own rating, stored beside the machine's against the
+  rubric version that produced it, is what keeps the rubric honest.
 
   **Nothing applies itself.** The engine may collect and may suggest. A suggestion reaches a record
   only when a person accepts it, and acceptance writes the value, the reason and the source
