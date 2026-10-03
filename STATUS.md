@@ -202,6 +202,29 @@ redesign's original hexes; light values are chosen per role (darker orange/viole
 ones kept for fills and shadows). A Playwright test measures heading/label contrast in light mode on
 `/`, `/inbox`, `/companies`, `/companies/[id]`, `/problems/[id]`, `/discover` and fails below 4.5:1.
 
+### Automatic collection with real data (2026-10-04)
+
+Plain version: "Run discovery" now fetches real sources by itself in three lanes: **pain** (Reddit
+via Brave search, Hacker News), **businesses** already selling around it with their published
+prices (Brave), and **money** (Remotive job posts). It then builds one proposal for you to review.
+Two real runs are stored: "financial operations in European RIAs" (29 sources) and "invoice chasing
+for small agencies" (36 sources, 16 of them pain, 12 with prices).
+
+Precise version:
+
+- `lib/collectors.ts`: query plan, provider mappers, injected `fetch`. Labels are earned by the text:
+  `pain` needs pain wording (bare "hours" does not count), `price` needs a figure, `budget` needs a
+  stated salary; otherwise `context`. Every result must mention a direction word; jobs need two.
+- `POST /api/discovery-runs/:id/collect` (`collectRun`): stores results as untriaged sources; a run
+  fails only if every provider failed, and each failed provider is named.
+- `pnpm discover:dry "direction"` prints real results without writing. `pnpm discover:run
+  "direction"` stores a run with the secret key (admin, like `load:companies`); it only adds rows.
+- Proposals group collected sources by direction (`foundFor` = `direction · lane: query`).
+- Reddit's own API refuses anonymous requests (403); Reddit content comes through Brave instead.
+
+Known limit: one proposal per run bundles all lanes (29–36 sources). It does not yet split a run
+into distinct pains, each with the businesses selling a fix — that is the next step.
+
 ## What is not built
 
 - Discovery run/source/proposal APIs are connected; the first proposal-generation path is now implemented.
@@ -329,5 +352,5 @@ Nothing is required. When #45 is merged, the open follow-ups are, in rough order
 ## Suggested next prompt
 
 ```text
-Continue oppie.lab: put one real source through the loop with me.
+Continue oppie.lab: split a run into distinct pains, each with the businesses that sell a fix.
 ```
