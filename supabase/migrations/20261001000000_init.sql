@@ -1,13 +1,17 @@
 -- oppie.lab — the remote schema, as decided in DECISIONS.md #1.
 --
--- Status: decided, NOT implemented. Nothing in the app reads these tables yet and
--- localStorage is still the only store. Applying this file changes no behaviour until a
--- later PR reads it.
+-- Status: applied on 2026-10-02. The nine tables and the private bucket exist, verified
+-- against the live project. Nothing in the app reads them yet and localStorage is still the
+-- only store; 20261002000000_allowlist.sql is what opens them to the one allowed person.
 --
 -- How to apply: there is no supabase CLI, psql or docker on this machine, so paste this
 -- whole file into the Supabase dashboard's SQL editor and run it. Every statement is
 -- guarded, so running it twice is harmless — and re-running re-asserts the access model
 -- over any table added since.
+--
+-- Warning: the revoke loop below is unconditional, so re-running this file AFTER the
+-- allowlist migration takes the `authenticated` grants back and the app reads as empty
+-- again. If you re-run this one for any reason, re-run the allowlist file straight after.
 --
 -- The dashboard will still offer a "this creates tables without enabling Row Level
 -- Security" warning the first time. That warning is wrong about this file: every table
