@@ -155,14 +155,211 @@ talking to Postgres directly and is unused until one is added; `SUPABASE_SERVICE
 1. ~~**Is a secret key created by the integration, and under what name?**~~ **Answered**
    2026-10-01: `SUPABASE_SECRET_KEY` exists in Preview and Production. It is the only secret the
    server-only shape needs, alongside `SUPABASE_URL`.
-2. **Cutover policy.** Local-first write-through, remote-first, or two-way sync? Unstated. The
-   recommendation is that local stays authoritative and remote is a mirror until a separate
-   entry decides otherwise, because the failure mode of getting this wrong is lost records.
-3. **What happens to records already in a browser's `localStorage`** — one-time upload, or
-   abandoned at cutover? Unstated.
+2. ~~**Cutover policy.** Local-first write-through, remote-first, or two-way sync?~~ **Answered**
+   2026-10-03 by entry #2 below: remote-first, with `localStorage` kept as an offline cache and
+   never read as the source of truth again.
+3. ~~**What happens to records already in a browser's `localStorage`** — one-time upload, or
+   abandoned at cutover?~~ **Answered** 2026-10-03 by entry #2 below: pushed up once, on the first
+   successful load, and only for records that are not untouched seeds. Measured on the first live
+   load: nothing was pushed, because the browser held only the seed list.
 4. **What is actually stored for attachments?** The source `url` is already recorded with a
    `linkStatus`; a bucket implies real files. Snapshots, downloads, or uploads — undecided.
 5. **Multi-device.** The gate is one password, not one account. Concurrent editing from two
    browsers needs a conflict rule before it needs a schema.
 6. **Does the collector move server-side?** `BRAVE_API_KEY` currently lives on the machine
    running the script.
+
+---
+
+## 2. Problem records read from the database; the browser keeps a cache
+
+**Date:** 2026-10-03
+**Status:** Decided and implemented (PRs #27, #29).
+**Decided by:** the owner, answering the cutover question in entry #1.
+
+### What was decided
+
+For the `problems` record type, the database is the source of truth. The page reads as the signed-in
+person on the server and passes the list to the client, so the first client render already has the
+records and there is no fetch-after-mount. `localStorage` is still written on every change, but it
+is an offline cache and is never read as the source of truth again.
+
+What is in a browser already is pushed up **once**, on the first successful load, and only for
+records that are not untouched seeds. A failed push is recomputed on the next load, so nothing is
+stranded.
+
+### What this resolves
+
+Open questions 2 and 3 of entry #1. It does not answer question 5 (multi-device): with one browser
+as the writer, last-write-wins holds and no conflict rule is needed yet.
+
+### A failed read is not an empty table
+
+The read returns `null` for unconfigured, denied or failed, and `[]` only for a genuinely empty
+table. `null` shows the browser's own records and uploads nothing. Pushing into a table that could
+not be read is how a stale copy overwrites a newer one.
+
+### Consequences
+
+- `resetToSeed` is now local-only. It is not a delete and writes nothing.
+- The three problem routes are `force-dynamic`. A prerendered page would be one person's records
+  baked into a file.
+- `problem_companies` is read but not written, because its foreign key points at `companies`, which
+  is still seed-only data. An edited P-001 loses its seven company ids on a browser with no local
+  copy. This closes with the companies screen.
+
+---
+
+## 3. The engine analyses, scores and ranks; the score shows its inputs
+
+**Date:** 2026-10-03
+**Status:** Decided. The capability is specified as
+`openspec/changes/problem-analysis-rubric/`; nothing is built yet.
+**Decided by:** the owner.
+
+### What was decided
+
+The app stops being a place where a person types a problem and reads it back. It becomes an evidence
+engine: it collects sources, evaluates a problem against the method's dimensions, and **scores and
+ranks** the result.
+
+**This amends `docs/RULES.md` § 5, which previously banned an overall score outright.** A first draft
+of this entry enforced that ban. It was wrong, and the owner reversed it: ranking is a real need, and
+a rule that forbids it is not protecting anything, it is refusing to define the thing. "How can I
+rank it" has to have an answer.
+
+The rule that replaces it is narrower and about honesty rather than arithmetic. A score is allowed
+when all four of these hold:
+
+- its dimensions and weights are stated in one place, written down, and visible next to the number;
+- every dimension's contribution, and the citation behind it, is reachable from the number;
+- it states how many dimensions it was computed over, and a blank never counts as zero;
+- it is labelled as this system's judgement, never as a measurement, a probability or a forecast.
+
+Still banned: a number that hides how it was made, and any figure dressed up as a measurement.
+Weights remain invented, and that is fine — an invented weight you can see is a position you can
+argue with; one you cannot see is a claim you cannot check. What no weight fixes is putting
+quantities on different scales into one sum.
+
+### Why the boundary moved, and what did not move
+
+The original objection was that an engine returning a blended number is unfalsifiable. That objection
+applies to a *hidden* number, not to a scored judgement whose inputs are on screen. What survives
+unchanged is the part that was doing the work: the engine's first job is still to **find the
+citation**, and a score with no citation behind any dimension is not a score worth showing.
+
+The per-dimension verdict vocabulary stays `yes` / `no` / `unknown` even though a score now exists.
+A dimension can be unknown, and an unknown is never summed as zero.
+
+### The rating loop
+
+A person's own rating is stored beside the machine's, with the version of the rubric that produced
+the machine's score, and a reason is required only where the two diverge by more than a stated
+threshold. Divergence is the informative label; demanding a reason for every rating would make the
+labelling too expensive to ever produce enough of them, and the disagreements are the ones worth
+explaining anyway.
+
+This is a calibration record first and a training set second. **With one user and a handful of
+records there is no training signal** — a fitted weight over ten labels is noise, and worse than a
+hand-set weight because it looks earned. Weights stay hand-written and visible until there are enough
+ratings to justify fitting them, and the thing to read in the meantime is where the rubric and the
+person disagree.
+
+### What this overrides
+
+- `docs/RULES.md` § 5, as above, and the matching lines in `AGENTS.md` § 6 and `docs/MVP_SPEC.md`.
+- `docs/MVP_SPEC.md` "Out of scope: **automated web crawling**" — the engine may collect from more
+  than one search API. Its sibling line, "AI-generated conclusions", is **not** overridden: the
+  engine offers cited verdicts and scores as suggestions, and a person still decides.
+- `docs/RULES.md` § 12 is not overridden in any respect.
+
+### Consequences
+
+- Analysis output stays proposal-shaped, so the existing accept-with-reason guard applies unchanged.
+- Anything that could put a verdict or a score in a record without a click and a reason is a
+  violation of this entry, not an optimisation of it.
+- The default list order remains the cited ordering in `docs/PAIN_FUNNEL.md` § Ordering. Sorting by
+  the score is available and must be labelled as sorting by the system's judgement.
+
+### Open
+
+1. Whether the engine may propose *candidate problems* from raw sources, or only evaluate problems a
+   person framed. The owner's answer was "evidence and so on", which reads as the latter, but a
+   clustering step is not ruled out. It needs its own entry, and a shape to store a proposed problem
+   in, before any code.
+2. Whether the person rates **before** seeing the machine's score. If the score is visible first,
+   the rating anchors on it and the disagreement signal is destroyed — which is the only thing the
+   loop produces at this scale.
+
+---
+
+## 4. OpenSpec holds the behaviour; the handoffs are retired
+
+**Date:** 2026-10-03
+**Status:** Decided and implemented (`openspec/` plus the pi integration in `.pi/`).
+**Decided by:** the owner.
+
+### What was decided
+
+OpenSpec is the record of what the software does. `openspec/specs/` holds behaviour that exists now,
+written as requirements with scenarios; `openspec/changes/` holds proposed changes, one folder each.
+Artifacts are plain Markdown and the tool never touches git, so it fits the existing branch/PR/CI
+flow rather than replacing it.
+
+### What it replaces, and what it does not
+
+The point is to remove a drift surface, not add a fifth place for the truth to live:
+
+| Document | Role after this entry |
+|---|---|
+| `openspec/specs/` | What the software does now. Requirement and scenario form. |
+| `openspec/changes/` | What is proposed, and why. |
+| `docs/RULES.md` | Research law. Not software behaviour, and not superseded. |
+| `docs/PAIN_FUNNEL.md` | The method: gates, axes, the tally, the ordering rule. Not superseded. |
+| `docs/MVP_SPEC.md` | Superseded by `openspec/specs/` once the existing screens are captured there. |
+| `DECISIONS.md` | The decision log, unchanged. Every entry that changes an invariant belongs here. |
+| `docs/handoffs/*.md` | Retired. No new handoff files. |
+
+The three handoff files stay in place until their content is captured, then go. Until then
+`HANDOFF_SUPABASE.md` is the accurate description of storage and `STATUS.md` is behind.
+
+### Consequences
+
+- A change to behaviour should land as an OpenSpec change. A PR that changes behaviour without one
+  should be rejected in review.
+- `@fission-ai/openspec` is a devDependency, so `pnpm exec openspec` is reproducible and can run in
+  CI later. It is not part of the build.
+- Telemetry defaults to on and reports command names and version only. Disable with
+  `openspec config set telemetry.enabled false` or `OPENSPEC_TELEMETRY=0`.
+
+---
+
+## 5. The legacy opportunity board is not repaired
+
+**Date:** 2026-10-03
+**Status:** Decided. The page is still shipped and still in the nav; removing it is a separate
+change.
+**Decided by:** the owner.
+
+### What was decided
+
+`/opportunities` uses 21 CSS classes that no longer exist in `app/globals.css` — `brand`,
+`side-label`, `count`, `rule-dot`, `green`, `yellow`, `red`, `sidebar-bottom`, `signal-strip` and
+others. It renders as broken markup: "We are still researching" runs into the sentence before it,
+the summary counts collapse onto one line, and the search field collapses to a single character.
+
+The cause is not a regression to hunt. Two generations of UI share one stylesheet and one of them
+stopped being maintained. It will not be repaired, because it will rot again and because a board is
+coming back on the new model.
+
+### What this does not decide
+
+The board itself is wanted. It stays wanted as a view over problems, companies and the figures
+attached to them — not as the opportunity card grid. When that board lands, `/opportunities` goes,
+and `lib/data.ts` stays untouched: `AGENTS.md` § 6 protects the six seeded candidates as reference
+data for the method, not the screen that displays them.
+
+### Consequences
+
+- No CSS work on `/opportunities`. It stays in the nav until its replacement exists.
+- The nav label "Legacy board" is honest and stays until then.

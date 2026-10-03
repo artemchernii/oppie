@@ -45,17 +45,32 @@ The kill reason must name the strongest reason not to build the opportunity toda
 
 Good kill reasons mention crowding, trust, regulation, distribution, switching cost, low willingness to pay, or bad economics.
 
-## 5. No fake precision, and no composites
+## 5. A score is a judgement with its inputs showing
 
-No overall score, no weighted total, no index. `83/100` is forbidden, and so is
-`Pain ×2 + Market ×3`. Weights are invented, and summing weeks against euros against ordinal
-severity produces a number that measures nothing — **cited inputs do not rescue an invented
-aggregation.**
+A number that hides how it was made is forbidden. So is any figure that presents itself as a
+measurement of a market, a probability of success, or a forecast. `83/100` handed down as a verdict
+on a business is exactly that, and it stays banned.
 
-An **ordering** is allowed only where it is fully determined by cited facts, per `docs/PAIN_FUNNEL.md`
-§ Ordering: furthest gate passed, then a cited yes/no on pain severity, then the largest
-already-paid amount. No weights, and nothing in the order that is not a quote, a date, and a URL.
-Records are never ordered before they have passed every gate.
+A **score is allowed**, and is how the board ranks. Four conditions:
+
+- its dimensions and weights are stated in one place, written down, and visible next to the number;
+- every dimension's contribution, and the citation behind it, is reachable from the number;
+- it states how many dimensions it was computed over, and a blank never counts as zero;
+- it is labelled as this system's judgement, never as a measurement.
+
+Weights are still invented. That is acceptable precisely because they are written down and
+overridable — an invented weight you can see is a position you can argue with, and one you cannot
+see is a claim you cannot check. What no weight fixes is summing quantities that are not on one
+scale: weeks against euros against ordinal severity stays meaningless, and `Pain ×2 + Market ×3` is
+only coherent where both inputs are the same kind of quantity.
+
+A person's own rating, stored beside the machine's and against the version of the rubric that
+produced it, is what keeps the rubric honest.
+
+An **ordering by cited facts** remains available and is the default, per `docs/PAIN_FUNNEL.md`
+§ Ordering: furthest gate passed, then a cited yes/no on pain severity, then the largest already-paid
+amount. Nothing in that order that is not a quote, a date, and a URL. Records are never ordered
+before they have passed every gate.
 
 Use evidence statuses and plain-language conclusions:
 
