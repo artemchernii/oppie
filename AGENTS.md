@@ -135,7 +135,10 @@ These are not style preferences; a PR that breaks one should be rejected.
 - Untriaged sources count in no total. The inbox is a queue, not evidence.
 - The six seeded candidates in `lib/data.ts` stay intact; they are the reference data for the
   method, not a shortlist.
-- Local-only: no backend, auth, accounts, billing, or sync without an explicit decision.
+- Remote storage and sign-in are no longer exceptions — both are decided (`DECISIONS.md` #1) and
+  shipped. That decision is narrow: records and files may live in Supabase, and exactly one person
+  is allowed in. Accounts, teams, sharing and billing remain open, and each needs its own entry
+  before it is built.
 
 ## 7. Reviews and merging
 

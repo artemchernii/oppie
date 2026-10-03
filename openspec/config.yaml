@@ -1,0 +1,27 @@
+schema: spec-driven
+
+# Constraints that shape every artifact and that an agent cannot infer from the code.
+# General documentation and discoverable codebase facts belong in docs/, not here.
+context: |
+  oppie.lab is a single-user research workspace. There are no accounts, no teams, no sharing, and
+  no billing, and adding them needs a `DECISIONS.md` entry first.
+
+  The product invariants in `AGENTS.md` § 6 and `docs/RULES.md` are requirements, not style. The
+  two that shape almost every spec:
+
+  **No composite number.** No overall score, no weighted total, no index, no `83/100`. Cited
+  inputs do not rescue an invented aggregation. What is allowed: one verdict per dimension,
+  orderings fully determined by cited facts, and counts of records. What is not: any value
+  computed from two or more dimensions.
+
+  **Nothing applies itself.** The engine may collect and may suggest. A suggestion reaches a record
+  only when a person accepts it, and acceptance writes the value, the reason and the source
+  together, in one action. A suggestion carrying no reason is rejected at the storage boundary.
+
+  Two more that are easy to break silently: **empty is not zero** — a checked `0` and an unchecked
+  blank are different readings and must survive storage, analysis and rendering, with blanks shown
+  rather than summed. And **the six seeded candidates in `lib/data.ts` are reference data for the
+  method**, never a shortlist, and are never uploaded to the database.
+
+  Prefer requirements that can be checked from a stored record or a stored artifact over
+  requirements that need a model running. Write all artifacts in English.

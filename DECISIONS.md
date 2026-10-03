@@ -155,14 +155,184 @@ talking to Postgres directly and is unused until one is added; `SUPABASE_SERVICE
 1. ~~**Is a secret key created by the integration, and under what name?**~~ **Answered**
    2026-10-01: `SUPABASE_SECRET_KEY` exists in Preview and Production. It is the only secret the
    server-only shape needs, alongside `SUPABASE_URL`.
-2. **Cutover policy.** Local-first write-through, remote-first, or two-way sync? Unstated. The
-   recommendation is that local stays authoritative and remote is a mirror until a separate
-   entry decides otherwise, because the failure mode of getting this wrong is lost records.
-3. **What happens to records already in a browser's `localStorage`** — one-time upload, or
-   abandoned at cutover? Unstated.
+2. ~~**Cutover policy.** Local-first write-through, remote-first, or two-way sync?~~ **Answered**
+   2026-10-03 by entry #2 below: remote-first, with `localStorage` kept as an offline cache and
+   never read as the source of truth again.
+3. ~~**What happens to records already in a browser's `localStorage`** — one-time upload, or
+   abandoned at cutover?~~ **Answered** 2026-10-03 by entry #2 below: pushed up once, on the first
+   successful load, and only for records that are not untouched seeds. Measured on the first live
+   load: nothing was pushed, because the browser held only the seed list.
 4. **What is actually stored for attachments?** The source `url` is already recorded with a
    `linkStatus`; a bucket implies real files. Snapshots, downloads, or uploads — undecided.
 5. **Multi-device.** The gate is one password, not one account. Concurrent editing from two
    browsers needs a conflict rule before it needs a schema.
 6. **Does the collector move server-side?** `BRAVE_API_KEY` currently lives on the machine
    running the script.
+
+---
+
+## 2. Problem records read from the database; the browser keeps a cache
+
+**Date:** 2026-10-03
+**Status:** Decided and implemented (PRs #27, #29).
+**Decided by:** the owner, answering the cutover question in entry #1.
+
+### What was decided
+
+For the `problems` record type, the database is the source of truth. The page reads as the signed-in
+person on the server and passes the list to the client, so the first client render already has the
+records and there is no fetch-after-mount. `localStorage` is still written on every change, but it
+is an offline cache and is never read as the source of truth again.
+
+What is in a browser already is pushed up **once**, on the first successful load, and only for
+records that are not untouched seeds. A failed push is recomputed on the next load, so nothing is
+stranded.
+
+### What this resolves
+
+Open questions 2 and 3 of entry #1. It does not answer question 5 (multi-device): with one browser
+as the writer, last-write-wins holds and no conflict rule is needed yet.
+
+### A failed read is not an empty table
+
+The read returns `null` for unconfigured, denied or failed, and `[]` only for a genuinely empty
+table. `null` shows the browser's own records and uploads nothing. Pushing into a table that could
+not be read is how a stale copy overwrites a newer one.
+
+### Consequences
+
+- `resetToSeed` is now local-only. It is not a delete and writes nothing.
+- The three problem routes are `force-dynamic`. A prerendered page would be one person's records
+  baked into a file.
+- `problem_companies` is read but not written, because its foreign key points at `companies`, which
+  is still seed-only data. An edited P-001 loses its seven company ids on a browser with no local
+  copy. This closes with the companies screen.
+
+---
+
+## 3. The engine analyses; it does not score
+
+**Date:** 2026-10-03
+**Status:** Decided. The capability is specified as
+`openspec/changes/problem-analysis-rubric/`; nothing is built yet.
+**Decided by:** the owner.
+
+### What was decided
+
+The app stops being a place where a person types a problem and reads it back. It becomes an evidence
+engine: it collects sources, and it evaluates a problem record against the method's dimensions. The
+engine's job is to **find the citation**, not to rate the idea.
+
+`docs/RULES.md` § 5 and `AGENTS.md` § 6 are **not** relaxed. There is no overall score, no weighted
+total and no index. What is allowed, and what this entry authorises:
+
+- one verdict per dimension, each carrying the record field or source that decided it;
+- a named dimension identified as the one blocking the record;
+- counts of records, and figures quoted verbatim with their source.
+
+What stays forbidden: any value computed from two or more dimensions.
+
+### Why the boundary is drawn there
+
+An engine that returns a blended number is unfalsifiable — it will feel productive and settle
+nothing. An engine that returns "paid today: yes, cite: this job posting, whose description *is* the
+workflow" can be checked in one click, and it is `docs/RULES.md` § 11 read literally. That is the
+whole difference between this and an idea generator.
+
+A second, harder reason: the verdict vocabulary is `yes` / `no` / `unknown` rather than the
+readiness tally's `0–3`, precisely because `0–3` is summable and `yes` / `no` / `unknown` is not.
+The no-composite rule becomes a property of the data rather than something someone has to remember.
+The cost is a second scale in the product, accepted deliberately.
+
+### What this overrides
+
+`docs/MVP_SPEC.md` "Out of scope: **automated web crawling**" — the engine may now collect from more
+than one search API. Its sibling line, "AI-generated conclusions", is **not** overridden: the engine
+offers cited verdicts as suggestions, and a person still decides. `docs/RULES.md` § 12 is unchanged.
+
+### Consequences
+
+- Analysis output is proposal-shaped, so the existing accept-with-reason guard applies unchanged.
+- Anything that could put a verdict in a record without a click and a reason is a violation of this
+  entry, not an optimisation of it.
+- `docs/PAIN_FUNNEL.md` § Ordering may not consume verdicts as weights, tie-breakers or inputs.
+
+### Open
+
+Whether the engine may propose *candidate problems* from raw sources, or only evaluate problems a
+person framed. The owner's answer was "evidence and so on", which reads as the latter, but a
+clustering step for candidate problems is not ruled out. It needs its own entry, and a new shape to
+store a proposed problem in, before any code.
+
+---
+
+## 4. OpenSpec holds the behaviour; the handoffs are retired
+
+**Date:** 2026-10-03
+**Status:** Decided and implemented (`openspec/` plus the pi integration in `.pi/`).
+**Decided by:** the owner.
+
+### What was decided
+
+OpenSpec is the record of what the software does. `openspec/specs/` holds behaviour that exists now,
+written as requirements with scenarios; `openspec/changes/` holds proposed changes, one folder each.
+Artifacts are plain Markdown and the tool never touches git, so it fits the existing branch/PR/CI
+flow rather than replacing it.
+
+### What it replaces, and what it does not
+
+The point is to remove a drift surface, not add a fifth place for the truth to live:
+
+| Document | Role after this entry |
+|---|---|
+| `openspec/specs/` | What the software does now. Requirement and scenario form. |
+| `openspec/changes/` | What is proposed, and why. |
+| `docs/RULES.md` | Research law. Not software behaviour, and not superseded. |
+| `docs/PAIN_FUNNEL.md` | The method: gates, axes, the tally, the ordering rule. Not superseded. |
+| `docs/MVP_SPEC.md` | Superseded by `openspec/specs/` once the existing screens are captured there. |
+| `DECISIONS.md` | The decision log, unchanged. Every entry that changes an invariant belongs here. |
+| `docs/handoffs/*.md` | Retired. No new handoff files. |
+
+The three handoff files stay in place until their content is captured, then go. Until then
+`HANDOFF_SUPABASE.md` is the accurate description of storage and `STATUS.md` is behind.
+
+### Consequences
+
+- A change to behaviour should land as an OpenSpec change. A PR that changes behaviour without one
+  should be rejected in review.
+- `@fission-ai/openspec` is a devDependency, so `pnpm exec openspec` is reproducible and can run in
+  CI later. It is not part of the build.
+- Telemetry defaults to on and reports command names and version only. Disable with
+  `openspec config set telemetry.enabled false` or `OPENSPEC_TELEMETRY=0`.
+
+---
+
+## 5. The legacy opportunity board is not repaired
+
+**Date:** 2026-10-03
+**Status:** Decided. The page is still shipped and still in the nav; removing it is a separate
+change.
+**Decided by:** the owner.
+
+### What was decided
+
+`/opportunities` uses 21 CSS classes that no longer exist in `app/globals.css` — `brand`,
+`side-label`, `count`, `rule-dot`, `green`, `yellow`, `red`, `sidebar-bottom`, `signal-strip` and
+others. It renders as broken markup: "We are still researching" runs into the sentence before it,
+the summary counts collapse onto one line, and the search field collapses to a single character.
+
+The cause is not a regression to hunt. Two generations of UI share one stylesheet and one of them
+stopped being maintained. It will not be repaired, because it will rot again and because a board is
+coming back on the new model.
+
+### What this does not decide
+
+The board itself is wanted. It stays wanted as a view over problems, companies and the figures
+attached to them — not as the opportunity card grid. When that board lands, `/opportunities` goes,
+and `lib/data.ts` stays untouched: `AGENTS.md` § 6 protects the six seeded candidates as reference
+data for the method, not the screen that displays them.
+
+### Consequences
+
+- No CSS work on `/opportunities`. It stays in the nav until its replacement exists.
+- The nav label "Legacy board" is honest and stays until then.
