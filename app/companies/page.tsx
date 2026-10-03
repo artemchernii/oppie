@@ -111,7 +111,7 @@ function MoneyTable({ rows, empty }: { rows: Company[]; empty: string }) {
 }
 
 export default async function CompaniesPage() {
-  const { companies, source } = await companiesForPage();
+  const { companies, error } = await companiesForPage();
   const priced = companies.filter(withAmount);
   const salaries = priced.filter((company) => company.kind === "employer");
   const prices = priced.filter((company) => company.kind !== "employer");
@@ -128,16 +128,11 @@ export default async function CompaniesPage() {
           Real companies, where they are, and the figures attached to this work. Every row says how
           sure we are and whether its link still opens. Nothing here is averaged into a score.
         </p>
-        {source === "seed" ? (
-          <p className="storage-warn" style={{ fontSize: 12.5 }}>
-            Showing the companies built into the app, not the database — the table is empty or the read was
-            refused. Run <span className="mono">pnpm load:companies</span> and reload.
+        {error ? (
+          <p className="storage-warn" style={{ fontSize: 12.5 }} role="alert">
+            The companies could not be read: {error}
           </p>
-        ) : (
-          <p className="faint" style={{ fontSize: 12.5 }}>
-            Read from the database as you, under the allowlist policy.
-          </p>
-        )}
+        ) : null}
       </header>
 
       <div className="summary">

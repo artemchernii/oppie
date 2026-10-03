@@ -58,14 +58,23 @@ export async function readRemoteProblems(): Promise<ProblemsRead> {
   }
 }
 
-/** What a page renders from. Null means "keep using what the browser already has". */
-export async function problemsForPage(): Promise<Problem[] | null> {
+export type ProblemsPage = { problems: Problem[]; error: string | null };
+
+/**
+ * What a page renders from.
+ *
+ * **There is no fallback.** If the read fails the page says so, instead of quietly rendering
+ * something else — a screen that shows one thing while looking like another is worse than a screen
+ * that admits it could not load. There is no browser copy to fall back to any more either; the
+ * database is the only store (`DECISIONS.md` #9).
+ */
+export async function problemsForPage(): Promise<ProblemsPage> {
   const result = await readRemoteProblems();
   if (!result.ok) {
-    console.error(`[problems] remote read unavailable: ${result.error}`);
-    return null;
+    console.error(`[problems] read failed: ${result.error}`);
+    return { problems: [], error: result.error };
   }
-  return result.problems;
+  return { problems: result.problems, error: null };
 }
 
 /**

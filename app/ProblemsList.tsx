@@ -8,8 +8,8 @@ import { nextProblemId } from "../lib/problemPersistence";
 import { useProblems } from "../lib/problemStore";
 import { GateChip, ReadinessNumber, VerdictChip, isBacklog } from "./ui";
 
-export default function ProblemsList({ remote }: { remote: Problem[] | null }) {
-  const { problems, hydrated, storageError, remoteError, insertProblem, resetToSeed } = useProblems(remote);
+export default function ProblemsList({ initial, readError }: { initial: Problem[]; readError: string | null }) {
+  const { problems, saveError, insertProblem } = useProblems(initial);
   const router = useRouter();
 
   const [query, setQuery] = useState("");
@@ -57,11 +57,9 @@ export default function ProblemsList({ remote }: { remote: Problem[] | null }) {
               means not checked — it is never counted as zero.
             </p>
           </div>
-          {hydrated && (
-            <button className="btn btn-primary" onClick={createProblem}>
-              New problem
-            </button>
-          )}
+          <button className="btn btn-primary" onClick={createProblem}>
+            New problem
+          </button>
         </div>
       </header>
 
@@ -146,24 +144,23 @@ export default function ProblemsList({ remote }: { remote: Problem[] | null }) {
         {visible.length === 0 && <div className="empty">Nothing matches that. Clear the search or the stage filter.</div>}
       </div>
 
+      {readError && (
+        <div className="empty storage-warn" role="alert">
+          The records could not be read: {readError}
+        </div>
+      )}
+
       <div className="footer">
         <span>
           “not researched” means no evidence and no answered question yet — not a score of zero. A
           tally with blanks beside it is a guess, and is labelled as one.
         </span>
         <div className="footer-right">
-          {remoteError ? (
-            <b className="storage-warn">Not saved to the database — your edits are still in this browser only ({remoteError})</b>
-          ) : storageError ? (
-            <b className="storage-warn">Local storage unavailable — the offline copy will not persist</b>
-          ) : remote ? (
-            <span>Stored in the database{hydrated ? "" : " · loading…"}</span>
+          {saveError ? (
+            <b className="storage-warn">Not saved: {saveError}</b>
           ) : (
-            <b className="storage-warn">Database unreachable — showing this browser&apos;s copy</b>
+            <span>Saved</span>
           )}
-          <button className="link-button" onClick={resetToSeed}>
-            Reset to seed data
-          </button>
         </div>
       </div>
     </main>
