@@ -220,6 +220,7 @@ function ProposalCard({ card, problems, onDecided }: { card: ProposalCardView; p
         <dt>Does the work</dt><dd>{proposal.actor || NOT_ADDED}</dd>
         <dt>Pays</dt><dd>{proposal.payer || NOT_ADDED}</dd>
         <dt>Workaround today</dt><dd>{proposal.workaround || NOT_ADDED}</dd>
+        <dt>Already sold by</dt><dd>{proposal.businessPattern?.replace(/^Already sold by: /, "") || NOT_ADDED}</dd>
       </dl>
       <div className="inbox-proposal-unknowns">
         <span className="inbox-section-label">Still unknown</span>

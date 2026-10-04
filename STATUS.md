@@ -222,8 +222,27 @@ Precise version:
 - Proposals group collected sources by direction (`foundFor` = `direction · lane: query`).
 - Reddit's own API refuses anonymous requests (403); Reddit content comes through Brave instead.
 
-Known limit: one proposal per run bundles all lanes (29–36 sources). It does not yet split a run
-into distinct pains, each with the businesses selling a fix — that is the next step.
+### Runs split into distinct pains, each with who already sells a fix (2026-10-04)
+
+Plain version: a run is now split into separate pains, and each pain lists the businesses selling a
+fix for it, with their quoted prices. A language model suggests the split; the code then checks
+every quote word for word against the stored sources and throws out anything unsupported. The
+"invoice chasing for small agencies" run is split into 4 real pains, now waiting in Inbox.
+
+Precise version:
+
+- `lib/painSplit.ts`: prompt + JSON schema, `checkSplit` (cited ids must exist; quotes verbatim;
+  pain evidence from the pain lane; businesses from the business lane; unquoted prices stripped;
+  every drop counted), `proposalsFromSplit` (one waiting proposal per pain; repetition and "no
+  business found" stated from the evidence, not the model).
+- `POST /api/discovery-runs/:id/split` calls AI Gateway (`anthropic/claude-sonnet-5.5`, override with
+  `AI_GATEWAY_MODEL`) over its OpenAI-compatible endpoint, no new package. Auth: `AI_GATEWAY_API_KEY`,
+  else the Vercel OIDC token.
+- Run discovery: collect → split; if the split fails it falls back to one combined proposal and
+  says why on the page.
+- `pnpm discover:split <run> [--save] [--from file.json]`.
+- **Blocked:** AI Gateway refuses requests until the Vercel account has a credit card on file
+  (403). The 4 stored pains were split by Claude in the coding session and passed the same checker.
 
 ## What is not built
 
@@ -341,16 +360,13 @@ GET  /api/companies/:id
 
 ## Owner action
 
-Nothing is required. When #45 is merged, the open follow-ups are, in rough order of value:
-
-1. Create one real accepted Problem: `/discover` → save a real source → build a proposal → accept it
-   in `/inbox` with a reason. Nothing real has gone through the loop yet.
-2. Add Reddit credentials to `.env.local` (`REDDIT_CLIENT_ID`, `REDDIT_CLIENT_SECRET`,
-   `REDDIT_USER_AGENT`) to try live collection.
-3. Replace the hardcoded "Fintech · reconciliation" label on `/companies`.
+1. Add a credit card to Vercel AI Gateway so the app can split runs itself:
+   <https://vercel.com/d?to=%2F%5Bteam%5D%2F%7E%2Fai%3Fmodal%3Dadd-credit-card>.
+2. Review the 4 real pains from "invoice chasing for small agencies" in `/inbox`. The two older
+   combined proposals can be rejected with a reason ("superseded by the split").
 
 ## Suggested next prompt
 
 ```text
-Continue oppie.lab: split a run into distinct pains, each with the businesses that sell a fix.
+Continue oppie.lab: card is added, run discovery on 3 new directions and compare the pains.
 ```

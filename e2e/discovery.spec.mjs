@@ -151,7 +151,7 @@ test("inbox decides persisted proposals only with a reason and chosen sources", 
   const card = page.getByRole("article", { name: "Review repeated work around reconciliation" });
   await expect(card).toBeVisible();
   await expect(card.getByText("Who pays and what they pay today are not established.")).toBeVisible();
-  await expect(card.getByText("Not added yet")).toHaveCount(3);
+  await expect(card.getByText("Not added yet")).toHaveCount(4);
   await expect(card.getByRole("checkbox")).toHaveCount(2);
   await expect(card.getByRole("checkbox", { checked: true })).toHaveCount(0);
 
@@ -373,6 +373,7 @@ test("Run discovery collects in three lanes and shows what each returned", async
       { lane: "money", provider: "remotive", query: "invoice chasing", found: 0, saved: 0, error: "remotive answered 503" }
     ] }) });
   });
+  await page.route("**/api/discovery-runs/run-auto/split", (r) => { calls.push("split"); return r.fulfill({ status: 502, contentType: "application/json", body: JSON.stringify({ error: "AI Gateway answered 403: AI Gateway requires a valid credit card on file" }) }); });
   await page.route("**/api/discovery-runs/run-auto/proposals", async (r) => {
     calls.push("proposals");
     stored.proposals = [{ id: "prop-auto", runId: "run-auto", title: "Review repeated work around invoice chasing for small agencies", workflow: "Overdue invoice follow up is a nightmare.", unknowns: ["Who pays and what they pay today are not established."], killReasons: [], sourceIds: ["s1", "s2"], companyIds: [], status: "waiting" }];
@@ -392,5 +393,38 @@ test("Run discovery collects in three lanes and shows what each returned", async
   await expect(detail.getByRole("heading", { name: /invoice chasing for small agencies/ })).toBeVisible();
   await expect(detail.getByText("waiting for review · not accepted", { exact: false })).toBeVisible();
   await expect(detail.getByRole("link", { name: "How do you handle chasing unpaid invoices?" })).toBeVisible();
-  expect(calls).toEqual(["create", "collect", "proposals"]);
+  // The split was refused, so the page falls back to one combined proposal and says why.
+  await expect(page.getByText(/Pains could not be split \(AI Gateway answered 403: AI Gateway requires a valid credit card on file\)/)).toBeVisible();
+  expect(calls).toEqual(["create", "collect", "split", "proposals"]);
+});
+
+test("Run discovery splits a run into distinct pains, each with who already sells a fix", async ({ page }) => {
+  const run = { id: "run-split", direction: "invoice chasing for small agencies", status: "queued", createdAt: "2026-10-04T00:00:00.000Z", updatedAt: "2026-10-04T00:00:00.000Z" };
+  const src = (id, sourceType, signalType, title, lane) => ({ id, runId: "run-split", sourceType, signalType, url: `https://example.com/${id}`, title, excerpt: `${title}.`, foundFor: `invoice chasing for small agencies · ${lane}: q`, linkStatus: "unverified", triage: "untriaged", createdAt: "t" });
+  const stored = { run, sources: [src("p1", "reddit", "pain", "Chasing overdue invoices by hand", "pain"), src("p2", "reddit", "pain", "Invoices tracked in a spreadsheet slip", "pain"), src("b1", "vendor", "price", "Chasing software from $29/month", "business")], proposals: [], companies: [] };
+  const calls = [];
+  await page.route("**/api/discovery-runs", (r) => r.fulfill({ status: 201, contentType: "application/json", body: JSON.stringify({ run }) }));
+  await page.route("**/api/discovery-runs/run-split", (r) => r.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(stored) }));
+  await page.route("**/api/discovery-runs/run-split/collect", (r) => r.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ summary: [{ lane: "pain", provider: "brave", query: "q", found: 2, saved: 2 }, { lane: "business", provider: "brave", query: "q", found: 1, saved: 1 }] }) }));
+  await page.route("**/api/discovery-runs/run-split/proposals", (r) => { calls.push("proposals"); return r.fulfill({ status: 201, contentType: "application/json", body: "{}" }); });
+  await page.route("**/api/discovery-runs/run-split/split", (r) => {
+    calls.push("split");
+    stored.proposals = [
+      { id: "pain-1", runId: "run-split", title: "Agency owners chase overdue invoices by hand", workflow: "They chase by hand.", actor: "agency owners", businessPattern: "Already sold by: ChaseCo — chasing software (“from $29/month”)", unknowns: ["Repetition is not established yet: one source describes this pain."], killReasons: [], sourceIds: ["p1", "b1"], companyIds: [], status: "waiting" },
+      { id: "pain-2", runId: "run-split", title: "Invoice status lives in a spreadsheet, so invoices slip", workflow: "Tracked in a spreadsheet.", unknowns: ["No business selling a fix was found in this run."], killReasons: [], sourceIds: ["p2"], companyIds: [], status: "waiting" }
+    ];
+    return r.fulfill({ status: 201, contentType: "application/json", body: JSON.stringify({ split: { proposals: 2, suggested: 3, dropped: { quotes: 2, businesses: 0, prices: 1, pains: 1 } } }) });
+  });
+
+  await page.goto("/discover");
+  await page.getByLabel("Discovery direction").fill("invoice chasing for small agencies");
+  await page.getByRole("button", { name: /Run discovery/ }).click();
+
+  await expect(page.getByText("2 distinct pains found · 4 unsupported claims from the model dropped. Waiting in Inbox.")).toBeVisible();
+  const rail = page.getByRole("region", { name: "Candidate problems" });
+  await expect(rail.getByRole("button", { name: /Agency owners chase overdue invoices by hand/ })).toBeVisible();
+  await expect(rail.getByRole("button", { name: /Invoice status lives in a spreadsheet/ })).toBeVisible();
+  const detail = page.locator("article.candidate-detail");
+  await expect(detail.getByText("Already sold by: ChaseCo — chasing software (“from $29/month”)")).toBeVisible();
+  expect(calls).toEqual(["split"]);
 });

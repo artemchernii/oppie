@@ -10,6 +10,7 @@ const inbox = require(path.join(__dirname, "..", ".tmp-test", "discoveryInbox.js
 const trail = require(path.join(__dirname, "..", ".tmp-test", "problemTrail.js"));
 const analysisLib = require(path.join(__dirname, "..", ".tmp-test", "analysis.js"));
 const collectors = require(path.join(__dirname, "..", ".tmp-test", "collectors.js"));
+const painSplit = require(path.join(__dirname, "..", ".tmp-test", "painSplit.js"));
 const fixtures = require(path.join(__dirname, "..", ".tmp-test", "playwrightFixtures.js"));
 
 let passed = 0;
@@ -501,6 +502,94 @@ test("collected sources from one run group into one proposal across lanes", () =
   ]);
   assert.deepStrictEqual(out.map((p) => p.sourceIds), [["a", "b"], ["c"]]);
   assert.strictEqual(out[0].title, "Review repeated work around invoice chasing");
+});
+
+// ---- Splitting a run into distinct pains: the model suggests, the stored sources decide.
+
+const splitSources = () => {
+  const src = (id, lane, sourceType, excerpt) => ({ id, runId: "r", sourceType, signalType: lane === "business" ? "price" : "pain", url: `https://x.test/${id}`, title: `title ${id}`, excerpt, foundFor: `invoice chasing · ${lane}: q`, linkStatus: "unverified", triage: "untriaged", createdAt: "t" });
+  return [
+    src("p1", "pain", "reddit", "Overdue invoice follow up is a nightmare. It kills cash flow."),
+    src("p2", "pain", "reddit", "We chase every late payment by hand, 40 hours a month."),
+    src("b1", "business", "vendor", "Invoice chasing software. Plans start at $29/month for agencies."),
+    src("b2", "business", "vendor", "Outsourced receivables for small firms.")
+  ];
+};
+const pain = (overrides = {}) => ({
+  name: "Agencies chase late invoices by hand", who: "agency owners", description: "They chase by hand.",
+  evidence: [{ sourceId: "p1", quote: "Overdue invoice follow up is a nightmare" }, { sourceId: "p2", quote: "We chase every late payment by hand" }],
+  businesses: [{ sourceId: "b1", name: "ChaseCo", offer: "chasing software", priceQuote: "Plans start at $29/month" }],
+  unknowns: ["Who approves the purchase."], ...overrides
+});
+
+test("a quote must appear word for word in its source", () => {
+  assert.strictEqual(painSplit.quotedVerbatim("overdue INVOICE follow up", "Overdue invoice follow up is a nightmare."), true);
+  assert.strictEqual(painSplit.quotedVerbatim("Overdue invoices are always a nightmare", "Overdue invoice follow up is a nightmare."), false);
+  assert.strictEqual(painSplit.quotedVerbatim("a", "a b c"), false, "a quote too short to mean anything is refused");
+});
+
+test("a correct split is kept whole", () => {
+  const report = painSplit.checkSplit({ pains: [pain()] }, splitSources());
+  assert.deepStrictEqual(report.dropped, { quotes: 0, businesses: 0, prices: 0, pains: 0 });
+  assert.deepStrictEqual(report.pains[0].painSourceIds, ["p1", "p2"]);
+  assert.deepStrictEqual(report.pains[0].businessSourceIds, ["b1"]);
+});
+
+test("invented quotes, unknown ids and business sources cited as pain are dropped and counted", () => {
+  const report = painSplit.checkSplit({ pains: [pain({ evidence: [
+    { sourceId: "p1", quote: "Overdue invoice follow up is a nightmare" },
+    { sourceId: "p2", quote: "Agencies lose 30% of revenue to late payment" },
+    { sourceId: "p9", quote: "Overdue invoice follow up is a nightmare" },
+    { sourceId: "b1", quote: "Invoice chasing software" }
+  ] })] }, splitSources());
+  assert.deepStrictEqual(report.pains[0].painSourceIds, ["p1"]);
+  assert.strictEqual(report.dropped.quotes, 3);
+});
+
+test("a pain with no supported evidence is dropped entirely", () => {
+  const report = painSplit.checkSplit({ pains: [pain({ evidence: [{ sourceId: "p1", quote: "a quote that is not there at all" }] })] }, splitSources());
+  assert.strictEqual(report.pains.length, 0);
+  assert.strictEqual(report.dropped.pains, 1);
+});
+
+test("a business must come from the business lane, and an unquoted price is stripped, not kept", () => {
+  const report = painSplit.checkSplit({ pains: [pain({ businesses: [
+    { sourceId: "p2", name: "Not a business", offer: "x", priceQuote: "" },
+    { sourceId: "b1", name: "ChaseCo", offer: "chasing", priceQuote: "$19/month" },
+    { sourceId: "b2", name: "AR Outsourcing", offer: "people chasing", priceQuote: "" }
+  ] })] }, splitSources());
+  assert.deepStrictEqual(report.pains[0].businessSourceIds, ["b1", "b2"]);
+  assert.strictEqual(report.pains[0].businesses[0].priceQuote, "", "a price the source does not state is removed");
+  assert.deepStrictEqual([report.dropped.businesses, report.dropped.prices], [1, 1]);
+});
+
+test("each kept pain becomes one waiting proposal, with repetition stated from the evidence", () => {
+  const report = painSplit.checkSplit({ pains: [pain(), pain({ name: "Second pain", evidence: [{ sourceId: "p2", quote: "We chase every late payment by hand" }], businesses: [] })] }, splitSources());
+  let n = 0;
+  const out = painSplit.proposalsFromSplit("r", report, () => `prop-${++n}`);
+  assert.deepStrictEqual(out.map((p) => [p.id, p.title, p.status]), [["prop-1", "Agencies chase late invoices by hand", "waiting"], ["prop-2", "Second pain", "waiting"]]);
+  assert.deepStrictEqual(out[0].sourceIds, ["p1", "p2", "b1"]);
+  assert.match(out[0].unknowns[0], /Described in 2 sources/);
+  assert.match(out[1].unknowns[0], /Repetition is not established yet/);
+  assert.match(out[1].unknowns[1], /No business selling a fix/);
+  assert.strictEqual(out[0].businessPattern, "Already sold by: ChaseCo — chasing software (“Plans start at $29/month”)");
+  assert.strictEqual(out[1].businessPattern, undefined);
+});
+
+test("the gateway call sends the schema and surfaces a refusal such as a missing card", async () => {
+  let sent = null;
+  const ok = await painSplit.requestSplit("invoice chasing", splitSources(), "tok", async (url, init) => {
+    sent = { url, body: JSON.parse(init.body), auth: init.headers.Authorization };
+    return { ok: true, status: 200, json: async () => ({ choices: [{ message: { content: JSON.stringify({ pains: [pain()] }) } }] }), text: async () => "" };
+  });
+  assert.strictEqual(ok.ok, true);
+  assert.strictEqual(sent.url, "https://ai-gateway.vercel.sh/v1/chat/completions");
+  assert.strictEqual(sent.auth, "Bearer tok");
+  assert.strictEqual(sent.body.response_format.json_schema.name, "pain_split");
+  assert.match(sent.body.messages[1].content, /\[p1\] lane=pain/);
+  assert.match(sent.body.messages[1].content, /\[b1\] lane=business/);
+  const refused = await painSplit.requestSplit("x", splitSources(), "tok", async () => ({ ok: false, status: 403, json: async () => ({}), text: async () => "AI Gateway requires a valid credit card on file" }));
+  assert.match(refused.error, /^AI Gateway answered 403: AI Gateway requires a valid credit card/);
 });
 
 (async () => {

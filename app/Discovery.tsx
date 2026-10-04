@@ -49,8 +49,9 @@ export default function Discovery({ initial, initialError, recentRuns, recentRun
   const [data, setData] = useState<DiscoveryRunData | null>(initial);
   const [loadError, setLoadError] = useState(initialError ?? "");
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [runState, setRunState] = useState<"idle" | "creating" | "collecting" | "proposing" | "error">("idle");
+  const [runState, setRunState] = useState<"idle" | "creating" | "collecting" | "splitting" | "proposing" | "error">("idle");
   const [collectSummary, setCollectSummary] = useState<CollectSummary[] | null>(null);
+  const [runOutcome, setRunOutcome] = useState("");
   const [runError, setRunError] = useState("");
   const [sourceUrl, setSourceUrl] = useState("");
   const [sourceTitle, setSourceTitle] = useState("");
@@ -87,6 +88,7 @@ export default function Discovery({ initial, initialError, recentRuns, recentRun
       setSourceState("");
       setProposalState("");
       setCollectSummary(null);
+      setRunOutcome("");
       const id = payload.run.id;
       await loadRun(id);
       // Collect real sources for the direction, then group them into a proposal for review.
@@ -99,11 +101,20 @@ export default function Discovery({ initial, initialError, recentRuns, recentRun
       }
       setCollectSummary(collectedPayload.summary ?? []);
       if ((collectedPayload.summary ?? []).some((lane) => lane.saved > 0)) {
-        setRunState("proposing");
-        const built = await fetch(`/api/discovery-runs/${encodeURIComponent(id)}/proposals`, { method: "POST" });
-        if (!built.ok) {
+        // First choice: split into distinct pains, each with the businesses selling a fix.
+        setRunState("splitting");
+        const split = await fetch(`/api/discovery-runs/${encodeURIComponent(id)}/split`, { method: "POST" });
+        const splitPayload = await split.json().catch(() => ({})) as { split?: { proposals: number; suggested: number; dropped: Record<string, number> }; error?: string };
+        if (split.ok && splitPayload.split && splitPayload.split.proposals > 0) {
+          const dropped = Object.values(splitPayload.split.dropped).reduce((a, b) => a + b, 0);
+          setRunOutcome(`${plural(splitPayload.split.proposals, "distinct pain")} found${dropped ? ` · ${plural(dropped, "unsupported claim")} from the model dropped` : ""}. Waiting in Inbox.`);
+        } else {
+          // Fallback: one plain proposal over all sources, and say why the split did not happen.
+          setRunState("proposing");
+          const built = await fetch(`/api/discovery-runs/${encodeURIComponent(id)}/proposals`, { method: "POST" });
           const builtPayload = await built.json().catch(() => ({})) as { error?: string };
-          setProposalState(builtPayload.error || "Could not build proposal");
+          const why = splitPayload.error || "the model found no pain it could support with quotes";
+          setRunOutcome(built.ok ? `Pains could not be split (${why}). One combined proposal is waiting in Inbox instead.` : builtPayload.error || "Could not build proposal");
         }
       }
       await loadRun(id);
@@ -152,7 +163,7 @@ export default function Discovery({ initial, initialError, recentRuns, recentRun
   return (
     <main className="discover-page"><div className="discover-shell">
       <header className="discover-head"><div className="hero-copy"><div className="eyebrow hero-eyebrow"><span className="pulse-dot" /> oppie.lab / discovery</div><h1>Start with a direction.<br /><em>Find the work.</em></h1><p>Give us a market, a role, or a loose constraint. We look for painful workflows, existing spend, and businesses worth studying.</p></div><div className="research-note"><span className="note-mark">✦</span><div><strong>Research mode</strong><span>{view ? (accepted ? `${plural(accepted, "proposal")} accepted by a person` : "Nothing accepted yet") : "No run open"}</span></div></div></header>
-      <section className="direction-card"><div className="direction-top"><span>What are you curious about?</span><span className="direction-hint">No problem statement needed</span></div><div className="prompt-field"><input className="direction-input" aria-label="Discovery direction" value={prompt} onChange={(event) => setPrompt(event.target.value)} /></div><div className="prompt-chips"><button className="suggestion" onClick={() => setPrompt("Boring B2B services in Portugal for solo founders")}>Boring B2B in Portugal</button><button className="suggestion" onClick={() => setPrompt("Compliance work that European SMEs still do in spreadsheets")}>Compliance + spreadsheets</button><button className="suggestion" onClick={() => setPrompt("Businesses to adapt for small financial firms")}>Small financial firms</button></div><div className="direction-bottom"><span>Market · geography · role · workflow · constraint</span><button className="run-button" onClick={runDiscovery} disabled={runState === "creating" || runState === "collecting" || runState === "proposing"}>{runState === "creating" ? "Starting…" : runState === "collecting" ? "Collecting real sources…" : runState === "proposing" ? "Building proposal…" : "Run discovery"} <span>↗</span></button></div>{view && <div className="run-feedback">Run {view.run.status} · {view.run.id}</div>}{runState === "error" && <div className="run-feedback run-feedback-error">{runError}</div>}{collectSummary && <ul className="collect-summary" aria-label="What was collected">{collectSummary.map((lane) => <li key={`${lane.lane}-${lane.provider}-${lane.query}`}><b>{LANE_LABEL[lane.lane]}</b><span>{PROVIDER_LABEL[lane.provider] ?? lane.provider}</span><span className="collect-query">{lane.query}</span>{lane.error ? <em className="run-feedback-error">failed: {lane.error}</em> : <em>{lane.saved} saved{lane.found > lane.saved ? ` · ${lane.found - lane.saved} already stored` : ""}</em>}</li>)}</ul>}</section>
+      <section className="direction-card"><div className="direction-top"><span>What are you curious about?</span><span className="direction-hint">No problem statement needed</span></div><div className="prompt-field"><input className="direction-input" aria-label="Discovery direction" value={prompt} onChange={(event) => setPrompt(event.target.value)} /></div><div className="prompt-chips"><button className="suggestion" onClick={() => setPrompt("Boring B2B services in Portugal for solo founders")}>Boring B2B in Portugal</button><button className="suggestion" onClick={() => setPrompt("Compliance work that European SMEs still do in spreadsheets")}>Compliance + spreadsheets</button><button className="suggestion" onClick={() => setPrompt("Businesses to adapt for small financial firms")}>Small financial firms</button></div><div className="direction-bottom"><span>Market · geography · role · workflow · constraint</span><button className="run-button" onClick={runDiscovery} disabled={runState !== "idle" && runState !== "error"}>{runState === "creating" ? "Starting…" : runState === "collecting" ? "Collecting real sources…" : runState === "splitting" ? "Splitting into pains…" : runState === "proposing" ? "Building proposal…" : "Run discovery"} <span>↗</span></button></div>{view && <div className="run-feedback">Run {view.run.status} · {view.run.id}</div>}{runState === "error" && <div className="run-feedback run-feedback-error">{runError}</div>}{runOutcome && <p className="run-feedback" role="status">{runOutcome}</p>}{collectSummary && <ul className="collect-summary" aria-label="What was collected">{collectSummary.map((lane) => <li key={`${lane.lane}-${lane.provider}-${lane.query}`}><b>{LANE_LABEL[lane.lane]}</b><span>{PROVIDER_LABEL[lane.provider] ?? lane.provider}</span><span className="collect-query">{lane.query}</span>{lane.error ? <em className="run-feedback-error">failed: {lane.error}</em> : <em>{lane.saved} saved{lane.found > lane.saved ? ` · ${lane.found - lane.saved} already stored` : ""}</em>}</li>)}</ul>}</section>
       {runId && <section className="source-capture"><div><span className="section-overline">Add evidence to this run</span><h2>Capture a source</h2><p>Paste a public page when the engine cannot collect it directly. The excerpt is required so the link never becomes an unsupported claim.</p></div><div className="source-capture-grid"><label>URL<input value={sourceUrl} onChange={(event) => setSourceUrl(event.target.value)} placeholder="https://…" /></label><label>Title<input value={sourceTitle} onChange={(event) => setSourceTitle(event.target.value)} placeholder="What this page is" /></label><label className="source-capture-wide">Quoted excerpt<textarea value={sourceExcerpt} onChange={(event) => setSourceExcerpt(event.target.value)} placeholder="Paste the relevant passage or figure" /></label><button className="action-primary" onClick={captureManualSource}>Save source <span>↗</span></button></div><div className="source-capture-reddit"><label>Reddit search<input value={redditQuery} onChange={(event) => setRedditQuery(event.target.value)} /></label><button className="action-secondary" onClick={searchReddit}>Search Reddit</button></div>{sourceState && <p className="run-feedback">{sourceState}</p>}<button className="action-secondary proposal-build-button" onClick={generateProposal}>Build review proposal <span>↗</span></button>{proposalState && <p className="run-feedback">{proposalState}</p>}</section>}
 
       {loadError && <p className="run-feedback run-feedback-error" role="alert">Could not read the run: {loadError}</p>}

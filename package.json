@@ -11,14 +11,15 @@
     "test:e2e": "playwright test",
     "build": "next build",
     "start": "next start",
-    "test": "tsc lib/problemPersistence.ts lib/problemSync.ts lib/analysis.ts lib/companySync.ts lib/supabaseResult.ts lib/research.ts lib/researchPersistence.ts lib/discovery.ts lib/discoveryAcceptance.ts lib/discoveryView.ts lib/discoveryInbox.ts lib/problemTrail.ts lib/playwrightFixtures.ts lib/ingestion.ts lib/proposals.ts lib/collectors.ts lib/supabaseConfig.ts lib/supabase/service.ts --rootDir lib --outDir .tmp-test --module commonjs --target es2020 --moduleResolution node --skipLibCheck --esModuleInterop && node scripts/problems.test.js && node scripts/analysis.test.js && node scripts/companies.test.js && node scripts/research.test.js && node scripts/discovery.test.js && node scripts/supabase.test.js",
+    "test": "tsc lib/problemPersistence.ts lib/problemSync.ts lib/analysis.ts lib/companySync.ts lib/supabaseResult.ts lib/research.ts lib/researchPersistence.ts lib/discovery.ts lib/discoveryAcceptance.ts lib/discoveryView.ts lib/discoveryInbox.ts lib/problemTrail.ts lib/playwrightFixtures.ts lib/ingestion.ts lib/proposals.ts lib/collectors.ts lib/painSplit.ts lib/supabaseConfig.ts lib/supabase/service.ts --rootDir lib --outDir .tmp-test --module commonjs --target es2020 --moduleResolution node --skipLibCheck --esModuleInterop && node scripts/problems.test.js && node scripts/analysis.test.js && node scripts/companies.test.js && node scripts/research.test.js && node scripts/discovery.test.js && node scripts/supabase.test.js",
     "research": "node scripts/research.js",
     "load:companies": "tsc lib/companySync.ts lib/supabaseResult.ts --rootDir lib --outDir .tmp-test --module commonjs --target es2020 --moduleResolution node --skipLibCheck && node scripts/load-companies.js",
     "check:commits": "node scripts/check-commits.js",
     "prepare": "git config core.hooksPath .githooks 2>/dev/null || true",
     "load:problems": "tsc lib/problemSync.ts --rootDir lib --outDir .tmp-test --module commonjs --target es2020 --moduleResolution node --skipLibCheck && node scripts/load-problems.js",
     "discover:dry": "tsc lib/collectors.ts --rootDir lib --outDir .tmp-test --module commonjs --target es2020 --moduleResolution node --skipLibCheck && node scripts/discover-dry.js",
-    "discover:run": "tsc lib/collectors.ts lib/discovery.ts lib/proposals.ts --rootDir lib --outDir .tmp-test --module commonjs --target es2020 --moduleResolution node --skipLibCheck && node scripts/discover-run.js"
+    "discover:run": "tsc lib/collectors.ts lib/discovery.ts lib/proposals.ts --rootDir lib --outDir .tmp-test --module commonjs --target es2020 --moduleResolution node --skipLibCheck && node scripts/discover-run.js",
+    "discover:split": "tsc lib/painSplit.ts lib/discovery.ts --rootDir lib --outDir .tmp-test --module commonjs --target es2020 --moduleResolution node --skipLibCheck && node scripts/discover-split.js"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

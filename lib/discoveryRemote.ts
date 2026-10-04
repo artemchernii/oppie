@@ -6,6 +6,7 @@ import { isNextControlFlow, messageOf, reason } from "./supabaseResult";
 import { canonicalDiscoveryUrl, discoveryProposalFromRow, discoveryRunFromRow, discoverySourceFromRow, discoveryUrlKey, newDiscoveryRun, validateDiscoverySource, acceptanceBlockedByRun, runStatusAfter, validateProposalAcceptance, validateProposalRejection, type RunEvent, type DiscoveryInput, type DiscoveryRun, type DiscoverySource, type DiscoverySourceInput } from "./discovery";
 import { redditSources } from "./ingestion";
 import { collect, type Lane, type Provider } from "./collectors";
+import { checkSplit, DEFAULT_SPLIT_MODEL, proposalsFromSplit, requestSplit, type SplitReport } from "./painSplit";
 import { generateDiscoveryProposals } from "./proposals";
 import { problemFromDiscoveryProposal, mergeDiscoveryEvidence, runAcceptance, type StepResult } from "./discoveryAcceptance";
 import type { Problem } from "./problems";
@@ -366,6 +367,50 @@ export async function collectRun(runId: string): Promise<DiscoveryResult<Collect
     const failure = messageOf(error, "could not collect sources");
     await markRun(runId, "failed", failure);
     return { ok: false, error: failure };
+  }
+}
+
+export type SplitSummary = { proposals: number; suggested: number; dropped: SplitReport["dropped"] };
+
+/**
+ * Splits a run into distinct pains with the language model, keeps only what the stored sources
+ * support (`checkSplit`), and stores each pain as a waiting proposal. Nothing is accepted.
+ * A gateway failure is returned as an error so the caller can fall back to the plain proposal;
+ * it does not fail the run, because the collected sources are still good.
+ */
+export async function splitRun(runId: string, token: string | null): Promise<DiscoveryResult<SplitSummary>> {
+  if (!token) return { ok: false, error: "AI splitting is not configured: no AI_GATEWAY_API_KEY or Vercel OIDC token" };
+  if (!supabaseConfig().userConfigured) return { ok: false, error: "Supabase is not configured" };
+  try {
+    const { supabase } = supabaseForRoute();
+    const [runResult, sourceResult] = await Promise.all([
+      supabase.from("discovery_runs").select("*").eq("id", runId).maybeSingle(),
+      supabase.from("discovery_sources").select("*").eq("run_id", runId).neq("triage", "discarded")
+    ]);
+    if (runResult.error) return { ok: false, error: reason(runResult.error) };
+    if (!runResult.data) return { ok: false, error: "The run was not found" };
+    if (sourceResult.error) return { ok: false, error: reason(sourceResult.error) };
+    const run = discoveryRunFromRow(runResult.data as Record<string, unknown>);
+    const sources = sourceResult.data.map((row) => discoverySourceFromRow(row as Record<string, unknown>));
+    if (sources.length === 0) return { ok: false, error: "The run has no sources to split" };
+    const suggested = await requestSplit(run.direction, sources, token, (url, init) => fetch(url, { ...init, cache: "no-store" }), process.env.AI_GATEWAY_MODEL || DEFAULT_SPLIT_MODEL);
+    if (!suggested.ok) return { ok: false, error: suggested.error };
+    const report = checkSplit(suggested.value, sources);
+    const proposals = proposalsFromSplit(runId, report);
+    if (proposals.length > 0) {
+      const written = await supabase.from("discovery_proposals").insert(proposals.map((proposal) => ({
+        id: proposal.id, run_id: proposal.runId, title: proposal.title, workflow: proposal.workflow,
+        actor: proposal.actor ?? null, payer: null, workaround: null, business_pattern: proposal.businessPattern ?? null,
+        unknowns: proposal.unknowns, kill_reasons: proposal.killReasons, source_ids: proposal.sourceIds,
+        company_ids: proposal.companyIds, status: proposal.status
+      })));
+      if (written.error) return { ok: false, error: reason(written.error) };
+      await markRun(runId, "proposals-built");
+    }
+    return { ok: true, value: { proposals: proposals.length, suggested: suggested.value.pains?.length ?? 0, dropped: report.dropped } };
+  } catch (error) {
+    if (isNextControlFlow(error)) throw error;
+    return { ok: false, error: messageOf(error, "could not split the run") };
   }
 }
 
