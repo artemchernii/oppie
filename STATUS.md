@@ -4,12 +4,37 @@ Last updated: 2026-10-04
 
 ## Branch and commit
 
-- `master` at `e45d9b4` (2026-10-04). All work through PR #62 is merged.
-- Handoff for the next session: [`docs/CLAUDE_HANDOFF.md`](docs/CLAUDE_HANDOFF.md) — NIS2 is parked;
-  the owner is reviewing the inbox on the live app.
+- `master` at `24ea033` (2026-10-04). All work through PR #65 is merged; the Ideas board is on
+  `feat/ideas-board`.
+- Handoff for the next session: [`docs/CLAUDE_HANDOFF.md`](docs/CLAUDE_HANDOFF.md) — the owner
+  decides ideas on the new board; next build links Pursue to a tracked problem.
 - Never commit or push directly to `master`
 
 ## What is complete
+
+### Ideas board is the home page (2026-10-04, `DECISIONS.md` #10)
+
+Plain version: the app now opens on **Ideas** — 11 cards, one per theme the 30 searches covered.
+Each card shows how many complaints and sellers were found, the cheapest and dearest real price,
+a one-word badge (Crowded, Real budget, Already served, Not proven, Too broad) and one line saying
+whether it is worth your time. Click a card for four boxes and Pursue / Park / Drop. The old
+Problems list is now "Tracked problems" at `/problems`.
+
+Precise version:
+
+- Idea records: `lib/ideas.ts` (agent notes, reviewed by PR). Live counts and quotes:
+  `lib/ideaRemote.ts`. Decisions: `idea_decisions` (migration `20261008000000_idea_decisions.sql`,
+  **to be applied by the owner**; it also records the NIS2 park).
+- Live counts on 2026-10-04: contract renewals 34 complaints / 24 sellers; invoice chasing 24 / 30;
+  supplier certificates 23 / 12; SME compliance 16 / 9; AML and KYC 15 / 24; NIS2 15 / 52;
+  finance for small firms 14 / 9; EU seller rules 9 / 13; Portugal 7 / 9; credit control abroad
+  3 / 47 (non-English pain is stored as context); e-invoicing 0 / 1.
+- Every price on a card was checked to appear word for word in the stored business lines; every
+  quote is a stored source excerpt.
+- Tests: `scripts/ideas.test.js` (9), `e2e/ideas.spec.mjs` (5), contrast check extended to the
+  new pages. The menu now wraps on phones (it overflowed at 375px once it had four links).
+- `scripts/persistence.test.js` is not run by `pnpm test`; `AGENTS.md` § 4 still refers to it.
+
 
 ### Visual product mock
 

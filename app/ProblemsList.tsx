@@ -62,8 +62,8 @@ export default function ProblemsList({ initial, readError, initialRatings, ratin
       <header className="page-head">
         <div className="page-head-row">
           <div>
-            <div className="eyebrow">Find a problem worth building</div>
-            <h1>Problems</h1>
+            <div className="eyebrow">Tracked problems</div>
+            <h1>Tracked problems</h1>
             <p>
               Every problem you are tracking, how far the evidence goes, and how ready it is. Blank
               means not checked — it is never counted as zero.

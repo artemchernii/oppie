@@ -586,3 +586,42 @@ different number after any edit — see `openspec/changes/problem-analysis-rubri
    public procurement documents beat job boards, so that is the likely first one.
 3. Open question 1 of entry #3 is untouched: whether the engine may propose *candidate problems*,
    rather than only evaluating problems a person framed.
+
+---
+
+## 10. Ideas become the home page; only the owner's decision is stored
+
+**Date:** 2026-10-04
+**Status:** Decided and implemented. The `idea_decisions` table exists only after the owner applies
+`supabase/migrations/20261008000000_idea_decisions.sql`; until then the board renders and the
+decision buttons say the table is missing.
+**Decided by:** the owner, in chat (option A cards; design in
+`docs/superpowers/specs/2026-10-04-ideas-board-design.md`).
+
+### What was decided
+
+1. The home page (`/`) is an **Ideas board**: one card per researched theme, with complaints,
+   sellers and searches as live counts, the cheapest and dearest quoted price, a one-word verdict
+   and a one-line answer. The former Problems list moves to `/problems` as "Tracked problems".
+2. **Idea records live in the repo** (`lib/ideas.ts`), written by the agent from the discovery runs
+   and changed only through a reviewed PR. They are agent notes: every answer and verdict is
+   labelled "Agent note" on screen.
+3. **Only the owner's decision is stored**, in `idea_decisions`: `pursue`, `park` or `drop`, with a
+   non-empty reason, enforced in code and by `check` constraints. Rows are appended; the newest per
+   idea is current, so a change of mind keeps its history.
+
+### Why
+
+Thirty searches produced 95 waiting proposals and a verdict table that lived only in `STATUS.md`.
+The app's home page showed ten seed problems from before discovery existed, and the owner could not
+tell which ideas were worth their time.
+
+### What this does not change
+
+- No number is a score. Counts are row counts; the board sorts undecided ideas first, then by
+  complaints, and says so on the page. Prices are quoted text with the seller named — never parsed,
+  converted, summed or averaged.
+- Nothing is decided on load: a status appears only after the owner clicks and gives a reason.
+- The ten seed problems are untouched (#8). Pursue does not create a tracked problem yet.
+- The migration records the NIS2 "park" decision the owner made in chat; applying it is the
+  owner's act of recording that decision.

@@ -342,8 +342,8 @@ export default async function CompaniesPage() {
           </span>
         </span>
         <div className="footer-right">
-          <Link className="link-button" href="/">
-            Back to problems
+          <Link className="link-button" href="/problems">
+            Back to tracked problems
           </Link>
         </div>
       </div>
