@@ -478,6 +478,16 @@ test("generic business words do not make an off-topic job count as on-topic", ()
   assert.deepStrictEqual(out.map((s) => s.publisher), ["Acme"]);
 });
 
+test("non-English directions keep whole words and drop their filler words", () => {
+  assert.deepStrictEqual(collectors.directionTerms("windykacja polubowna outsourcing dla małych firm"), ["windykacja", "polubowna"]);
+  assert.deepStrictEqual(collectors.directionTerms("externalizar gestión de cobros para pymes"), ["gestión", "cobro"]);
+  assert.deepStrictEqual(collectors.directionTerms("Forderungsmanagement und Mahnwesen Outsourcing für kleine Unternehmen"), ["forderungsmanagement", "mahnwesen"]);
+  const terms = collectors.directionTerms("windykacja polubowna outsourcing dla małych firm");
+  assert.strictEqual(collectors.mentionsDirection("Outsourcing IT dla małych firm", terms), false, "an IT page sharing only filler words is off-topic");
+  assert.strictEqual(collectors.mentionsDirection("Ile kosztuje windykacja polubowna?", terms), true);
+  assert.strictEqual(collectors.mentionsDirection("La gestión de cobros", collectors.directionTerms("externalizar gestión de cobros para pymes")), true);
+});
+
 test("a job is budget only when it states a salary", () => {
   const payload = { jobs: [
     { url: "https://j.test/1", title: "Invoice chasing specialist", company_name: "Acme", salary: "$50k", description: "Chase small agency invoices" },
