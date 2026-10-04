@@ -56,7 +56,7 @@ export const SPLIT_SCHEMA = {
             type: "array",
             items: {
               type: "object", additionalProperties: false, required: ["sourceId", "quote"],
-              properties: { sourceId: { type: "string" }, quote: { type: "string", description: "Exact words copied from that source's excerpt." } }
+              properties: { sourceId: { type: "string", description: "The source label, e.g. S3." }, quote: { type: "string", description: "Exact words copied from that source's excerpt." } }
             }
           },
           businesses: {
@@ -64,7 +64,7 @@ export const SPLIT_SCHEMA = {
             items: {
               type: "object", additionalProperties: false, required: ["sourceId", "name", "offer", "priceQuote"],
               properties: {
-                sourceId: { type: "string" }, name: { type: "string" },
+                sourceId: { type: "string", description: "The source label, e.g. S12." }, name: { type: "string" },
                 offer: { type: "string", description: "What they sell for this pain, in a few words." },
                 priceQuote: { type: "string", description: "Exact price words copied from that source, or empty if it states none." }
               }
@@ -77,15 +77,34 @@ export const SPLIT_SCHEMA = {
   }
 } as const;
 
+/**
+ * Short labels for the prompt. Models miscopy long random ids (dropping the "src-" prefix, or
+ * garbling a digit), which the checker then rightly refuses. `S1`, `S2`… are easy to copy back
+ * exactly; `resolveLabels` maps them to the real ids. An unknown label stays unknown and is dropped.
+ */
+export const sourceLabel = (index: number) => `S${index + 1}`;
+
+export function resolveLabels(response: SplitResponse, sources: DiscoverySource[]): SplitResponse {
+  const byLabel = new Map(sources.map((source, index) => [sourceLabel(index), source.id]));
+  const resolve = (id: string) => byLabel.get(id.trim().replace(/^\[|\]$/g, "").toUpperCase()) ?? id;
+  return {
+    pains: (response.pains ?? []).map((pain) => ({
+      ...pain,
+      evidence: (pain.evidence ?? []).map((item) => ({ ...item, sourceId: resolve(item.sourceId) })),
+      businesses: (pain.businesses ?? []).map((business) => ({ ...business, sourceId: resolve(business.sourceId) }))
+    }))
+  };
+}
+
 export function splitPrompt(direction: string, sources: DiscoverySource[]): { system: string; user: string } {
-  const lines = sources.map((source) =>
-    `[${source.id}] lane=${isBusinessSource(source) ? "business" : "pain"} type=${source.sourceType} signal=${source.signalType}\ntitle: ${source.title}\nexcerpt: ${source.excerpt}`);
+  const lines = sources.map((source, index) =>
+    `[${sourceLabel(index)}] lane=${isBusinessSource(source) ? "business" : "pain"} type=${source.sourceType} signal=${source.signalType}\ntitle: ${source.title}\nexcerpt: ${source.excerpt}`);
   return {
     system: [
       "You help a founder find painful, repeated work that businesses already charge to fix, so a business can be copied or adapted.",
       "Group the pain-lane sources into DISTINCT pains. Two sources are the same pain only if the same kind of person struggles with the same work.",
       "For each pain, list the business-lane sources that sell a fix for THAT pain (not merely the same industry).",
-      "Rules: cite only source ids from the list. Every quote must be copied exactly, word for word, from that source's excerpt. Never paraphrase inside a quote.",
+      "Rules: cite sources only by their label from the list, exactly as written, e.g. S3. Every quote must be copied exactly, word for word, from that source's excerpt. Never paraphrase inside a quote.",
       "Do not estimate market size, probability, revenue or scores. Do not state a price that is not quoted. If a pain has only one source, keep it but say repetition is unknown.",
       "Skip sources that do not describe a problem. Return at most 8 pains, most evidenced first."
     ].join("\n"),
@@ -171,7 +190,7 @@ export async function requestSplit(direction: string, sources: DiscoverySource[]
   const content = payload.choices?.[0]?.message?.content;
   if (!content) return { ok: false, error: "AI Gateway returned no content" };
   try {
-    return { ok: true, value: JSON.parse(content) as SplitResponse };
+    return { ok: true, value: resolveLabels(JSON.parse(content) as SplitResponse, sources) };
   } catch {
     return { ok: false, error: "AI Gateway returned content that is not JSON" };
   }

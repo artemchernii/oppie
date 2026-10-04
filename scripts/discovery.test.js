@@ -586,10 +586,24 @@ test("the gateway call sends the schema and surfaces a refusal such as a missing
   assert.strictEqual(sent.url, "https://ai-gateway.vercel.sh/v1/chat/completions");
   assert.strictEqual(sent.auth, "Bearer tok");
   assert.strictEqual(sent.body.response_format.json_schema.name, "pain_split");
-  assert.match(sent.body.messages[1].content, /\[p1\] lane=pain/);
-  assert.match(sent.body.messages[1].content, /\[b1\] lane=business/);
+  assert.match(sent.body.messages[1].content, /\[S1\] lane=pain/);
+  assert.match(sent.body.messages[1].content, /\[S3\] lane=business/);
+  assert.ok(!sent.body.messages[1].content.includes("[p1]"), "real ids are not shown to the model");
   const refused = await painSplit.requestSplit("x", splitSources(), "tok", async () => ({ ok: false, status: 403, json: async () => ({}), text: async () => "AI Gateway requires a valid credit card on file" }));
   assert.match(refused.error, /^AI Gateway answered 403: AI Gateway requires a valid credit card/);
+});
+
+test("the model cites short labels, and they map back to the real source ids", () => {
+  const sources = splitSources();
+  const resolved = painSplit.resolveLabels({ pains: [pain({
+    evidence: [{ sourceId: "S1", quote: "Overdue invoice follow up is a nightmare" }, { sourceId: "[s2]", quote: "We chase every late payment by hand" }, { sourceId: "S99", quote: "Overdue invoice follow up is a nightmare" }],
+    businesses: [{ sourceId: "S3", name: "ChaseCo", offer: "chasing", priceQuote: "Plans start at $29/month" }]
+  })] }, sources);
+  assert.deepStrictEqual(resolved.pains[0].evidence.map((e) => e.sourceId), ["p1", "p2", "S99"]);
+  assert.strictEqual(resolved.pains[0].businesses[0].sourceId, "b1");
+  const report = painSplit.checkSplit(resolved, sources);
+  assert.deepStrictEqual(report.pains[0].painSourceIds, ["p1", "p2"]);
+  assert.strictEqual(report.dropped.quotes, 1, "an unknown label is dropped, never guessed");
 });
 
 (async () => {

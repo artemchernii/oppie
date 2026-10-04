@@ -241,6 +241,22 @@ Precise version:
 - Run discovery: collect → split; if the split fails it falls back to one combined proposal and
   says why on the page.
 - `pnpm discover:split <run> [--save] [--from file.json]`.
+- The model sees sources as short labels (`S1`, `S2`…) that the code maps back to real ids. With
+  the real ids, Gemini dropped the `src-` prefix and garbled digits, so the checker refused every
+  quote in one run (0 of 4 pains kept); with labels the same run kept 5 pains.
+
+### Runs so far (2026-10-04, all real data, all pains waiting in /inbox)
+
+| Direction | Sources (pain) | Pains kept | Notes |
+|---|---|---|---|
+| invoice chasing for small agencies | 36 (16) | 4 | split by Claude in-session; strongest copy signal |
+| compliance work European SMEs still do in spreadsheets | 35 (16) | 8 | priced fixes, e.g. compliance software 7,500–15,000 EUR/year |
+| businesses to adapt for small financial firms | 34 (10) | 5 | fractional finance priced $300–$3,464/month |
+| boring B2B services in Portugal for solo founders | 35 (7) | 5 | generic (sales, overwhelm); direction too vague |
+| financial operations in European RIAs | 29 (4) | not split | only the combined proposal |
+
+`pnpm discover:run` still stores one combined proposal per run instead of splitting first; the
+five combined proposals can be rejected in Inbox as superseded.
 - Free tier verified 2026-10-04 (card on file, no credits bought): Gemini 2.5 Flash split the invoice
   run into 3 pains in ~58s; the checker dropped 3 misquotes and 13 wrong business citations. Claude
   models need paid credits. The 4 stored pains were split by Claude in the coding session.
