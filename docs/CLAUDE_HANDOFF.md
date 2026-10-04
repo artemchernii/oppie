@@ -1,8 +1,8 @@
 # oppie.lab — Claude handoff
 
 - Date: 2026-10-04
-- Branch: `master` at `45ef7d6`; the supplier-side results are on `docs/nis2-supplier-paid-today`
-- Next task: **owner decision on the NIS2 candidate** (section 5) — desk research is exhausted
+- Branch: `master` at `e45d9b4` (all merged through #62)
+- Next task: **owner reviews the inbox on the live app** (section 5); NIS2 is parked
 
 ## 1. Read first
 
@@ -66,21 +66,18 @@ sources → a Problem) or rejects (reason). Nothing is accepted, scored or concl
   fixed, GreenOnion 1,900–3,900 EUR, fraghugo bundled from 79 €/month, NIS2 Pilot 49.99 €, Fiverr
   $40–$200) but no named supplier who paid was found, and FitNIS2 offers it free (BMWE-funded).
 
-## 5. Next task: owner decision on NIS2
+## 5. Next task: owner reviews the inbox
 
-Desk research on NIS2 is done: buyers demand evidence (real, weak), sellers price help (2,990 EUR
-down to free), no proof any small supplier paid. The next evidence cannot come from search. The
-owner picks one:
+The owner chose option (a) on 2026-10-04: **NIS2 is parked** — free and near-free fixes exist and no
+small supplier was found paying. Do not start new NIS2 runs unless new payment evidence appears.
 
-1. **Kill or park NIS2** with the reason "free and near-free fixes exist; no proof of payment" and
-   return to the inbox (95 proposals, 0 decided).
-2. **Real-world test**: ask 5–10 small suppliers to energy, health or industry customers whether
-   they received a NIS2 questionnaire and whether they paid anyone to answer it. The owner does the
-   outreach; the agent can draft the questions and a log in `docs/`.
-3. **Pricing test**: a one-page offer at a fixed price, measured by replies. Needs spend and a
-   `DECISIONS.md` entry before anything is built.
+The owner now reviews the waiting proposals on the live app (`https://oppie-delta.vercel.app`,
+GitHub sign-in, one allowed account): 95 waiting, 0 decided. Accepting needs a reason and chosen
+sources; rejecting needs a reason. Suggested rejections: the 5 old combined "Review repeated work
+around …" proposals (superseded) and NIS2 pains (parked).
 
-Until the owner decides, the agent should not start new NIS2 runs.
+The agent's job in the next session: read what the owner accepted and rejected, report anything
+the inbox made confusing or slow, and fix it with a Playwright test. Do not decide proposals.
 
 ## 6. Owner preferences
 
@@ -93,5 +90,5 @@ Until the owner decides, the agent should not start new NIS2 runs.
 ## Copy-paste prompt
 
 ```text
-Continue oppie.lab: act on my NIS2 decision (docs/CLAUDE_HANDOFF.md §5).
+Continue oppie.lab: I reviewed the inbox — read my decisions and fix what was confusing (docs/CLAUDE_HANDOFF.md §5).
 ```

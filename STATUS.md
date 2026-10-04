@@ -4,10 +4,9 @@ Last updated: 2026-10-04
 
 ## Branch and commit
 
-- `master` at `45ef7d6` (2026-10-04). All work through PR #61 is merged; the NIS2 supplier-side
-  paid-today test is on `docs/nis2-supplier-paid-today`.
-- Handoff for the next session: [`docs/CLAUDE_HANDOFF.md`](docs/CLAUDE_HANDOFF.md) — the NIS2
-  candidate waits on an owner decision (desk research is exhausted).
+- `master` at `e45d9b4` (2026-10-04). All work through PR #62 is merged.
+- Handoff for the next session: [`docs/CLAUDE_HANDOFF.md`](docs/CLAUDE_HANDOFF.md) — NIS2 is parked;
+  the owner is reviewing the inbox on the live app.
 - Never commit or push directly to `master`
 
 ## What is complete
@@ -376,6 +375,10 @@ Counter-evidence, found with equal effort:
 Verdict: demand from buyers is real but weak (above); money moving on the supplier side is
 unproven; the price ladder runs 2,990 EUR → 79 €/month bundle → $40 → free. Desk research has hit
 its limit — the next evidence has to come from suppliers themselves.
+
+**Owner decision (2026-10-04): NIS2 is parked.** Reason: free and near-free fixes exist and no
+small supplier was found paying. No more NIS2 runs unless new evidence of payment turns up. The
+owner reviews the inbox next.
 
 ## What is not built
 
