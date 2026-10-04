@@ -271,6 +271,7 @@ Precise version:
 | mandatory B2B e-invoicing for small businesses in Belgium and Germany | 25 | 2 | Belgian Peppol mandate (2026) confuses small firms (8 sources); many free or low-cost providers (Billit, B2BRouter, Mercurius, Odoo); "inspecting received UBL invoices locally" had no fix found (2 sources); Germany barely surfaced |
 | OSS VAT returns for small EU online sellers | 27 | 3 | served and priced: hellotax OSS reports from 41 €/month, filings from 75 €/month; Eurofiscalis |
 | NIS2 cybersecurity compliance for small suppliers | 27 | 3 | price gap: consultancy 15,000–250,000 EUR one-time, platforms $30,000–50,000/year "aren't designed for startups"; small suppliers are pulled in by customers' supplier checks; 4 sources on scope confusion |
+| NIS2 small-supplier gap test (English + German runs, plus price searches) | 49 | 6 | the small fixed-price fix exists but is thin: GreenOnion (AT) supplier evidence package 1,900–3,900 EUR fixed; TSMONDO tool from 49 €/month; templates and a free applicability check; next tier is a 4,500 € gap assessment, then 15,000 €+ consultancy. Only one fixed-price package found in German searches. The checker dropped 14 German quotes the free model miscopied |
 
 `pnpm discover:run` now splits into pains first, like the button, and falls back to one combined
 proposal only when the split cannot run. The five older combined proposals can be rejected in Inbox
@@ -415,5 +416,5 @@ GET  /api/companies/:id
 ## Suggested next prompt
 
 ```text
-Continue oppie.lab: test the NIS2 small-supplier gap — find fixed-price NIS2 or security-questionnaire services for small suppliers and their prices.
+Continue oppie.lab: check NIS2 demand from the buyer side — are large EU companies actually sending NIS2 questionnaires to small suppliers, and how many?
 ```
