@@ -268,6 +268,9 @@ Precise version:
 | credit control outsourcing — Netherlands (debiteurenbeheer uitbesteden voor kleine bedrijven) | 20 | 2 | most developed and transparent: €3.95–€4.50 per call (Debiservice), from €45/month + ~€1.50 per action, €0.30–€2.50 per invoice or 2–8%; one provider says small firms can usually do it themselves |
 | credit control outsourcing — Spain (externalizar gestión de cobros para pymes) | 28 | 2 | software-led (Holded 59 €/month); outsourced cobros firms (Cobratis, recovery agencies); prices not published |
 | credit control outsourcing — Poland (windykacja polubowna outsourcing dla małych firm) | 22 | 5 | amicable collection on 7–30% commission; half the run was IT outsourcing until the filter fix in #56 |
+| mandatory B2B e-invoicing for small businesses in Belgium and Germany | 25 | 2 | Belgian Peppol mandate (2026) confuses small firms (8 sources); many free or low-cost providers (Billit, B2BRouter, Mercurius, Odoo); "inspecting received UBL invoices locally" had no fix found (2 sources); Germany barely surfaced |
+| OSS VAT returns for small EU online sellers | 27 | 3 | served and priced: hellotax OSS reports from 41 €/month, filings from 75 €/month; Eurofiscalis |
+| NIS2 cybersecurity compliance for small suppliers | 27 | 3 | price gap: consultancy 15,000–250,000 EUR one-time, platforms $30,000–50,000/year "aren't designed for startups"; small suppliers are pulled in by customers' supplier checks; 4 sources on scope confusion |
 
 `pnpm discover:run` now splits into pains first, like the button, and falls back to one combined
 proposal only when the split cannot run. The five older combined proposals can be rejected in Inbox
@@ -412,5 +415,5 @@ GET  /api/companies/:id
 ## Suggested next prompt
 
 ```text
-Continue oppie.lab: re-run the four credit-control countries with the multilingual fix and compare published prices side by side.
+Continue oppie.lab: test the NIS2 small-supplier gap — find fixed-price NIS2 or security-questionnaire services for small suppliers and their prices.
 ```
