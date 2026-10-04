@@ -83,3 +83,17 @@ office, client churn, the 30% of a year spent on year-end declarations.
 - Glassdoor and SalaryExpert are self-reported salary aggregators.
 - Whether UK firms pay more for a European team in UK hours: no source found either way.
 - Data protection for UK client data processed in Portugal: not checked in this session.
+
+## Timed spike on fake data (2026-10-04)
+
+Plain version: on four made-up landlords, a simple rule-based sorter plus a person came to
+**5–29 minutes per client per quarter**, under the 45-minute line where the numbers work. Even the
+"blind" landlord, whose payees the rules had never seen, took 15–29 minutes, because a landlord has
+only about a dozen different payees and each one is decided once. **This is fake data and assumed
+human speed. It says the idea is plausible, not that it works.**
+
+Precise version: `research/mtd-spike/README.md` (rows, rules hit, payees, assumptions). The time
+not measured is the likely real cost: onboarding, missing information, and chasing clients.
+
+Next test, in order of value: (1) a real, anonymised bank export used with the owner's consent;
+(2) ask two or three UK practices how long a quarterly update takes them today.
