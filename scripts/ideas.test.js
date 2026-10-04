@@ -81,6 +81,17 @@ test("every idea record is complete: runs, an answer, a verdict, and prices with
   assert.ok(ideas.IDEAS.length >= 10);
 });
 
+test("every market fact links to where it came from, and an edge is never blank", () => {
+  for (const idea of ideas.IDEAS) {
+    for (const fact of idea.facts ?? []) {
+      assert.ok(fact.text.trim(), `${idea.id} has an empty fact`);
+      assert.match(fact.url, /^https:\/\//, `${idea.id} fact without a source link`);
+    }
+    if (idea.edge !== undefined) assert.ok(idea.edge.trim(), `${idea.id} has a blank edge`);
+  }
+  assert.ok(ideas.IDEAS.filter((idea) => idea.edge).length >= 3, "the owner's edge ideas are on the board");
+});
+
 test("no run belongs to two ideas, so no complaint is counted twice", () => {
   const seen = new Map();
   for (const idea of ideas.IDEAS) for (const run of idea.runIds) {

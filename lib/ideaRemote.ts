@@ -129,7 +129,7 @@ export async function saveIdeaDecision(id: string, input: { status: unknown; rea
 function fixtureBoard(): IdeaBoard {
   const cards = IDEAS.map((idea, index): IdeaCard => ({
     idea,
-    complaints: index === 2 ? null : 30 - index,
+    complaints: idea.id === "credit-control-europe" ? null : 30 - index,
     sellers: 10 + index,
     decision: idea.id === "nis2-supplier-evidence" ? { ideaId: idea.id, status: "park", reason: "Fixture: parked.", decidedAt: "2026-10-04T15:00:00.000Z" } : undefined
   }));
