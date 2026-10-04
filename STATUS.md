@@ -254,9 +254,11 @@ Precise version:
 | businesses to adapt for small financial firms | 34 (10) | 5 | fractional finance priced $300–$3,464/month |
 | boring B2B services in Portugal for solo founders | 35 (7) | 5 | generic (sales, overwhelm); direction too vague |
 | financial operations in European RIAs | 29 (4) | not split | only the combined proposal |
+| vendor certificate and insurance tracking for small businesses | 30 (12) | 1 | 9 sources; 7 businesses sell a fix (e.g. $13–$19 per vendor/year, free plans up to 25–50 vendors); US-centred (COI, W-9) |
 
-`pnpm discover:run` still stores one combined proposal per run instead of splitting first; the
-five combined proposals can be rejected in Inbox as superseded.
+`pnpm discover:run` now splits into pains first, like the button, and falls back to one combined
+proposal only when the split cannot run. The five older combined proposals can be rejected in Inbox
+as superseded.
 - Free tier verified 2026-10-04 (card on file, no credits bought): Gemini 2.5 Flash split the invoice
   run into 3 pains in ~58s; the checker dropped 3 misquotes and 13 wrong business citations. Claude
   models need paid credits. The 4 stored pains were split by Claude in the coding session.
@@ -384,5 +386,5 @@ GET  /api/companies/:id
 ## Suggested next prompt
 
 ```text
-Continue oppie.lab: run discovery on 3 new directions and compare the pains.
+Continue oppie.lab: run discovery on the EU version of the strongest pains and compare who sells a fix.
 ```

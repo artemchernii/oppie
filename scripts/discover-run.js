@@ -5,8 +5,10 @@
 //
 // Admin work from a terminal, like `pnpm load:companies`: it writes with SUPABASE_SECRET_KEY, because
 // the app's own route needs a signed-in browser session. It only ADDS: one run, its sources (all
-// untriaged), and proposals waiting for review. It never accepts, rejects or scores anything —
-// that stays a person's decision in /inbox. Delete the run row and everything under it goes too.
+// untriaged), and proposals waiting for review — split into distinct pains when AI Gateway is
+// reachable (AI_GATEWAY_API_KEY or VERCEL_OIDC_TOKEN), otherwise one combined proposal. It never
+// accepts, rejects or scores anything — that stays a person's decision in /inbox. Delete the run
+// row and everything under it goes too.
 
 const fs = require("fs");
 const path = require("path");
@@ -15,6 +17,7 @@ const lib = (name) => require(path.join(ROOT, ".tmp-test", `${name}.js`));
 const { collect } = lib("collectors");
 const { newDiscoveryRun, canonicalDiscoveryUrl } = lib("discovery");
 const { generateDiscoveryProposals } = lib("proposals");
+const { requestSplit, checkSplit, proposalsFromSplit, DEFAULT_SPLIT_MODEL } = lib("painSplit");
 
 function loadEnvLocal() {
   const file = path.join(ROOT, ".env.local");
@@ -76,18 +79,41 @@ async function main() {
   const saved = rows.length ? await rest("POST", "discovery_sources", "?on_conflict=run_id,url", rows, "resolution=ignore-duplicates,return=representation") : [];
   const sources = saved.map((row) => ({ id: row.id, runId: row.run_id, sourceType: row.source_type, signalType: row.signal_type, url: row.url, title: row.title, excerpt: row.excerpt, foundFor: row.found_for, linkStatus: row.link_status, triage: row.triage, createdAt: row.created_at }));
   const companies = (await rest("GET", "companies", "?select=id,url")).map((row) => ({ id: String(row.id), url: String(row.url ?? "") }));
-  const proposals = generateDiscoveryProposals(run.id, sources, companies);
+  // Split into distinct pains first, exactly as the Run discovery button does. Only if that cannot
+  // happen (no gateway token, gateway refusal, or no pain the sources support) fall back to one
+  // combined proposal — and say why.
+  let proposals = [];
+  let how = "";
+  const token = process.env.AI_GATEWAY_API_KEY || process.env.VERCEL_OIDC_TOKEN;
+  const model = process.env.AI_GATEWAY_MODEL || DEFAULT_SPLIT_MODEL;
+  let whyNot = token ? "" : "no AI_GATEWAY_API_KEY or VERCEL_OIDC_TOKEN";
+  if (token && sources.length) {
+    console.log(`splitting into pains with ${model}…`);
+    const suggested = await requestSplit(run.direction, sources, token, (u, init) => fetch(u, init), model);
+    if (!suggested.ok) whyNot = suggested.error;
+    else {
+      const report = checkSplit(suggested.value, sources);
+      proposals = proposalsFromSplit(run.id, report);
+      how = `split into ${proposals.length} pain(s); the checker dropped ${JSON.stringify(report.dropped)}`;
+      if (!proposals.length) whyNot = "the model found no pain the sources support with quotes";
+    }
+  }
+  if (!proposals.length) {
+    proposals = generateDiscoveryProposals(run.id, sources, companies);
+    how = `one combined proposal (pains not split: ${whyNot})`;
+  }
   if (proposals.length) {
     await rest("POST", "discovery_proposals", "", proposals.map((p) => ({
-      id: p.id, run_id: p.runId, title: p.title, workflow: p.workflow, unknowns: p.unknowns, kill_reasons: p.killReasons,
-      source_ids: p.sourceIds, company_ids: p.companyIds, status: p.status
+      id: p.id, run_id: p.runId, title: p.title, workflow: p.workflow, actor: p.actor ?? null, business_pattern: p.businessPattern ?? null,
+      unknowns: p.unknowns, kill_reasons: p.killReasons, source_ids: p.sourceIds, company_ids: p.companyIds, status: p.status
     })));
   }
   await rest("PATCH", "discovery_runs", `?id=eq.${run.id}`, { status: proposals.length ? "ready" : "collecting", error: null, updated_at: new Date().toISOString() });
 
   const by = (signal) => sources.filter((s) => s.signalType === signal).length;
   console.log(`\nstored ${sources.length} sources (pain ${by("pain")}, price ${by("price")}, budget ${by("budget")}, workflow ${by("workflow")}, context ${by("context")})`);
-  console.log(`stored ${proposals.length} proposal(s), waiting for your decision in /inbox`);
+  console.log(`stored ${how}, waiting for your decision in /inbox`);
+  for (const p of proposals) console.log(`  · ${p.title}${p.businessPattern ? `\n      ${p.businessPattern.slice(0, 160)}` : ""}`);
   console.log(`open: /discover?run=${run.id}`);
 }
 
