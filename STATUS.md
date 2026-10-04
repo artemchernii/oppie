@@ -4,10 +4,9 @@ Last updated: 2026-10-04
 
 ## Branch and commit
 
-- PR [#44](https://github.com/artemchernii/oppie/pull/44) (ratings table) merged to `master` 2026-10-04.
-- PR [#45](https://github.com/artemchernii/oppie/pull/45) `feat/discovery-engine` → `master`: discovery
-  engine v1 (OpenSpec `discovery-engine-v1`, complete) and the editorial redesign.
-- `pnpm build` passed 2026-10-04 with the dev server stopped (OpenSpec 6.4).
+- `master` at `1288b2a` (2026-10-04). All discovery work through PR #59 is merged; nothing open.
+- Handoff for the next session: [`docs/CLAUDE_HANDOFF.md`](docs/CLAUDE_HANDOFF.md) — next task is
+  NIS2 demand from the buyer side.
 - Never commit or push directly to `master`
 
 ## What is complete
