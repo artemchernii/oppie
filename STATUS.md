@@ -4,10 +4,10 @@ Last updated: 2026-10-04
 
 ## Branch and commit
 
-- `master` at `c400a5c` (2026-10-04). All work through PR #60 is merged; the NIS2 buyer-side check
-  is on `docs/nis2-buyer-side-demand`.
-- Handoff for the next session: [`docs/CLAUDE_HANDOFF.md`](docs/CLAUDE_HANDOFF.md) — next task is
-  the supplier-side paid-today test for NIS2 evidence.
+- `master` at `45ef7d6` (2026-10-04). All work through PR #61 is merged; the NIS2 supplier-side
+  paid-today test is on `docs/nis2-supplier-paid-today`.
+- Handoff for the next session: [`docs/CLAUDE_HANDOFF.md`](docs/CLAUDE_HANDOFF.md) — the NIS2
+  candidate waits on an owner decision (desk research is exhausted).
 - Never commit or push directly to `master`
 
 ## What is complete
@@ -273,6 +273,7 @@ Precise version:
 | NIS2 cybersecurity compliance for small suppliers | 27 | 3 | price gap: consultancy 15,000–250,000 EUR one-time, platforms $30,000–50,000/year "aren't designed for startups"; small suppliers are pulled in by customers' supplier checks; 4 sources on scope confusion |
 | NIS2 small-supplier gap test (English + German runs, plus price searches) | 49 | 6 | the small fixed-price fix exists but is thin: GreenOnion (AT) supplier evidence package 1,900–3,900 EUR fixed; TSMONDO tool from 49 €/month; templates and a free applicability check; next tier is a 4,500 € gap assessment, then 15,000 €+ consultancy. Only one fixed-price package found in German searches. The checker dropped 14 German quotes the free model miscopied |
 | NIS2 buyer side — 4 runs: "supplier security requirements NIS2 large companies", "NIS2 Lieferantenanforderungen Informationssicherheit Lieferanten", "third-party risk management NIS2 supplier questionnaire", "NIS2 supply chain security clause supplier contract" | 100 (6) | 9 | the engine's lanes find sellers, not buyers: 9 pains, all described by vendors; Remotive found 0 jobs; the checker dropped 3 quotes and 1 business. Buyer evidence came from direct searches instead — see "NIS2 buyer-side demand" below |
+| NIS2 supplier side, paid-today test — 2 runs: "security questionnaire completion service for small suppliers", "Lieferantenfragebogen Informationssicherheit ausfüllen Dienstleister" | 36 (7) | 1 + 1 combined | the English run found automation tools (AutoRFP.ai, quote-based); the German run found no quotable pain and stored one combined proposal. Priced services came from direct searches — see "NIS2 supplier-side paid-today test" below |
 
 `pnpm discover:run` now splits into pains first, like the button, and falls back to one combined
 proposal only when the split cannot run. The five older combined proposals can be rejected in Inbox
@@ -340,6 +341,41 @@ requirements and NIS2 — a supplier hiring to answer buyers, one source.
 Kill-reason candidate (to weigh, not decided): buyers accept existing certificates (ISO 27001,
 TISAX) or their own free self-assessment form. A small supplier without a certificate may just fill
 in the form, which costs time but no money. The paid-today test is still open on the supplier side.
+
+### NIS2 supplier-side paid-today test (2026-10-04)
+
+Plain version: people are clearly **selling** help to answer a big customer's security
+questionnaire — from 2,990 EUR fixed (Wermescher, Germany) down to $40 on Fiverr, and a free
+government-funded tool (FitNIS2). What I could not find is one named small supplier who **paid**.
+A price on a seller's page is not a sale. So the paid-today test is **not passed**: money moving is
+unproven. And the price floor is close to zero, which is the same pattern as every earlier
+candidate — real pain, cheap or free fixes already there.
+
+Precise version. Offers aimed at a supplier answering a customer's evidence request:
+
+| Seller | Offer | Price | Source checked |
+|---|---|---|---|
+| Wermescher Advisory (DE) | "IT-Sicherheitsnachweis für Großkunden": answers the questionnaire, evidence pack, measures plan, 1–2 days | 2,990 EUR fixed + VAT | page read |
+| GreenOnion (AT) | supplier evidence package, 3 weeks | 1,900–3,900 EUR fixed | page read (also #59) |
+| fraghugo (DE) | "Sicherheitsprofil": one public security profile + help with each questionnaire | included in a data-protection-officer plan from 79 €/month | page read |
+| NIS2 Pilot (app) | supplier check, templates and PDF reports for customer requests | 9.99 € or 49.99 € one-time | page read |
+| Fiverr sellers (4) | complete vendor security questionnaires (SIG Lite, CAIQ, custom) | $40, $40, $100, $200 | search snippets only; Fiverr returns 403, order counts not seen |
+
+Signals someone wanted to pay, unverified: an Upwork job titled "Security Questionnaire Completion"
+(posted by a client; budget not visible, 403). Content written for suppliers without a price: H5M,
+octoja, TTG, biteno, audatis, nis2-service.
+
+Counter-evidence, found with equal effort:
+- **FitNIS2 Navigator** adds a supply-chain check and documentation module for SMEs, **free**, funded
+  by the German economy ministry (BMWE) under "IT-Sicherheit in der Wirtschaft".
+- Buyers offer their own free self-assessment forms (Baumann, Reinhausen, heyco — see above).
+- Free supplier-questionnaire templates (norppa, Orbiq, CompliantDesk).
+- Reddit r/cybersecurity: some suppliers do the reverse and **charge the customer** a consultant day
+  to fill a questionnaire, pointing them to a trust page instead.
+
+Verdict: demand from buyers is real but weak (above); money moving on the supplier side is
+unproven; the price ladder runs 2,990 EUR → 79 €/month bundle → $40 → free. Desk research has hit
+its limit — the next evidence has to come from suppliers themselves.
 
 ## What is not built
 
