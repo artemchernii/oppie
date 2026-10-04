@@ -50,23 +50,25 @@ export const IDEAS: Idea[] = [
   {
     id: "uk-mtd-desk-for-accountants",
     title: "Making Tax Digital back office for UK accountancy firms",
-    answer: "Most UK accountancy firms are turning clients away for lack of staff, and Making Tax Digital just turned one tax return a year into five filings. Firms already buy white-label help per client. A team in Lisbon works in UK hours.",
+    answer: "Firms already buy this at £10–£35 per client per month and resell it at £75–£125 a quarter. Lisbon is dearer per hour than India, so it only works if your software cuts each client to minutes. Pricing check in docs/UK_MTD_BACK_OFFICE.md.",
     verdict: "real-budget",
     region: "UK",
     runIds: ["run-3cb32678-eac8-4ebf-9205-6c6ffb597fd3"],
     quoteSourceIds: [],
-    priceLow: { seller: "White-label bookkeeping (pricing guide)", quote: "most white label bookkeeping providers charge between $100 and $300 per client per month", url: "https://www.remotebooksonline.com/blog/what-is-the-charge-for-white-label-bookkeeping" },
-    priceHigh: { seller: "Dedicated offshore bookkeeper (pricing guide)", quote: "a dedicated offshore bookkeeper costs $1,200 to $3,200 per month.", url: "https://www.etisson.com/blog/outsourced-bookkeeping-cost-guide-cpa-firms" },
+    priceLow: { seller: "Initor Global — MTD Lite, up to 25 transactions a month", quote: "£10", url: "https://initor-global.co.uk/use-outsourcing-to-price-mtd-for-income-tax-services-effectively/" },
+    priceHigh: { seller: "Initor Global — MTD Full, 76 to 100 transactions a month", quote: "£35", url: "https://initor-global.co.uk/use-outsourcing-to-price-mtd-for-income-tax-services-effectively/" },
     unknowns: [
-      "What does a UK firm pay, wholesale, for one client's quarterly update?",
-      "Indian and Philippine outsourcers already sell this. Will a firm pay more for UK hours and a European team?",
-      "How do you reach small firms: AccountingWEB, Accountex, LinkedIn, or partnering with MTD software vendors?"
+      "How many minutes per client per quarter can your software get to? Below about 45 minutes the numbers work; by hand they do not.",
+      "Will a UK firm pay more for UK hours and a European team than Indian outsourcers charge (£8–£15 an hour)?",
+      "How do you win the first firms when QX alone serves 500+ UK firms? Free trials and referrals are what incumbents use."
     ],
     edge: "You live in Lisbon, on UK time; you build software and like finance. Bookkeeping for others needs anti-money-laundering registration (£300 plus £400 a year), not a qualification.",
     facts: [
       { text: "73% of UK accounting firms are turning away clients because they lack staff (Advancetrack, 2026).", url: "https://www.taxcalc.com/blog/uk-accounting-talent-shortage-2026?hs_amp=true" },
-      { text: "About 40,275 accountancy firms in the UK; around 80% have four or fewer employees.", url: "https://www.nimblefins.co.uk/business-insurance/accountant-insurance/number-accountants-uk" },
-      { text: "A bookkeeper in Lisbon earns up to about €31,293 a year (€15 an hour).", url: "https://www.glassdoor.com/Salaries/lisbon-portugal-bookkeeper-salary-SRCH_IL.0,15_IM1121_KO16,26.htm" }
+      { text: "Firms charge their clients £75–£125 a quarter for the quarterly update alone.", url: "https://mtd.digital/mtd-income-tax/mtd-cost/" },
+      { text: "Indian outsourcers charge UK firms £8–£15 an hour.", url: "https://exuberantglobal.co.uk/blog/complete-guide-to-accounting-outsourcing-in-2026" },
+      { text: "A bookkeeper in Portugal averages €20,115 a year; employers add 23.75% social security.", url: "https://www.salaryexpert.com/salary/job/bookkeeper/portugal" },
+      { text: "QX serves 500+ UK accounting firms, including the top 20.", url: "https://www.accountingexcellence.co.uk/partners/qx/" }
     ]
   },
   {
