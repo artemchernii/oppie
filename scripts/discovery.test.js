@@ -431,10 +431,11 @@ test("a price is earned by a figure, not by a pricing page title", () => {
 
 test("results must mention the direction; jobs must mention two of its words", () => {
   const terms = collectors.directionTerms("invoice chasing for small agencies");
-  assert.deepStrictEqual(terms, ["invoice", "chasing", "small", "agencie"]);
+  assert.deepStrictEqual(terms, ["invoice", "chasing", "agencie"]);
   assert.strictEqual(collectors.mentionsDirection("Agencies chase invoices by hand", terms), true);
   assert.strictEqual(collectors.mentionsDirection("We can mine asteroids", terms), false);
   assert.strictEqual(collectors.mentionsDirection("Small team", terms, 2), false);
+  assert.strictEqual(collectors.mentionsDirection("Small agencies need invoices", terms, 2), true);
   assert.strictEqual(collectors.mentionsDirection("Invoice ops for small agencies", terms, 2), true);
 });
 
@@ -464,6 +465,17 @@ test("Hacker News keeps only on-topic comments that describe pain", () => {
   const out = collectors.hnSources(payload, "invoice chasing", Q("pain", "hn"));
   assert.deepStrictEqual(out.map((s) => s.url), ["https://news.ycombinator.com/item?id=1"]);
   assert.strictEqual(out[0].signalType, "pain");
+});
+
+test("generic business words do not make an off-topic job count as on-topic", () => {
+  const terms = collectors.directionTerms("done-for-you contract and renewal management service for small businesses");
+  assert.deepStrictEqual(terms, ["contract", "renewal"]);
+  const payload = { jobs: [
+    { url: "https://j.test/1", title: "Senior Shopify Developer", company_name: "Sanctuary", salary: "$80k - $150k", description: "We are hiring a contract-based developer for our service team" },
+    { url: "https://j.test/2", title: "Contract renewal coordinator", company_name: "Acme", salary: "$45k", description: "Track contract renewal dates" }
+  ] };
+  const out = collectors.remotiveSources(payload, "done-for-you contract and renewal management service for small businesses", Q("money", "remotive"));
+  assert.deepStrictEqual(out.map((s) => s.publisher), ["Acme"]);
 });
 
 test("a job is budget only when it states a salary", () => {
