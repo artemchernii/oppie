@@ -92,6 +92,16 @@ test("every market fact links to where it came from, and an edge is never blank"
   assert.ok(ideas.IDEAS.filter((idea) => idea.edge).length >= 3, "the owner's edge ideas are on the board");
 });
 
+test("the UK filter shows only UK ideas, and a price from a web page names its link", () => {
+  const cards = ideas.IDEAS.map((idea) => ({ idea }));
+  const uk = ideas.filterByRegion(cards, "UK");
+  assert.ok(uk.length >= 5 && uk.every((card) => card.idea.region === "UK"));
+  assert.strictEqual(ideas.filterByRegion(cards, undefined).length, cards.length);
+  for (const idea of ideas.IDEAS) for (const price of [idea.priceLow, idea.priceHigh].filter(Boolean)) {
+    if (price.url !== undefined) assert.match(price.url, /^https:\/\//, `${idea.id} price link`);
+  }
+});
+
 test("no run belongs to two ideas, so no complaint is counted twice", () => {
   const seen = new Map();
   for (const idea of ideas.IDEAS) for (const run of idea.runIds) {

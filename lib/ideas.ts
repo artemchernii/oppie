@@ -8,7 +8,7 @@
 // Every `answer` and `verdict` is an agent note, never the owner's decision. Prices are quoted
 // text with the seller named — never parsed, converted, summed or averaged (AGENTS.md § 6).
 
-export type IdeaVerdict = "crowded" | "real-budget" | "served" | "unproven" | "too-broad";
+export type IdeaVerdict = "crowded" | "real-budget" | "served" | "unproven" | "too-broad" | "blocked";
 
 /** The one-word badge and what it means, so the badge never needs a legend elsewhere. */
 export const VERDICTS: Record<IdeaVerdict, { label: string; meaning: string }> = {
@@ -16,10 +16,12 @@ export const VERDICTS: Record<IdeaVerdict, { label: string; meaning: string }> =
   "real-budget": { label: "Real budget", meaning: "Firms already spend real money on this." },
   served: { label: "Already served", meaning: "Priced services exist and look mature." },
   unproven: { label: "Not proven", meaning: "Demand is real; nobody was found paying for the gap." },
-  "too-broad": { label: "Too broad", meaning: "The search mixed different problems; narrow it first." }
+  "too-broad": { label: "Too broad", meaning: "The search mixed different problems; narrow it first." },
+  blocked: { label: "Blocked by law", meaning: "The rules stop an outside service from doing this work." }
 };
 
-export type IdeaPrice = { seller: string; quote: string };
+/** `url` is set when the quote comes from a page read in research rather than a stored business line. */
+export type IdeaPrice = { seller: string; quote: string; url?: string };
 
 export type Idea = {
   id: string;
@@ -40,9 +42,98 @@ export type Idea = {
   edge?: string;
   /** Market-size facts from outside the runs, each with the page it came from. */
   facts?: Array<{ text: string; url: string }>;
+  /** Where the buyers are, for the board's region filter. */
+  region?: "UK";
 };
 
 export const IDEAS: Idea[] = [
+  {
+    id: "uk-mtd-desk-for-accountants",
+    title: "Making Tax Digital back office for UK accountancy firms",
+    answer: "Most UK accountancy firms are turning clients away for lack of staff, and Making Tax Digital just turned one tax return a year into five filings. Firms already buy white-label help per client. A team in Lisbon works in UK hours.",
+    verdict: "real-budget",
+    region: "UK",
+    runIds: ["run-3cb32678-eac8-4ebf-9205-6c6ffb597fd3"],
+    quoteSourceIds: [],
+    priceLow: { seller: "White-label bookkeeping (pricing guide)", quote: "most white label bookkeeping providers charge between $100 and $300 per client per month", url: "https://www.remotebooksonline.com/blog/what-is-the-charge-for-white-label-bookkeeping" },
+    priceHigh: { seller: "Dedicated offshore bookkeeper (pricing guide)", quote: "a dedicated offshore bookkeeper costs $1,200 to $3,200 per month.", url: "https://www.etisson.com/blog/outsourced-bookkeeping-cost-guide-cpa-firms" },
+    unknowns: [
+      "What does a UK firm pay, wholesale, for one client's quarterly update?",
+      "Indian and Philippine outsourcers already sell this. Will a firm pay more for UK hours and a European team?",
+      "How do you reach small firms: AccountingWEB, Accountex, LinkedIn, or partnering with MTD software vendors?"
+    ],
+    edge: "You live in Lisbon, on UK time; you build software and like finance. Bookkeeping for others needs anti-money-laundering registration (£300 plus £400 a year), not a qualification.",
+    facts: [
+      { text: "73% of UK accounting firms are turning away clients because they lack staff (Advancetrack, 2026).", url: "https://www.taxcalc.com/blog/uk-accounting-talent-shortage-2026?hs_amp=true" },
+      { text: "About 40,275 accountancy firms in the UK; around 80% have four or fewer employees.", url: "https://www.nimblefins.co.uk/business-insurance/accountant-insurance/number-accountants-uk" },
+      { text: "A bookkeeper in Lisbon earns up to about €31,293 a year (€15 an hour).", url: "https://www.glassdoor.com/Salaries/lisbon-portugal-bookkeeper-salary-SRCH_IL.0,15_IM1121_KO16,26.htm" }
+    ]
+  },
+  {
+    id: "uk-mtd-landlords-direct",
+    title: "Making Tax Digital done for landlords directly",
+    answer: "A huge forced change: 864,000 landlords and sole traders file quarterly since April 2026, and more join in 2027. But the software is free, accountants already own these clients, and there are no late-filing penalty points in the first year.",
+    verdict: "crowded",
+    region: "UK",
+    runIds: ["run-24469b6b-d59e-4f26-86e6-a472a4265666"],
+    quoteSourceIds: [],
+    priceLow: { seller: "Clear Books", quote: "So we built a permanently free plan with everything you need to stay compliant.", url: "https://www.clearbooks.co.uk/free-mtd-software/" },
+    priceHigh: { seller: "UK accountancy practices (fee guide)", quote: "£75 to £125 per quarter for the quarterly update element alone", url: "https://mtd.digital/mtd-income-tax/mtd-cost/" },
+    unknowns: ["Will landlords who ignored year one panic in April 2027, when penalty points start and the £30,000 group joins?"],
+    facts: [
+      { text: "HMRC reminded more than 864,000 sole traders and landlords to prepare for MTD from April 2026.", url: "https://www.bytestart.co.uk/news-insights/864000-sole-traders-and-landlords-face-new-mtd-reporting-rules-from-april-2026/" },
+      { text: "An estimated 216,000 had not signed up before the first quarterly deadline.", url: "https://www.property118.com/216000-landlords-and-traders-havent-signed-up-for-making-tax-digital/" },
+      { text: "No penalty points for late quarterly updates in the first year of MTD.", url: "https://www.icas.com/regulation-technical-resources/technical-resources/tax/making-tax-digital/making-tax-digital-penalties" }
+    ]
+  },
+  {
+    id: "uk-letting-compliance",
+    title: "Compliance chasing for UK letting agents",
+    answer: "Letting agents must keep gas, electrical and energy certificates valid on every property. Software is cheap, but someone still chases landlords and contractors, and an offshore back office for UK agents already exists.",
+    verdict: "unproven",
+    region: "UK",
+    runIds: ["run-3234ad58-57d2-4738-bd3a-9e090b7bfa39"],
+    quoteSourceIds: ["src-477a5391-8c41-41aa-9c72-956e37f28e2b"],
+    priceLow: { seller: "LetCompliance", quote: "from £14.99/mo", url: "https://letcompliance.com/letting-agent-fees-uk" },
+    priceHigh: { seller: "Letting agents (full management)", quote: "Letting agents typically charge 10% to 20% of the monthly rent for full property management services", url: "https://theindependentlandlord.com/property-management-2/" },
+    unknowns: ["What does an agent pay an outsourced back office per property, and which tasks do they hand over first?"],
+    facts: [
+      { text: "About 23,346 letting agents in the UK (2024).", url: "https://rdmarketing.co.uk/knowledge-hub/how-many-letting-agents-in-the-uk/" },
+      { text: "ARLA Propertymark's 10,219 branches manage about 221 properties each.", url: "https://www.propertymark.co.uk/resource/arla-propertymark-members-manage-almost-half-of-england-s-private-rented-sector.html" },
+      { text: "Invarium already sells back-office outsourcing to UK letting agents, staffed from Zimbabwe.", url: "https://invariumsolutions.com/property-management-back-office-outsourcing-uk-guide/" }
+    ]
+  },
+  {
+    id: "uk-cis-builders",
+    title: "Monthly construction tax returns for UK builders",
+    answer: "Builders must file a CIS return every month and check each subcontractor. It is tedious and fined when late, but bookkeepers already add it for £15–£30 a return.",
+    verdict: "served",
+    region: "UK",
+    runIds: ["run-80ab28f6-fe1b-4941-855a-9eef25cd4c5d"],
+    quoteSourceIds: ["src-e5a42ccb-08d6-4bc9-a39f-f61196958144", "src-25c2823d-173c-45a6-a272-dfd061bc2a05"],
+    priceLow: { seller: "UK bookkeepers (fee guide)", quote: "CIS returns for construction businesses are an additional £15–£30 per submission.", url: "https://wearegro.co.uk/blog/how-much-does-a-bookkeeper-cost-uk-2026-guide" },
+    priceHigh: { seller: "Aone Outsourcing (fee guide)", quote: "usually an extra 15 to 25 per cent on top of a standard bookkeeping fee", url: "https://www.aoneoutsourcing.uk/blog/how-much-does-bookkeeping-cost-in-the-uk" },
+    unknowns: ["How many UK contractors run CIS, and how many still file it themselves?"],
+    facts: [
+      { text: "Filing 12 monthly returns one day late costs £1,200 in penalties.", url: "https://www.livingstonesaccountants.co.uk/blog/cis-accounting-explained-what-uk-builders-must-know/" }
+    ]
+  },
+  {
+    id: "uk-right-to-work",
+    title: "Right-to-work checks for UK employers",
+    answer: "Fines are huge, up to £60,000 per illegal worker. But Home Office guidance says employers lose their legal protection if an outside firm does the check, and digital checks already cost about £3–£4.",
+    verdict: "blocked",
+    region: "UK",
+    runIds: ["run-edefda4f-be77-44e9-bbbe-fc6e5e44aaa6"],
+    quoteSourceIds: [],
+    priceLow: { seller: "Checks Direct", quote: "Prices from £3.04", url: "https://checksdirect.co.uk/services/right-to-work-id-checks/" },
+    priceHigh: { seller: "Care Check", quote: "£4.17 per check", url: "https://www.carecheck.co.uk/digital-right-to-work-checks/" },
+    unknowns: [],
+    facts: [
+      { text: "Right-to-work checks cannot be outsourced without losing the statutory excuse, except through approved digital ID providers.", url: "https://www.brightmine.com/uk/resources/hr-compliance/immigration/right-to-work-checks-requirements-and-pitfalls/" },
+      { text: "The maximum civil penalty rose to £60,000 per illegal worker in 2024.", url: "https://www.lewissilkin.com/insights/2023/08/08/illegal-working-civil-penalties-set-to-triple-from-2024" }
+    ]
+  },
   {
     id: "asian-sellers-eu-rep",
     title: "EU and UK representative for Asian online sellers",
@@ -110,6 +201,7 @@ export const IDEAS: Idea[] = [
   {
     id: "invoice-chasing",
     title: "Chasing late invoices for small agencies",
+    region: "UK",
     answer: "Every agency hates chasing payment, but tools start at £50 a month and outsourced chasing already exists.",
     verdict: "crowded",
     runIds: ["run-afb6a53d-da1f-480c-9758-8610e1303144", "run-cbfbe9a0-8563-4fe2-8e32-6fd60decf42e", "run-fda28a6f-842f-4e99-b80f-188afe1fadde"],
@@ -220,6 +312,10 @@ export const IDEAS: Idea[] = [
     unknowns: ["Which single chore do solo founders in Portugal hate most?"]
   }
 ];
+
+/** The board's region filter. Ideas without a region show only under "All". */
+export const filterByRegion = <T extends { idea: Pick<Idea, "region"> }>(cards: T[], region?: string): T[] =>
+  region === "UK" ? cards.filter((card) => card.idea.region === "UK") : cards;
 
 export const ideaById = (id: string): Idea | undefined => IDEAS.filter((idea) => idea.id === id)[0];
 

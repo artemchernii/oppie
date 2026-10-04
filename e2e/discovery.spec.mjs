@@ -327,7 +327,7 @@ async function contrastOf(page, selector) {
 test("light theme: headings and labels meet 4.5:1 contrast on every redesigned page", async ({ page }) => {
   await page.route("**/api/inbox", (r) => r.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ sources: [], proposals: [], citedSources: [], decided: [] }) }));
   const checks = [
-    ["/", ["h1", ".eyebrow", ".idea-numbers b", ".idea-numbers span", ".idea-badge", ".agent-note", ".idea-price-label", ".idea-open", ".idea-edge", ".idea-edge b"]],
+    ["/", ["h1", ".eyebrow", ".idea-numbers b", ".idea-numbers span", ".idea-badge", ".agent-note", ".idea-price-label", ".idea-open", ".idea-edge", ".idea-edge b", ".ideas-filter a"]],
     ["/ideas/aml-kyc-fintech", ["h1", ".idea-box-label", ".agent-note", ".idea-price-label", ".idea-choice span"]],
     ["/problems", ["h1", ".eyebrow"]],
     ["/inbox", ["h1", ".inbox-section-head h2", ".inbox-section-label", ".inbox-head p"]],
