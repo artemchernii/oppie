@@ -5,14 +5,15 @@ import { usePathname } from "next/navigation";
 import ThemeToggle from "./ThemeToggle";
 
 const LINKS = [
-  { href: "/", label: "Problems" },
+  { href: "/", label: "Ideas" },
+  { href: "/discover", label: "Discover" },
   { href: "/inbox", label: "Inbox" },
-  { href: "/companies", label: "Companies & numbers" }
+  { href: "/problems", label: "Tracked problems" }
 ];
 
 export default function TopNav() {
   const pathname = usePathname();
-  const isActive = (href: string) => (href === "/" ? pathname === "/" : pathname.startsWith(href));
+  const isActive = (href: string) => (href === "/" ? pathname === "/" || pathname.startsWith("/ideas") : pathname.startsWith(href));
 
   return (
     <nav className="nav">

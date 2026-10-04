@@ -90,7 +90,7 @@ export default function ProblemDetail({ id, initial, readError, initialRatings, 
     return (
       <main className="wrap wrap-narrow">
         <div className="breadcrumb">
-          <Link href="/">Problems</Link>
+          <Link href="/problems">Tracked problems</Link>
           <span className="crumb-sep">/</span>
           <span>{id}</span>
         </div>
@@ -98,7 +98,7 @@ export default function ProblemDetail({ id, initial, readError, initialRatings, 
           No problem with that id
         </h1>
         <p className="muted">
-          {readError ? `The records could not be read: ${readError}` : <>{id} is not in the records. <Link href="/">Back to the list</Link>.</>}
+          {readError ? `The records could not be read: ${readError}` : <>{id} is not in the records. <Link href="/problems">Back to the list</Link>.</>}
         </p>
       </main>
     );
@@ -114,7 +114,7 @@ export default function ProblemDetail({ id, initial, readError, initialRatings, 
   return (
     <main className="wrap problem-detail-page">
       <div className="breadcrumb">
-        <Link href="/">Problems</Link>
+        <Link href="/problems">Tracked problems</Link>
         <span className="crumb-sep">/</span>
         <span className="mono">{problem.id}</span>
       </div>
@@ -477,7 +477,7 @@ function ProblemEditor({ form, onChange, onCancel, onSave }: { form: Problem; on
   return (
     <main className="wrap">
       <div className="breadcrumb">
-        <Link href="/">Problems</Link>
+        <Link href="/problems">Tracked problems</Link>
         <span className="crumb-sep">/</span>
         <Link href={`/problems/${form.id}`}>{form.id}</Link>
         <span className="crumb-sep">/</span>
