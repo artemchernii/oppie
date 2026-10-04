@@ -18,7 +18,7 @@
     "prepare": "git config core.hooksPath .githooks 2>/dev/null || true",
     "load:problems": "tsc lib/problemSync.ts --rootDir lib --outDir .tmp-test --module commonjs --target es2020 --moduleResolution node --skipLibCheck && node scripts/load-problems.js",
     "discover:dry": "tsc lib/collectors.ts --rootDir lib --outDir .tmp-test --module commonjs --target es2020 --moduleResolution node --skipLibCheck && node scripts/discover-dry.js",
-    "discover:run": "tsc lib/collectors.ts lib/discovery.ts lib/proposals.ts --rootDir lib --outDir .tmp-test --module commonjs --target es2020 --moduleResolution node --skipLibCheck && node scripts/discover-run.js",
+    "discover:run": "tsc lib/collectors.ts lib/discovery.ts lib/proposals.ts lib/painSplit.ts --rootDir lib --outDir .tmp-test --module commonjs --target es2020 --moduleResolution node --skipLibCheck && node scripts/discover-run.js",
     "discover:split": "tsc lib/painSplit.ts lib/discovery.ts --rootDir lib --outDir .tmp-test --module commonjs --target es2020 --moduleResolution node --skipLibCheck && node scripts/discover-split.js"
   },
   "dependencies": {
