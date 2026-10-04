@@ -52,10 +52,14 @@ const GENERIC = new Set([
   "small", "service", "services", "business", "businesses", "company", "companies", "firm", "firms", "team", "teams", "software", "tool", "tools", "outsourced", "outsourcing", "done", "you", "management", "manual", "solution", "solutions", "europe", "european", "online",
   "kleine", "kleinen", "unternehmen", "bedrijven", "uitbesteden", "pymes", "pyme", "empresas", "externalizar", "małych", "firm", "firmy"
 ]);
+// Built with the RegExp constructor: the app type-checks against ES5, which rejects `/…/u` literals.
+const NON_WORD = new RegExp("[^\\p{L}\\p{N}]+", "u");
+const NON_WORD_ALL = new RegExp("[^\\p{L}\\p{N}]", "gu");
+
 /** The words of a direction that a result must mention to count as about it. */
 export function directionTerms(direction: string): string[] {
   // Letters in any alphabet, so "małych" or "gestión" stay whole words instead of breaking into fragments.
-  return Array.from(new Set(direction.toLowerCase().split(/[^\p{L}\p{N}]+/u)
+  return Array.from(new Set(direction.toLowerCase().split(NON_WORD)
     .filter((word) => word.length > 2 && !STOPWORDS.has(word) && !GENERIC.has(word))
     .map((word) => word.replace(/s$/, ""))));
 }
@@ -63,7 +67,7 @@ export function directionTerms(direction: string): string[] {
 export function mentionsDirection(text: string, terms: string[], atLeast = 1): boolean {
   const lower = text.toLowerCase();
   // A term counts when it starts a word: no letter or digit right before it, in any alphabet.
-  const hits = terms.filter((term) => new RegExp(`(^|[^\\p{L}\\p{N}])${term.replace(/[^\p{L}\p{N}]/gu, "")}`, "u").test(lower)).length;
+  const hits = terms.filter((term) => new RegExp(`(^|[^\\p{L}\\p{N}])${term.replace(NON_WORD_ALL, "")}`, "u").test(lower)).length;
   return hits >= Math.min(atLeast, terms.length);
 }
 export const showsPrice = (text: string) => PRICE.test(text);
