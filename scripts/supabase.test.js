@@ -89,5 +89,15 @@ test("values are passed through untouched, so nothing is silently rewritten", ()
   assert.strictEqual(config.publishable, PUBLISHABLE);
 });
 
+test("ids for an .in() filter are batched so the URL stays short, none lost or repeated", () => {
+  const { idChunks } = require("../.tmp-test/supabaseResult.js");
+  const ids = Array.from({ length: 570 }, (_, i) => `src-${i}`);
+  const chunks = idChunks(ids);
+  assert.strictEqual(chunks.length, 6);
+  assert.ok(chunks.every((chunk) => chunk.length <= 100));
+  assert.deepStrictEqual(chunks.flat(), ids);
+  assert.deepStrictEqual(idChunks([]), []);
+});
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

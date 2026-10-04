@@ -26,3 +26,14 @@ export function isNextControlFlow(error: unknown): boolean {
 export function messageOf(error: unknown, fallback: string): string {
   return error instanceof Error ? error.message : fallback;
 }
+
+/**
+ * Ids for an `.in()` filter, split so each request stays a short URL. PostgREST puts the list in
+ * the query string; 570 source ids made a 23 KB URL that the gateway refused with "Bad Request",
+ * which took the whole inbox down. 100 ids of ~40 characters is ~4 KB.
+ */
+export function idChunks<T>(ids: readonly T[], size = 100): T[][] {
+  const chunks: T[][] = [];
+  for (let i = 0; i < ids.length; i += size) chunks.push(ids.slice(i, i + size));
+  return chunks;
+}
