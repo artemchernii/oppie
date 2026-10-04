@@ -261,6 +261,9 @@ Precise version:
 | GPSR compliance for small online sellers shipping to the EU | 33 (6) | 5 | not a gap: EU Responsible Person services €195–€549/year, €400 one-time per product type, €199/month support; only "managing compliance data across thousands of listings" had no fix (1 source) |
 | supplier contract renewals tracked in spreadsheets by small businesses | 29 (14) | 1 | strongest repetition so far (11 sources); fixes priced for mid-market and enterprise ($450/month, CLM $15K+/year); a source says a spreadsheet is fine up to ~25 contracts, which is a possible kill reason for the small-business end |
 | contract renewal reminder software for small businesses (paid-today test) | 27 (7) | 3 | small businesses already pay: RenewalTime $8/user/month, PandaDoc $19/user, Oneflow free + $20/month, Contract Hound $95/month, ExpiryEdge $99/month; the "no cheap fix" earlier was a search gap. Crowded at every tier. Prices are from vendor pages and listicles, not customer counts |
+| outsourced credit control and invoice chasing service for small agencies | 27 (2) | 1 | service exists cheaply in the UK: £50 + VAT per hour, minimum £100/month (Confident Cashflow); software Trove £50/month; pain cited by 17 sources |
+| outsourced AML compliance analyst service for small fintechs | 32 (6) | 3 | real budget: outsourced staffing $0–$80,000/year vs $120,000+ for a hire; needs AML expertise, a barrier to copying |
+| done-for-you contract and renewal management service for small businesses | 36 (13) | 6 | part-time outsourced support from $699/month vs software $7–$700/month; 8 sources call software too expensive or complex for small firms |
 
 `pnpm discover:run` now splits into pains first, like the button, and falls back to one combined
 proposal only when the split cannot run. The five older combined proposals can be rejected in Inbox
@@ -268,6 +271,13 @@ as superseded.
 - Free tier verified 2026-10-04 (card on file, no credits bought): Gemini 2.5 Flash split the invoice
   run into 3 pains in ~58s; the checker dropped 3 misquotes and 13 wrong business citations. Claude
   models need paid credits. The 4 stored pains were split by Claude in the coding session.
+
+### Service businesses: first comparison (2026-10-04)
+
+Plain version: for each strong pain, a human service already exists, and at the small end it is
+priced close to software (UK credit control from £100/month). The service with the biggest budget
+is AML compliance for fintechs, but it needs real expertise. The repeated pattern is that cheap
+software exists and the human layer is thin, regional, or expert-only.
 
 ## What is not built
 
@@ -392,5 +402,5 @@ GET  /api/companies/:id
 ## Suggested next prompt
 
 ```text
-Continue oppie.lab: look for a narrower angle on contract renewals that the cheap tools miss.
+Continue oppie.lab: check whether outsourced credit control exists outside the UK (Germany, Netherlands, Spain, Poland) and at what price.
 ```
