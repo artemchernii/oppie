@@ -222,8 +222,28 @@ Precise version:
 - Proposals group collected sources by direction (`foundFor` = `direction · lane: query`).
 - Reddit's own API refuses anonymous requests (403); Reddit content comes through Brave instead.
 
-Known limit: one proposal per run bundles all lanes (29–36 sources). It does not yet split a run
-into distinct pains, each with the businesses selling a fix — that is the next step.
+### Runs split into distinct pains, each with who already sells a fix (2026-10-04)
+
+Plain version: a run is now split into separate pains, and each pain lists the businesses selling a
+fix for it, with their quoted prices. A language model suggests the split; the code then checks
+every quote word for word against the stored sources and throws out anything unsupported. The
+"invoice chasing for small agencies" run is split into 4 real pains, now waiting in Inbox.
+
+Precise version:
+
+- `lib/painSplit.ts`: prompt + JSON schema, `checkSplit` (cited ids must exist; quotes verbatim;
+  pain evidence from the pain lane; businesses from the business lane; unquoted prices stripped;
+  every drop counted), `proposalsFromSplit` (one waiting proposal per pain; repetition and "no
+  business found" stated from the evidence, not the model).
+- `POST /api/discovery-runs/:id/split` calls AI Gateway (`google/gemini-2.5-flash` on the free tier by default;
+  set `AI_GATEWAY_MODEL=anthropic/claude-sonnet-5.5` for finer splits, about $0.03 a run with paid credits) over its OpenAI-compatible endpoint, no new package. Auth: `AI_GATEWAY_API_KEY`,
+  else the Vercel OIDC token.
+- Run discovery: collect → split; if the split fails it falls back to one combined proposal and
+  says why on the page.
+- `pnpm discover:split <run> [--save] [--from file.json]`.
+- Free tier verified 2026-10-04 (card on file, no credits bought): Gemini 2.5 Flash split the invoice
+  run into 3 pains in ~58s; the checker dropped 3 misquotes and 13 wrong business citations. Claude
+  models need paid credits. The 4 stored pains were split by Claude in the coding session.
 
 ## What is not built
 
@@ -341,16 +361,12 @@ GET  /api/companies/:id
 
 ## Owner action
 
-Nothing is required. When #45 is merged, the open follow-ups are, in rough order of value:
-
-1. Create one real accepted Problem: `/discover` → save a real source → build a proposal → accept it
-   in `/inbox` with a reason. Nothing real has gone through the loop yet.
-2. Add Reddit credentials to `.env.local` (`REDDIT_CLIENT_ID`, `REDDIT_CLIENT_SECRET`,
-   `REDDIT_USER_AGENT`) to try live collection.
-3. Replace the hardcoded "Fintech · reconciliation" label on `/companies`.
+1. Nothing to buy: splitting runs on the free tier. Buy AI Gateway credits only if you want the finer
+   Sonnet splits, then set `AI_GATEWAY_MODEL=anthropic/claude-sonnet-5.5` in Vercel.
+2. Review the invoice pains in `/inbox`; reject the two older combined proposals with a reason.
 
 ## Suggested next prompt
 
 ```text
-Continue oppie.lab: split a run into distinct pains, each with the businesses that sell a fix.
+Continue oppie.lab: run discovery on 3 new directions and compare the pains.
 ```
