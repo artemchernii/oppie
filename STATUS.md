@@ -264,6 +264,10 @@ Precise version:
 | outsourced credit control and invoice chasing service for small agencies | 27 (2) | 1 | service exists cheaply in the UK: £50 + VAT per hour, minimum £100/month (Confident Cashflow); software Trove £50/month; pain cited by 17 sources |
 | outsourced AML compliance analyst service for small fintechs | 32 (6) | 3 | real budget: outsourced staffing $0–$80,000/year vs $120,000+ for a hire; needs AML expertise, a barrier to copying |
 | done-for-you contract and renewal management service for small businesses | 36 (13) | 6 | part-time outsourced support from $699/month vs software $7–$700/month; 8 sources call software too expensive or complex for small firms |
+| credit control outsourcing — Germany (Forderungsmanagement und Mahnwesen Outsourcing für kleine Unternehmen) | 21 | 2 | many providers (Büroservice firms, call centres, factoring, Inkasso); software from 59 €/month; service prices mostly not published |
+| credit control outsourcing — Netherlands (debiteurenbeheer uitbesteden voor kleine bedrijven) | 20 | 2 | most developed and transparent: €3.95–€4.50 per call (Debiservice), from €45/month + ~€1.50 per action, €0.30–€2.50 per invoice or 2–8%; one provider says small firms can usually do it themselves |
+| credit control outsourcing — Spain (externalizar gestión de cobros para pymes) | 28 | 2 | software-led (Holded 59 €/month); outsourced cobros firms (Cobratis, recovery agencies); prices not published |
+| credit control outsourcing — Poland (windykacja polubowna outsourcing dla małych firm) | 22 | 5 | amicable collection on 7–30% commission; half the run was IT outsourcing until the filter fix in #56 |
 
 `pnpm discover:run` now splits into pains first, like the button, and falls back to one combined
 proposal only when the split cannot run. The five older combined proposals can be rejected in Inbox
@@ -278,6 +282,12 @@ Plain version: for each strong pain, a human service already exists, and at the 
 priced close to software (UK credit control from £100/month). The service with the biggest budget
 is AML compliance for fintechs, but it needs real expertise. The repeated pattern is that cheap
 software exists and the human layer is thin, regional, or expert-only.
+
+Outside the UK (2026-10-04): outsourced credit control exists in all four countries checked. The
+Netherlands is mature with transparent per-call and per-invoice prices; Germany and Spain have many
+providers but rarely publish prices; Poland sells it as commission-based collection. No empty
+market was found. The only untested angle is a transparent fixed monthly price where prices are
+hidden (Germany, Spain) — a hypothesis, not evidence.
 
 ## What is not built
 
@@ -402,5 +412,5 @@ GET  /api/companies/:id
 ## Suggested next prompt
 
 ```text
-Continue oppie.lab: check whether outsourced credit control exists outside the UK (Germany, Netherlands, Spain, Poland) and at what price.
+Continue oppie.lab: re-run the four credit-control countries with the multilingual fix and compare published prices side by side.
 ```
