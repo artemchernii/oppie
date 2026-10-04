@@ -37,10 +37,17 @@ export function decodeEntities(text: string): string {
 export const describesPain = (text: string) => PAIN_WORDS.test(text);
 
 const STOPWORDS = new Set(["the", "and", "for", "with", "that", "this", "from", "into", "what", "who", "how", "are", "our", "your", "in", "of", "on", "to", "a", "an", "or", "at", "by", "is", "it", "still", "do", "does", "work", "things"]);
+/**
+ * Words too generic to show a result is about the direction. Found 2026-10-04: "Senior Shopify
+ * Developer" and "Inside Sales Contractor" passed the two-word job filter for a contract-service
+ * direction on "contract" + "service" and "credit" + "small", and were labelled budget — which can
+ * answer Paid today.
+ */
+const GENERIC = new Set(["small", "service", "services", "business", "businesses", "company", "companies", "firm", "firms", "team", "teams", "software", "tool", "tools", "outsourced", "outsourcing", "done", "you", "management", "manual", "solution", "solutions", "europe", "european", "online"]);
 /** The words of a direction that a result must mention to count as about it. */
 export function directionTerms(direction: string): string[] {
   return Array.from(new Set(direction.toLowerCase().split(/[^a-z0-9]+/)
-    .filter((word) => word.length > 2 && !STOPWORDS.has(word))
+    .filter((word) => word.length > 2 && !STOPWORDS.has(word) && !GENERIC.has(word))
     .map((word) => word.replace(/s$/, ""))));
 }
 /** True when the text mentions at least one direction term (plural-insensitive, whole word start). */
