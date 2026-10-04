@@ -36,24 +36,38 @@ export function decodeEntities(text: string): string {
 
 export const describesPain = (text: string) => PAIN_WORDS.test(text);
 
-const STOPWORDS = new Set(["the", "and", "for", "with", "that", "this", "from", "into", "what", "who", "how", "are", "our", "your", "in", "of", "on", "to", "a", "an", "or", "at", "by", "is", "it", "still", "do", "does", "work", "things"]);
+const STOPWORDS = new Set([
+  "the", "and", "for", "with", "that", "this", "from", "into", "what", "who", "how", "are", "our", "your", "in", "of", "on", "to", "a", "an", "or", "at", "by", "is", "it", "still", "do", "does", "work", "things",
+  // German, Dutch, Spanish, Polish filler words. Found 2026-10-04: the Polish "dla" ("for") let IT-outsourcing
+  // pages pass as on-topic for a debt-collection direction.
+  "und", "für", "fur", "mit", "der", "die", "das", "von", "voor", "van", "het", "een", "met", "bij", "para", "por", "las", "los", "del", "con", "una", "dla", "oraz", "jak", "nie", "się"
+]);
 /**
  * Words too generic to show a result is about the direction. Found 2026-10-04: "Senior Shopify
  * Developer" and "Inside Sales Contractor" passed the two-word job filter for a contract-service
  * direction on "contract" + "service" and "credit" + "small", and were labelled budget — which can
  * answer Paid today.
  */
-const GENERIC = new Set(["small", "service", "services", "business", "businesses", "company", "companies", "firm", "firms", "team", "teams", "software", "tool", "tools", "outsourced", "outsourcing", "done", "you", "management", "manual", "solution", "solutions", "europe", "european", "online"]);
+const GENERIC = new Set([
+  "small", "service", "services", "business", "businesses", "company", "companies", "firm", "firms", "team", "teams", "software", "tool", "tools", "outsourced", "outsourcing", "done", "you", "management", "manual", "solution", "solutions", "europe", "european", "online",
+  "kleine", "kleinen", "unternehmen", "bedrijven", "uitbesteden", "pymes", "pyme", "empresas", "externalizar", "małych", "firm", "firmy"
+]);
+// Built with the RegExp constructor: the app type-checks against ES5, which rejects `/…/u` literals.
+const NON_WORD = new RegExp("[^\\p{L}\\p{N}]+", "u");
+const NON_WORD_ALL = new RegExp("[^\\p{L}\\p{N}]", "gu");
+
 /** The words of a direction that a result must mention to count as about it. */
 export function directionTerms(direction: string): string[] {
-  return Array.from(new Set(direction.toLowerCase().split(/[^a-z0-9]+/)
+  // Letters in any alphabet, so "małych" or "gestión" stay whole words instead of breaking into fragments.
+  return Array.from(new Set(direction.toLowerCase().split(NON_WORD)
     .filter((word) => word.length > 2 && !STOPWORDS.has(word) && !GENERIC.has(word))
     .map((word) => word.replace(/s$/, ""))));
 }
 /** True when the text mentions at least one direction term (plural-insensitive, whole word start). */
 export function mentionsDirection(text: string, terms: string[], atLeast = 1): boolean {
   const lower = text.toLowerCase();
-  const hits = terms.filter((term) => new RegExp(`\\b${term.replace(/[^a-z0-9]/g, "")}`).test(lower)).length;
+  // A term counts when it starts a word: no letter or digit right before it, in any alphabet.
+  const hits = terms.filter((term) => new RegExp(`(^|[^\\p{L}\\p{N}])${term.replace(NON_WORD_ALL, "")}`, "u").test(lower)).length;
   return hits >= Math.min(atLeast, terms.length);
 }
 export const showsPrice = (text: string) => PRICE.test(text);
