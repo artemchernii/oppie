@@ -905,3 +905,11 @@ html:not([data-theme="dark"]) .discover-page .section-label { color:var(--ed-vio
 .discovery-trail .trail-sources li { display:flex; flex-wrap:wrap; align-items:center; gap:8px; font-size:12.5px; }
 .inbox-page .paid-warning { color:var(--orange, var(--ed-orange-text)); font-weight:600; }
 .discover-page .run-failed { border:1px solid var(--ed-red); padding:10px 12px; margin:0 0 18px; font-size:12px; }
+
+/* /discover — what each collector lane returned. */
+.discover-page .collect-summary { list-style:none; margin:12px 0 0; padding:10px 0 0; border-top:1px solid var(--line); display:grid; gap:6px; font-size:12px; }
+.discover-page .collect-summary li { display:grid; grid-template-columns:80px 110px minmax(0,1fr) max-content; gap:10px; align-items:baseline; color:var(--ink-soft); }
+.discover-page .collect-summary b { color:var(--ink); font-weight:600; }
+.discover-page .collect-summary .collect-query { font:11px var(--mono); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.discover-page .collect-summary em { font-style:normal; font:11px var(--mono); }
+@media (max-width:640px) { .discover-page .collect-summary li { grid-template-columns:1fr 1fr; } }

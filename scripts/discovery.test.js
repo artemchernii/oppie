@@ -9,6 +9,7 @@ const view = require(path.join(__dirname, "..", ".tmp-test", "discoveryView.js")
 const inbox = require(path.join(__dirname, "..", ".tmp-test", "discoveryInbox.js"));
 const trail = require(path.join(__dirname, "..", ".tmp-test", "problemTrail.js"));
 const analysisLib = require(path.join(__dirname, "..", ".tmp-test", "analysis.js"));
+const collectors = require(path.join(__dirname, "..", ".tmp-test", "collectors.js"));
 const fixtures = require(path.join(__dirname, "..", ".tmp-test", "playwrightFixtures.js"));
 
 let passed = 0;
@@ -407,6 +408,99 @@ test("after the Problem exists, later failures are warnings, never a silent succ
   assert.strictEqual(out.ok, true);
   assert.match(out.warning, /Accepted into p-1, but the Problem id was not recorded on the proposal \(l\) and the selected sources were not marked kept \(a\)/);
   assert.ok(!calls.includes("release"));
+});
+
+// ---- Automatic collection: real providers, honest labels.
+
+const Q = (lane, provider, query = "q") => ({ lane, provider, query });
+
+test("pain is earned by the words, not by the lane", () => {
+  assert.strictEqual(collectors.describesPain("We still match every row by hand"), true);
+  assert.strictEqual(collectors.describesPain("Overdue invoice follow up is a nightmare"), true);
+  assert.strictEqual(collectors.describesPain("it takes 12 hours a week"), true);
+  assert.strictEqual(collectors.describesPain("2,000 passengers per hour in each direction"), false);
+  assert.strictEqual(collectors.describesPain("Invoicing software for agencies"), false);
+});
+
+test("a price is earned by a figure, not by a pricing page title", () => {
+  assert.strictEqual(collectors.showsPrice("starting around $100/month"), true);
+  assert.strictEqual(collectors.showsPrice("between $150 and $279 per user per month"), true);
+  assert.strictEqual(collectors.showsPrice("The best invoicing tools for agencies"), false);
+});
+
+test("results must mention the direction; jobs must mention two of its words", () => {
+  const terms = collectors.directionTerms("invoice chasing for small agencies");
+  assert.deepStrictEqual(terms, ["invoice", "chasing", "small", "agencie"]);
+  assert.strictEqual(collectors.mentionsDirection("Agencies chase invoices by hand", terms), true);
+  assert.strictEqual(collectors.mentionsDirection("We can mine asteroids", terms), false);
+  assert.strictEqual(collectors.mentionsDirection("Small team", terms, 2), false);
+  assert.strictEqual(collectors.mentionsDirection("Invoice ops for small agencies", terms, 2), true);
+});
+
+test("Brave results map to sources with verbatim snippets and honest labels", () => {
+  const payload = { web: { results: [
+    { url: "https://www.reddit.com/r/x/1", title: "Invoice chasing", description: "Chasing each invoice by hand is a <strong>nightmare</strong>" },
+    { url: "https://vendor.test/pricing", title: "Invoice tool", description: "Plans start at $100/month for agencies" },
+    { url: "https://vendor.test/about", title: "Invoice tool", description: "We help agencies with invoices" },
+    { url: "https://off.test", title: "Asteroids", description: "Mining asteroids is hard" },
+    { url: "notaurl", title: "x", description: "invoice" }
+  ] } };
+  const pain = collectors.braveSources(payload, "invoice chasing for small agencies", Q("pain", "brave"));
+  assert.deepStrictEqual(pain.map((s) => [s.sourceType, s.signalType]), [["reddit", "pain"], ["manual", "context"], ["manual", "context"]]);
+  assert.strictEqual(pain[0].excerpt, "Chasing each invoice by hand is a nightmare");
+  assert.strictEqual(pain[0].linkStatus, "unverified");
+  assert.strictEqual(pain[0].foundFor, "invoice chasing for small agencies · pain: q");
+  const business = collectors.braveSources(payload, "invoice chasing for small agencies", Q("business", "brave"));
+  assert.deepStrictEqual(business.map((s) => [s.sourceType, s.signalType]), [["reddit", "context"], ["vendor", "price"], ["vendor", "context"]]);
+});
+
+test("Hacker News keeps only on-topic comments that describe pain", () => {
+  const payload = { hits: [
+    { objectID: "1", comment_text: "Reconciling invoices by hand every month is tedious", story_title: "Ask HN" },
+    { objectID: "2", comment_text: "Invoices are interesting", story_title: "Ask HN" },
+    { objectID: "3", comment_text: "Mining asteroids by hand is tedious" }
+  ] };
+  const out = collectors.hnSources(payload, "invoice chasing", Q("pain", "hn"));
+  assert.deepStrictEqual(out.map((s) => s.url), ["https://news.ycombinator.com/item?id=1"]);
+  assert.strictEqual(out[0].signalType, "pain");
+});
+
+test("a job is budget only when it states a salary", () => {
+  const payload = { jobs: [
+    { url: "https://j.test/1", title: "Invoice chasing specialist", company_name: "Acme", salary: "$50k", description: "Chase small agency invoices" },
+    { url: "https://j.test/2", title: "Invoice chasing assistant", company_name: "Beta", salary: "", description: "Chase invoices for small agencies" },
+    { url: "https://j.test/3", title: "Rails engineer", company_name: "Gamma", salary: "$120k", description: "Build invoices UI" }
+  ] };
+  const out = collectors.remotiveSources(payload, "invoice chasing for small agencies", Q("money", "remotive"));
+  assert.deepStrictEqual(out.map((s) => [s.publisher, s.signalType]), [["Acme", "budget"], ["Beta", "workflow"]]);
+  assert.match(out[0].excerpt, /^Salary: \$50k\./);
+});
+
+test("one failing provider never hides what the others returned", async () => {
+  const fake = async (url) => {
+    if (url.includes("brave")) return { ok: false, status: 429, json: async () => ({}) };
+    if (url.includes("algolia")) return { ok: true, status: 200, json: async () => ({ hits: [{ objectID: "9", comment_text: "Invoice chasing by hand is painful" }] }) };
+    throw new Error("network down");
+  };
+  const lanes = await collectors.collect("invoice chasing", fake, { BRAVE_API_KEY: "k" });
+  assert.strictEqual(lanes.length, collectors.collectorPlan("invoice chasing").length);
+  assert.deepStrictEqual(lanes.filter((l) => l.provider === "brave").map((l) => l.error), Array(4).fill("brave answered 429"));
+  assert.strictEqual(lanes.find((l) => l.provider === "hn").sources.length, 1);
+  assert.strictEqual(lanes.find((l) => l.provider === "remotive").error, "network down");
+});
+
+test("without a Brave key, Brave lanes say so instead of silently returning nothing", async () => {
+  const lanes = await collectors.collect("invoice chasing", async () => ({ ok: true, status: 200, json: async () => ({}) }), {});
+  assert.ok(lanes.filter((l) => l.provider === "brave").every((l) => l.error === "BRAVE_API_KEY is not set"));
+});
+
+test("collected sources from one run group into one proposal across lanes", () => {
+  const src = (id, foundFor, signalType) => ({ id, runId: "r", sourceType: "reddit", signalType, url: `https://x.test/${id}`, title: id, excerpt: `e ${id}`, foundFor, linkStatus: "unverified", triage: "untriaged", createdAt: "t" });
+  const out = proposals.generateDiscoveryProposals("r", [
+    src("a", "invoice chasing · pain: q1", "pain"), src("b", "invoice chasing · business: q2", "price"), src("c", "manual direction", "workflow")
+  ]);
+  assert.deepStrictEqual(out.map((p) => p.sourceIds), [["a", "b"], ["c"]]);
+  assert.strictEqual(out[0].title, "Review repeated work around invoice chasing");
 });
 
 (async () => {

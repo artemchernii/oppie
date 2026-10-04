@@ -15,6 +15,7 @@ function mockStoredRun(page, runId) {
       reads.push(route.request().method());
       await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(stored) });
     });
+    await page.route(`**/api/discovery-runs/${runId}/collect`, (route) => route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ summary: [] }) }));
     await page.route(`**/api/discovery-runs/${runId}/ingest`, async (route) => {
       const body = JSON.parse(route.request().postData() || "{}");
       const source = { id: "src-e2e-1", runId, sourceType: "reddit", signalType: "pain", url: body.url, title: body.title, excerpt: body.excerpt, foundFor: body.foundFor, linkStatus: "unverified", triage: "untriaged", createdAt: "2026-10-03T00:01:00.000Z" };
@@ -64,7 +65,8 @@ test("direction to source to proposal renders the stored run and stays human-gat
   // No accept control on this page; acceptance with a reason happens in Inbox.
   await expect(detail.getByRole("button", { name: /Accept/ })).toHaveCount(0);
   await expect(page.getByText(/Strong|Medium/)).toHaveCount(0);
-  expect(mock.reads.length).toBe(3);
+  // Reads: after create, after collect, after the source save, after the proposal build.
+  expect(mock.reads.length).toBe(4);
 });
 
 test("proposal acceptance remains blocked without reason and source", async ({ page }) => {
@@ -346,4 +348,49 @@ test("light theme: headings and labels meet 4.5:1 contrast on every redesigned p
     }
   }
   expect(failures).toEqual([]);
+});
+
+// ---- Run discovery collects real sources automatically, then builds a proposal for review.
+
+test("Run discovery collects in three lanes and shows what each returned", async ({ page }) => {
+  const run = { id: "run-auto", direction: "invoice chasing for small agencies", status: "queued", createdAt: "2026-10-04T00:00:00.000Z", updatedAt: "2026-10-04T00:00:00.000Z" };
+  const stored = { run, sources: [], proposals: [], companies: [] };
+  const calls = [];
+  const src = (id, sourceType, signalType, title, excerpt, lane) => ({ id, runId: "run-auto", sourceType, signalType, url: `https://example.com/${id}`, title, excerpt, foundFor: `invoice chasing for small agencies · ${lane}: q`, linkStatus: "unverified", triage: "untriaged", createdAt: "t" });
+  await page.route("**/api/discovery-runs", (r) => { calls.push("create"); return r.fulfill({ status: 201, contentType: "application/json", body: JSON.stringify({ run }) }); });
+  await page.route("**/api/discovery-runs/run-auto", (r) => r.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(stored) }));
+  await page.route("**/api/discovery-runs/run-auto/collect", async (r) => {
+    calls.push("collect");
+    stored.run = { ...run, status: "collecting" };
+    stored.sources = [
+      src("s1", "reddit", "pain", "How do you handle chasing unpaid invoices?", "Overdue invoice follow up is a nightmare.", "pain"),
+      src("s2", "vendor", "price", "Invoice chasing software", "Plans start around $100/month.", "business")
+    ];
+    await r.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ summary: [
+      { lane: "pain", provider: "brave", query: "site:reddit.com invoice chasing", found: 1, saved: 1 },
+      { lane: "pain", provider: "hn", query: "invoice chasing", found: 0, saved: 0 },
+      { lane: "business", provider: "brave", query: "invoice chasing software pricing", found: 1, saved: 1 },
+      { lane: "money", provider: "remotive", query: "invoice chasing", found: 0, saved: 0, error: "remotive answered 503" }
+    ] }) });
+  });
+  await page.route("**/api/discovery-runs/run-auto/proposals", async (r) => {
+    calls.push("proposals");
+    stored.proposals = [{ id: "prop-auto", runId: "run-auto", title: "Review repeated work around invoice chasing for small agencies", workflow: "Overdue invoice follow up is a nightmare.", unknowns: ["Who pays and what they pay today are not established."], killReasons: [], sourceIds: ["s1", "s2"], companyIds: [], status: "waiting" }];
+    await r.fulfill({ status: 201, contentType: "application/json", body: JSON.stringify({ proposals: stored.proposals }) });
+  });
+
+  await page.goto("/discover");
+  await page.getByLabel("Discovery direction").fill("invoice chasing for small agencies");
+  await page.getByRole("button", { name: /Run discovery/ }).click();
+
+  const summary = page.getByRole("list", { name: "What was collected" });
+  await expect(summary.getByRole("listitem")).toHaveCount(4);
+  await expect(summary.getByRole("listitem").filter({ hasText: "Remotive jobs" })).toContainText("failed: remotive answered 503");
+  await expect(summary.getByRole("listitem").filter({ hasText: "Businesses" })).toContainText("1 saved");
+
+  const detail = page.locator("article.candidate-detail");
+  await expect(detail.getByRole("heading", { name: /invoice chasing for small agencies/ })).toBeVisible();
+  await expect(detail.getByText("waiting for review · not accepted", { exact: false })).toBeVisible();
+  await expect(detail.getByRole("link", { name: "How do you handle chasing unpaid invoices?" })).toBeVisible();
+  expect(calls).toEqual(["create", "collect", "proposals"]);
 });

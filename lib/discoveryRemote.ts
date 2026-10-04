@@ -5,6 +5,7 @@ import { supabaseConfig } from "./supabaseConfig";
 import { isNextControlFlow, messageOf, reason } from "./supabaseResult";
 import { canonicalDiscoveryUrl, discoveryProposalFromRow, discoveryRunFromRow, discoverySourceFromRow, discoveryUrlKey, newDiscoveryRun, validateDiscoverySource, acceptanceBlockedByRun, runStatusAfter, validateProposalAcceptance, validateProposalRejection, type RunEvent, type DiscoveryInput, type DiscoveryRun, type DiscoverySource, type DiscoverySourceInput } from "./discovery";
 import { redditSources } from "./ingestion";
+import { collect, type Lane, type Provider } from "./collectors";
 import { generateDiscoveryProposals } from "./proposals";
 import { problemFromDiscoveryProposal, mergeDiscoveryEvidence, runAcceptance, type StepResult } from "./discoveryAcceptance";
 import type { Problem } from "./problems";
@@ -329,6 +330,40 @@ export async function ingestReddit(runId: string, query: string, subreddit?: str
   } catch (error) {
     if (isNextControlFlow(error)) throw error;
     const failure = messageOf(error, "could not ingest Reddit sources");
+    await markRun(runId, "failed", failure);
+    return { ok: false, error: failure };
+  }
+}
+
+export type CollectSummary = { lane: Lane; provider: Provider; query: string; found: number; saved: number; error?: string };
+
+/**
+ * Runs the real collectors for a run's direction and stores what they find as untriaged sources.
+ * Collecting never accepts, scores or proposes anything. The run fails only when every provider
+ * failed; a partial collection is kept, and each failed provider is named in the summary.
+ */
+export async function collectRun(runId: string): Promise<DiscoveryResult<CollectSummary[]>> {
+  if (!supabaseConfig().userConfigured) return { ok: false, error: "Supabase is not configured" };
+  try {
+    const { supabase } = supabaseForRoute();
+    const runResult = await supabase.from("discovery_runs").select("*").eq("id", runId).maybeSingle();
+    if (runResult.error) return { ok: false, error: reason(runResult.error) };
+    if (!runResult.data) return { ok: false, error: "The run was not found" };
+    const run = discoveryRunFromRow(runResult.data as Record<string, unknown>);
+    const lanes = await collect(run.direction, (url, init) => fetch(url, { ...init, cache: "no-store" }), process.env);
+    const summary: CollectSummary[] = [];
+    for (const lane of lanes) {
+      const results = await Promise.all(lane.sources.map((source) => addDiscoverySource(runId, source)));
+      const saved = results.filter((result) => result.ok).length;
+      summary.push({ lane: lane.lane, provider: lane.provider, query: lane.query, found: lane.sources.length, saved, error: lane.error });
+    }
+    if (summary.every((item) => item.error)) {
+      await markRun(runId, "failed", `every collector failed: ${summary.map((item) => `${item.provider}: ${item.error}`).join("; ")}`);
+    }
+    return { ok: true, value: summary };
+  } catch (error) {
+    if (isNextControlFlow(error)) throw error;
+    const failure = messageOf(error, "could not collect sources");
     await markRun(runId, "failed", failure);
     return { ok: false, error: failure };
   }

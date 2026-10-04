@@ -11,7 +11,9 @@ const unique = (items: string[]) => Array.from(new Set(items.filter(Boolean)));
 export function generateDiscoveryProposals(runId: string, sources: DiscoverySource[], companies: DiscoveryCompanyRef[] = []): DiscoveryProposal[] {
   const groups = new Map<string, DiscoverySource[]>();
   for (const source of sources.filter((item) => item.triage !== "discarded")) {
-    const key = source.foundFor.trim() || "this direction";
+    // Collected sources record "direction · lane: query"; they group by the direction, so one run's
+    // pain, business and money lanes are reviewed together. Manual sources have no " · " part.
+    const key = source.foundFor.split(" · ")[0].trim() || "this direction";
     groups.set(key, [...(groups.get(key) ?? []), source]);
   }
 
