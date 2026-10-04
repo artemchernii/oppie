@@ -38,8 +38,8 @@ export default function IdeaDetail({ detail }: { detail: Detail }) {
       <div className="idea-boxes">
         <section className="idea-box" aria-labelledby="box-sellers">
           <span className="idea-box-label" id="box-sellers">2 · Who already sells it</span>
-          <PriceLine label="Low end" price={idea.priceLow} />
-          <PriceLine label="High end" price={idea.priceHigh} />
+          <PriceLine label="Low end" price={idea.priceLow} linked />
+          <PriceLine label="High end" price={idea.priceHigh} linked />
           {detail.sellerList.length === 0 ? <p className="faint">No seller found in these searches.</p> : (
             <details className="idea-sellers">
               <summary>Show all {detail.sellerList.length} sellers found</summary>

@@ -41,7 +41,8 @@ sources → a Problem) or rejects (reason). Nothing is accepted, scored or concl
 
 ## 4. Data state (live Supabase, 2026-10-04)
 
-- 36 runs, 1,008 sources (all untriaged), 112 proposals waiting, 0 decided by the owner yet.
+- 41 runs, 1,139 sources (all untriaged), 119 proposals waiting, 0 decided by the owner yet.
+- Focus market: **the UK** (owner, 2026-10-04). Model: B2B people-plus-software service.
 - The owner's edge (saved in agent memory): English, Ukrainian, Russian; EU (Portuguese) passport;
   frontend developer; likes finance, people, marketing, Asia. Aim at markets with money (UK, US,
   Korea, China), never Portugal; no freelancing.
@@ -69,22 +70,18 @@ sources → a Problem) or rejects (reason). Nothing is accepted, scored or concl
   fixed, GreenOnion 1,900–3,900 EUR, fraghugo bundled from 79 €/month, NIS2 Pilot 49.99 €, Fiverr
   $40–$200) but no named supplier who paid was found, and FitNIS2 offers it free (BMWE-funded).
 
-## 5. Next task: Pursue creates a tracked problem
+## 5. Next task: price the MTD back office for UK accountancy firms
 
-The home page is the Ideas board (`DECISIONS.md` #10, spec in
-`docs/superpowers/specs/2026-10-04-ideas-board-design.md`). The owner decides each idea with
-Pursue / Park / Drop and a reason. Decisions need `idea_decisions`, which the owner applies by
-pasting `supabase/migrations/20261008000000_idea_decisions.sql` into the Supabase SQL editor.
+The strongest UK card is `uk-mtd-desk-for-accountants` (`lib/ideas.ts`). Its gaps, in order:
+1. What a UK practice pays, wholesale, per client for quarterly MTD updates — find published
+   white-label price lists from UK-facing providers (Advancetrack, QX, Acenteus,
+   digital-tax-service.co.uk, Aone, Corient).
+2. How those providers win practices (channels, minimum contracts, pilots).
+3. Cost side: a Lisbon team per client per quarter, against those prices.
+Record findings in `STATUS.md` and update the card. Only 2 pain quotes exist for this idea; say so.
 
-Next build: when the owner picks **Pursue**, offer to create a tracked problem from the idea,
-reusing the inbox acceptance path (reason + chosen sources). Do not create anything on load.
-
-Also open, smaller:
-- Inbox: 829 raw sources render before the 95 proposals (page ~430,000px tall). Put proposals
-  first and group them by idea.
-- The businesses found by searches are stored only as text in `business_pattern`; `companies`
-  still holds the 21 seed companies.
-- `AGENTS.md` § 4 names `scripts/persistence.test.js`, which `pnpm test` does not run.
+Also open, smaller: Pursue creating a tracked problem; inbox proposals-first; companies table holds
+only seeds; `scripts/persistence.test.js` is not run by `pnpm test`.
 
 Do not run `pnpm build` while the dev server is running: both write `.next` and the dev server
 loses its CSS. Stop it, `rm -rf .next`, restart.
@@ -100,5 +97,5 @@ loses its CSS. Stop it, `rm -rf .next`, restart.
 ## Copy-paste prompt
 
 ```text
-Continue oppie.lab: Pursue creates a tracked problem (docs/CLAUDE_HANDOFF.md §5).
+Continue oppie.lab: price the MTD back office for UK accountancy firms (docs/CLAUDE_HANDOFF.md §5).
 ```

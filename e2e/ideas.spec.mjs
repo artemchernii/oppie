@@ -6,8 +6,8 @@ test("the home page is the Ideas board: numbers first, decided ideas last, blank
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "Which idea is worth your time?" })).toBeVisible();
   const cards = page.getByTestId("idea-card");
-  await expect(cards).toHaveCount(14);
-  await expect(page.getByTestId("ideas-summary")).toContainText("14 ideas · 1 decided · 13 waiting for you");
+  await expect(cards).toHaveCount(19);
+  await expect(page.getByTestId("ideas-summary")).toContainText("19 ideas · 1 decided · 18 waiting for you");
 
   // The parked idea sorts last and says who decided.
   await expect(cards.last()).toContainText("NIS2 security proof for small suppliers");
@@ -32,6 +32,16 @@ test("ideas built on the owner's edge say which strength they use, and market fa
   const facts = page.getByRole("list", { name: "How big the market is" });
   await expect(facts.getByRole("listitem")).toHaveCount(2);
   await expect(facts.getByRole("link", { name: "Source" }).first()).toHaveAttribute("href", /^https:\/\//);
+});
+
+test("the UK filter keeps only UK ideas, and a web-sourced price links to its page", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("navigation", { name: "Region" }).getByRole("link", { name: /UK/ }).click();
+  await expect(page).toHaveURL(/region=UK/);
+  await expect(page.getByTestId("idea-card")).toHaveCount(6);
+  await expect(page.getByTestId("idea-card").filter({ hasText: "Right-to-work checks" })).toContainText("Blocked by law");
+  await page.getByTestId("idea-card").filter({ hasText: "Making Tax Digital back office" }).click();
+  await expect(page.locator(".idea-price-text").first().getByRole("link", { name: "Source" })).toHaveAttribute("href", /^https:\/\//);
 });
 
 test("the old problem list lives at /problems as Tracked problems", async ({ page }) => {

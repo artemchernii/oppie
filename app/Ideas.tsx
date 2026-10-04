@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { boardSummary, IDEA_STATUS_LABEL, sortBoard, VERDICTS, type IdeaCard, type IdeaPrice } from "../lib/ideas";
+import { boardSummary, filterByRegion, IDEA_STATUS_LABEL, sortBoard, VERDICTS, type IdeaCard, type IdeaPrice } from "../lib/ideas";
 import type { IdeaBoard } from "../lib/ideaRemote";
 
 /** A count that could not be read says so; it never shows as 0. */
@@ -14,11 +14,16 @@ export function StatusBadge({ decision }: { decision: IdeaCard["decision"] }) {
   return <span className={`idea-badge status-${decision.status}`}>{IDEA_STATUS_LABEL[decision.status]}</span>;
 }
 
-export function PriceLine({ label, price }: { label: string; price?: IdeaPrice }) {
+export function PriceLine({ label, price, linked = false }: { label: string; price?: IdeaPrice; linked?: boolean }) {
   return (
     <div className="idea-price">
       <span className="idea-price-label">{label}</span>
-      {price ? <span className="idea-price-text"><b>{price.seller}</b> “{price.quote}”</span> : <span className="idea-price-text faint">Not added yet</span>}
+      {price ? (
+        <span className="idea-price-text">
+          <b>{price.seller}</b> “{price.quote}”
+          {linked && price.url ? <> <a href={price.url} target="_blank" rel="noreferrer">Source</a></> : null}
+        </span>
+      ) : <span className="idea-price-text faint">Not added yet</span>}
     </div>
   );
 }
@@ -46,8 +51,9 @@ function Card({ card }: { card: IdeaCard }) {
   );
 }
 
-export default function Ideas({ board }: { board: IdeaBoard }) {
-  const cards = sortBoard(board.cards);
+export default function Ideas({ board, region }: { board: IdeaBoard; region?: string }) {
+  const ukCount = filterByRegion(board.cards, "UK").length;
+  const cards = sortBoard(filterByRegion(board.cards, region));
   const summary = boardSummary(cards);
   return (
     <main className="wrap ideas-page">
@@ -58,6 +64,10 @@ export default function Ideas({ board }: { board: IdeaBoard }) {
           <b>{summary.total}</b> ideas · <b>{summary.decided}</b> decided · <b>{summary.waiting}</b> waiting for you.
           {summary.waiting > 0 ? <> Start with the ones marked <span className="idea-badge verdict-real-budget">Real budget</span>.</> : null}
         </p>
+        <nav className="ideas-filter" aria-label="Region">
+          <Link href="/" className={region === "UK" ? "" : "is-active"} aria-current={region === "UK" ? undefined : "page"}>All <b>{board.cards.length}</b></Link>
+          <Link href="/?region=UK" className={region === "UK" ? "is-active" : ""} aria-current={region === "UK" ? "page" : undefined}>UK <b>{ukCount}</b></Link>
+        </nav>
         <ul className="ideas-legend">
           <li><b>Complaints</b> sources where people describe the pain</li>
           <li><b>Sellers</b> businesses already selling a fix</li>
