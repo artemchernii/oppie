@@ -4,9 +4,10 @@ Last updated: 2026-10-04
 
 ## Branch and commit
 
-- `master` at `1288b2a` (2026-10-04). All discovery work through PR #59 is merged; nothing open.
+- `master` at `c400a5c` (2026-10-04). All work through PR #60 is merged; the NIS2 buyer-side check
+  is on `docs/nis2-buyer-side-demand`.
 - Handoff for the next session: [`docs/CLAUDE_HANDOFF.md`](docs/CLAUDE_HANDOFF.md) — next task is
-  NIS2 demand from the buyer side.
+  the supplier-side paid-today test for NIS2 evidence.
 - Never commit or push directly to `master`
 
 ## What is complete
@@ -271,6 +272,7 @@ Precise version:
 | OSS VAT returns for small EU online sellers | 27 | 3 | served and priced: hellotax OSS reports from 41 €/month, filings from 75 €/month; Eurofiscalis |
 | NIS2 cybersecurity compliance for small suppliers | 27 | 3 | price gap: consultancy 15,000–250,000 EUR one-time, platforms $30,000–50,000/year "aren't designed for startups"; small suppliers are pulled in by customers' supplier checks; 4 sources on scope confusion |
 | NIS2 small-supplier gap test (English + German runs, plus price searches) | 49 | 6 | the small fixed-price fix exists but is thin: GreenOnion (AT) supplier evidence package 1,900–3,900 EUR fixed; TSMONDO tool from 49 €/month; templates and a free applicability check; next tier is a 4,500 € gap assessment, then 15,000 €+ consultancy. Only one fixed-price package found in German searches. The checker dropped 14 German quotes the free model miscopied |
+| NIS2 buyer side — 4 runs: "supplier security requirements NIS2 large companies", "NIS2 Lieferantenanforderungen Informationssicherheit Lieferanten", "third-party risk management NIS2 supplier questionnaire", "NIS2 supply chain security clause supplier contract" | 100 (6) | 9 | the engine's lanes find sellers, not buyers: 9 pains, all described by vendors; Remotive found 0 jobs; the checker dropped 3 quotes and 1 business. Buyer evidence came from direct searches instead — see "NIS2 buyer-side demand" below |
 
 `pnpm discover:run` now splits into pains first, like the button, and falls back to one combined
 proposal only when the split cannot run. The five older combined proposals can be rejected in Inbox
@@ -291,6 +293,53 @@ Netherlands is mature with transparent per-call and per-invoice prices; Germany 
 providers but rarely publish prices; Poland sells it as commission-based collection. No empty
 market was found. The only untested angle is a transparent fixed monthly price where prices are
 hidden (Germany, Spain) — a hypothesis, not evidence.
+
+### NIS2 buyer-side demand (2026-10-04)
+
+Plain version: yes, big customers really are sending security demands to their suppliers, and some
+put it in the contract. RWE's standard purchase terms let it demand security questionnaires,
+interviews and evidence from any supplier, and cancel the contract over a false answer. Diehl
+Defence's supplier form, dated September 2026, asks whether you fall under NIS2. But the trail is
+thin: 5 of the 9 companies whose supplier documents were read, and only 2 of those name NIS2. And it does not yet show
+that a small supplier pays anyone to answer — Baumann, for example, offers a free self-assessment
+every 3 years as the alternative to a certificate. **Demand evidence: real but weak — upgraded
+from "~4 complaints" to 5 named buyers, not yet to money.**
+
+Precise version. Primary documents fetched and read (not snippets):
+
+| Buyer | Document | What it demands | Names NIS2? |
+|---|---|---|---|
+| RWE | General purchase and payment terms (EZB), 08/2025, §29–30 | any supplier: answer RWE security questionnaires, interviews, evidence on information security and critical-infrastructure protection; false answer = material breach and termination. OT suppliers: pre-qualification self-assessment (PIO) valid 3 years, OT security acceptance test, audits on 8 weeks' notice | no (cites critical infrastructure) |
+| Diehl Defence | Supplier self-disclosure EKFO0005 v27.0, 11.09.2026 | asks whether the supplier falls under the NIS2 implementation act (important / especially important / no) and for ISO 27001, BSI IT-Grundschutz or NIST certification | **yes** |
+| Baumann Group | Information security requirements for suppliers | three tiers by data sensitivity: normal = ISO 27001, ISO/IEC 22237, TISAX, "NIS2" or similar, **or** a supplier self-assessment every 3 years; high = certificate or on-site audit every 2 years | **yes** |
+| Reinhausen | Supplier self-assessment V2, 07/2025 | asks for information-security certification (e.g. ISO 27001) | no |
+| heyco | Supplier self-assessment on information security | information-security questionnaire | no |
+
+Checked, no supplier security demand found: Vattenfall supplier code of conduct (2024-09), Orange
+supplier code of conduct (2023), Bosch supplier quality requirements (only ISO 21434 for vehicle
+cybersecurity). Siemens, Deutsche Telekom and Airbus pages that mention NIS2 sell NIS2 services; they
+are not buyer demands. E.ON, Enel and Deutsche Bahn supplier portals surfaced but were not read. TIB Chemicals' self-disclosure has no security section beyond change notice.
+
+Infrastructure for buyers (a demand signal, not a buyer): in the Netherlands, Nevi (6,500
+procurement professionals) with MKB-Nederland and VNO-NCW (Samen Digitaal Veilig) published a model
+**NIS2 addendum to purchase terms** (v2, 2025-02-07), and ABN AMRO tells business clients to add NIS2
+clauses. That makes the demand repeatable at scale — any buyer can paste it in.
+
+Size of the pool (Germany, BSI "NIS-2 in Zahlen", read 2026-10-04): BSI estimates ~29,500 entities
+in scope; 17,945 registered, of which 6,215 especially important. Each must secure its direct
+suppliers (NIS2 Art. 21(2)(d), §30 BSIG). This is an upper bound on buyers, not a count of buyers
+who have sent anything.
+
+Not found: a tender that requires NIS2 evidence from bidders (only vendor blogs claim it); any
+survey giving the share of buyers that send supplier questionnaires (Cybersmart's 670-leader survey
+says only 16% are confident they comply and that "customers are already asking for proof", with no
+number). Jobs: Glassdoor lists 66 third-party-risk-manager jobs in Germany (not filtered for NIS2);
+one StepStone post (CREALOGIX, a supplier) asks for experience with customers' contractual security
+requirements and NIS2 — a supplier hiring to answer buyers, one source.
+
+Kill-reason candidate (to weigh, not decided): buyers accept existing certificates (ISO 27001,
+TISAX) or their own free self-assessment form. A small supplier without a certificate may just fill
+in the form, which costs time but no money. The paid-today test is still open on the supplier side.
 
 ## What is not built
 

@@ -1,8 +1,8 @@
 # oppie.lab — Claude handoff
 
 - Date: 2026-10-04
-- Branch: `master` at `1288b2a` (everything below is merged; no open PRs from this work)
-- Next task: **check NIS2 demand from the buyer side** (section 5)
+- Branch: `master` at `c400a5c`; the buyer-side results are on `docs/nis2-buyer-side-demand`
+- Next task: **supplier-side paid-today test for NIS2 evidence** (section 5)
 
 ## 1. Read first
 
@@ -41,7 +41,9 @@ sources → a Problem) or rejects (reason). Nothing is accepted, scored or concl
 
 ## 4. Data state (live Supabase, 2026-10-04)
 
-- 24 runs, 693 sources (all untriaged), 84 proposals waiting, 0 decided by the owner yet.
+- 28 runs, 793 sources (all untriaged), 93 proposals waiting, 0 decided by the owner yet.
+- The 4 buyer-side runs (2026-10-04) added 100 sources and 9 vendor-described pains; the buyer
+  documents below came from direct searches and are recorded in `STATUS.md`, not stored as sources.
 - 5 waiting proposals are old-style combined ones ("Review repeated work around …") — superseded by
   the splits; the owner may reject them.
 - Two off-topic job sources ("Senior Shopify Developer", "Inside Sales Contractor") sit in the
@@ -54,38 +56,32 @@ sources → a Problem) or rejects (reason). Nothing is accepted, scored or concl
 - Strongest candidate so far: **NIS2 evidence for small suppliers**. Large EU companies must check
   their suppliers' security; small suppliers get pulled in. Supply is thin: one fixed-price package
   found (GreenOnion, Austria, 1,900–3,900 EUR); next tiers are a 4,500 EUR gap assessment and
-  15,000 EUR+ consultancy; questionnaire software starts at $9,600/year. **Demand evidence is weak**
-  (~4 sources) — complaints are not proof anyone pays (`docs/RULES.md`, the paid-today test).
+  15,000 EUR+ consultancy; questionnaire software starts at $9,600/year.
+- Buyer side (2026-10-04): **real but weak**. 5 of 9 companies whose supplier documents were read publish
+  security demands (RWE terms with termination for false answers; Diehl Defence and Baumann name
+  NIS2). The Netherlands has a model NIS2 purchase-terms addendum from Nevi + VNO-NCW. Germany has
+  ~29,500 entities in scope (17,945 registered). No proof yet that a small supplier pays to answer;
+  buyers often accept a free self-assessment instead — a kill-reason candidate.
 
-## 5. Next task: NIS2 demand from the buyer side
+## 5. Next task: supplier-side paid-today test for NIS2 evidence
 
-Question: are large EU companies actually sending NIS2 security requirements to small suppliers,
-and how many? Supply exists; demand is the open question.
+Question: does a small supplier **already pay** someone to answer a customer's NIS2 / security
+evidence request? Buyers demanding it is now shown (`STATUS.md`, "NIS2 buyer-side demand"); money
+moving on the supplier side is not.
 
 What counts as evidence (stronger first):
-1. Published supplier security requirements, supplier codes of conduct or procurement terms from
-   named large EU companies that cite NIS2 or demand supplier security evidence.
-2. Tenders and RFPs that require NIS2-aligned security evidence from bidders.
-3. Job posts for third-party-risk / supplier-security roles at large EU firms that mention NIS2
-   (a salary is a budget signal; check the job is on-topic).
-4. Supplier-side reports of receiving these questionnaires (forums, Reddit) — weakest; it is pain,
-   not payment.
+1. A published price for answering customer security questionnaires or producing supplier
+   evidence for a small firm (MSPs, consultants, "Lieferantenfragebogen ausfüllen" services).
+2. Named customers or case studies of fixed-price packages (GreenOnion and similar).
+3. Freelance gigs (Upwork, Fiverr, Malt) for completing security questionnaires, with prices.
+4. Job posts at small suppliers for someone to handle customer security requirements.
 
-Suggested runs (use `discover:run`; check with `discover:dry` first if unsure):
-- `"supplier security requirements NIS2 large companies"`
-- `"NIS2 Lieferantenanforderungen Informationssicherheit Lieferanten"` (German)
-- `"third-party risk management NIS2 supplier questionnaire"`
-- `"NIS2 supply chain security clause supplier contract"`
+Counter-evidence to look for with equal effort: buyers accepting free self-assessments
+(Baumann, Reinhausen, heyco) and suppliers saying they filled the form themselves.
 
-Also try direct Brave searches for named companies' supplier portals and "supplier code of conduct
-NIS2". Record results in the `STATUS.md` runs table through a docs PR, and say plainly whether the
-demand evidence is strong, weak, or absent — with the numbers.
-
-Known limits to keep in mind:
-- The pain filter is English-only; non-English pain is labelled `context`.
-- Prices written as commissions ("7–30%") or in złoty are not recognised as prices.
-- On German text the free model miscopies quotes; the checker drops them (14 on one run). A paid
-  model would likely keep more; do not loosen the checker.
+Suggested runs: `"security questionnaire completion service for small suppliers"`,
+`"Lieferantenfragebogen Informationssicherheit ausfüllen Dienstleister"`, plus direct Brave
+searches for Upwork/Malt gigs. Record in `STATUS.md` and say whether money is moving, with numbers.
 
 ## 6. Owner preferences
 
@@ -98,5 +94,5 @@ Known limits to keep in mind:
 ## Copy-paste prompt
 
 ```text
-Continue oppie.lab: check NIS2 demand from the buyer side (docs/CLAUDE_HANDOFF.md §5).
+Continue oppie.lab: NIS2 supplier-side paid-today test (docs/CLAUDE_HANDOFF.md §5).
 ```
