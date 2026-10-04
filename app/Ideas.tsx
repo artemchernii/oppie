@@ -39,6 +39,7 @@ function Card({ card }: { card: IdeaCard }) {
       </div>
       <PriceLine label="Low end" price={idea.priceLow} />
       <PriceLine label="High end" price={idea.priceHigh} />
+      {idea.edge ? <p className="idea-edge"><b>Your edge</b> {idea.edge}</p> : null}
       <p className="idea-answer">{idea.answer} <span className="agent-note">Agent note</span></p>
       <span className="idea-open" aria-hidden="true">Open →</span>
     </Link>

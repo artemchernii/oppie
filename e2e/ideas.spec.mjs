@@ -6,8 +6,8 @@ test("the home page is the Ideas board: numbers first, decided ideas last, blank
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "Which idea is worth your time?" })).toBeVisible();
   const cards = page.getByTestId("idea-card");
-  await expect(cards).toHaveCount(11);
-  await expect(page.getByTestId("ideas-summary")).toContainText("11 ideas · 1 decided · 10 waiting for you");
+  await expect(cards).toHaveCount(14);
+  await expect(page.getByTestId("ideas-summary")).toContainText("14 ideas · 1 decided · 13 waiting for you");
 
   // The parked idea sorts last and says who decided.
   await expect(cards.last()).toContainText("NIS2 security proof for small suppliers");
@@ -24,6 +24,16 @@ test("the home page is the Ideas board: numbers first, decided ideas last, blank
 
 // The menu is drawn only for a signed-in person, which the isolated server never has; its links
 // are checked in source, and the page it points at here.
+test("ideas built on the owner's edge say which strength they use, and market facts link to a source", async ({ page }) => {
+  await page.goto("/");
+  const bookkeeping = page.getByTestId("idea-card").filter({ hasText: "Bookkeeping in Ukrainian and Russian" });
+  await expect(bookkeeping).toContainText("Your edge");
+  await bookkeeping.click();
+  const facts = page.getByRole("list", { name: "How big the market is" });
+  await expect(facts.getByRole("listitem")).toHaveCount(2);
+  await expect(facts.getByRole("link", { name: "Source" }).first()).toHaveAttribute("href", /^https:\/\//);
+});
+
 test("the old problem list lives at /problems as Tracked problems", async ({ page }) => {
   await page.goto("/problems");
   await expect(page.getByRole("heading", { name: "Tracked problems" })).toBeVisible();

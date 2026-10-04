@@ -36,9 +36,66 @@ export type Idea = {
   unknowns: string[];
   /** Set when some runs were not in English, whose pain is stored as `context`. */
   nonEnglishRuns?: boolean;
+  /** Which of the owner's strengths this idea uses (see the owner's stated edge). */
+  edge?: string;
+  /** Market-size facts from outside the runs, each with the page it came from. */
+  facts?: Array<{ text: string; url: string }>;
 };
 
 export const IDEAS: Idea[] = [
+  {
+    id: "asian-sellers-eu-rep",
+    title: "EU and UK representative for Asian online sellers",
+    answer: "The law forces this spend: since December 2024 a seller outside the EU cannot sell on Amazon Europe without an EU responsible person. Prices are low (€150–€1,190 a year), so it is a volume business.",
+    verdict: "crowded",
+    runIds: ["run-b882e599-76fa-4444-94a0-65c1007dff1f", "run-60b4dc2d-a476-4274-82aa-3cc65de819cd"],
+    quoteSourceIds: [],
+    priceLow: { seller: "Westwood Sourcing", quote: "EUR 150 per year all-in." },
+    priceHigh: { seller: "EU Authorised Representative services", quote: "EUR 1,190 for an unlimited number of products." },
+    unknowns: [
+      "The responsible person carries legal liability for the products. Can a small firm insure that risk?",
+      "Korean and Vietnamese sellers: who represents them today, and in which language?"
+    ],
+    edge: "EU passport, so you can legally be the EU person. You like Asia.",
+    facts: [
+      { text: "Chinese sellers are 50.03% of Amazon's global active sellers (September 2025).", url: "https://www.marketplacepulse.com/articles/china-reaches-global-majority-on-amazon" },
+      { text: "About 25% of sellers on Amazon's European marketplaces are based in China.", url: "https://ecommercenews.eu/25-european-amazon-marketplace-sellers-based-china/" }
+    ]
+  },
+  {
+    id: "diaspora-bookkeeping",
+    title: "Bookkeeping in Ukrainian and Russian for diaspora businesses",
+    answer: "Small firms already pay $200–$600 a month for bookkeeping, and a Russian-speaking service in Florida charges from $750. Tens of thousands of Ukrainian-owned firms in Poland and the UK need it in their language.",
+    verdict: "real-budget",
+    runIds: ["run-728cf9ab-47d6-48a4-a500-4d4040484c23", "run-93d77a03-7f76-4b34-9a72-6be0ac6948d0"],
+    quoteSourceIds: ["src-1b66f52f-3b17-4580-a291-2d4a021ada5e", "src-35e2da22-0572-4193-a761-4578dcc8e22b"],
+    priceLow: { seller: "Accounting services (US guide)", quote: "Basic bookkeeping runs $200 - $600/month, while full-service outsourced accounting can reach $2,500 - $6,000/month." },
+    priceHigh: { seller: "Russian-speaking bookkeeping, accounting & tax services (Florida)", quote: "Plans from $750/mo." },
+    unknowns: [
+      "You are not an accountant: hire one and sell, or partner with a firm that lacks the language?",
+      "Do Ukrainian owners in Poland and the UK already use Ukrainian-speaking accountants, and what do they pay?"
+    ],
+    edge: "Ukrainian and Russian, you like finance, and you like working with people.",
+    facts: [
+      { text: "29,044 companies in Poland had Ukrainian owners in July 2025; 13,014 opened after February 2022.", url: "https://www.euronews.com/business/2025/07/30/entrepreneur-like-a-ukrainian-100000-ukrainian-companies-have-opened" },
+      { text: "About 26,600 UK company records list some 25,500 Ukrainians as owners.", url: "https://visitukraine.today/blog/7609/ukrainian-business-in-the-uk-how-many-companies-are-owned-by-ukrainians-and-in-which-sectors-do-they-operate" }
+    ]
+  },
+  {
+    id: "booking-sites-uk-us",
+    title: "Website and booking setup for local businesses in the UK and US",
+    answer: "Salons and local services do lose hours to phone bookings, but booking tools are free to $39 a month. You would sell the setup, not software, so it needs one niche and a way to reach it.",
+    verdict: "crowded",
+    runIds: ["run-750cc097-af58-435c-b524-069e4014e564", "run-ec4bccb6-ec9b-46fb-a2fc-53cbe7b90233"],
+    quoteSourceIds: ["src-94807ef9-7c4c-42bc-a0db-9e2e29624ea3", "src-d59ccdeb-cc60-4b59-bafa-cd58d624c3f9"],
+    priceLow: { seller: "Setmore", quote: "Setmore’s pricing starts at $0." },
+    priceHigh: { seller: "Wix Bookings", quote: "starting at $39" },
+    unknowns: [
+      "What does a done-for-you setup sell for in the UK or US, and who sells it?",
+      "Which niche (salons, cleaners, tutors) is easiest to reach from abroad?"
+    ],
+    edge: "You build websites yourself and do not mind marketing."
+  },
   {
     id: "contract-renewals",
     title: "Contract renewals for small businesses",

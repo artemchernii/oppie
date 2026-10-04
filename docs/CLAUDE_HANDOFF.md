@@ -41,7 +41,10 @@ sources → a Problem) or rejects (reason). Nothing is accepted, scored or concl
 
 ## 4. Data state (live Supabase, 2026-10-04)
 
-- 30 runs, 829 sources (all untriaged), 95 proposals waiting, 0 decided by the owner yet.
+- 36 runs, 1,008 sources (all untriaged), 112 proposals waiting, 0 decided by the owner yet.
+- The owner's edge (saved in agent memory): English, Ukrainian, Russian; EU (Portuguese) passport;
+  frontend developer; likes finance, people, marketing, Asia. Aim at markets with money (UK, US,
+  Korea, China), never Portugal; no freelancing.
 - The 4 buyer-side runs (2026-10-04) added 100 sources and 9 vendor-described pains; the buyer
   documents below came from direct searches and are recorded in `STATUS.md`, not stored as sources.
 - 5 waiting proposals are old-style combined ones ("Review repeated work around …") — superseded by

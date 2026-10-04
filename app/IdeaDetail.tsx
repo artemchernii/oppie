@@ -21,6 +21,12 @@ export default function IdeaDetail({ detail }: { detail: Detail }) {
         <span className="idea-box-label" id="box-answer">1 · The answer in one line</span>
         <p className="idea-answer-big">{idea.answer}</p>
         <p className="faint idea-box-note">{VERDICTS[idea.verdict].label}: {VERDICTS[idea.verdict].meaning} <span className="agent-note">Agent note, not your decision</span></p>
+        {idea.edge ? <p className="idea-edge"><b>Your edge</b> {idea.edge}</p> : null}
+        {idea.facts?.length ? (
+          <ul className="idea-facts" aria-label="How big the market is">
+            {idea.facts.map((fact) => <li key={fact.url}>{fact.text} <a href={fact.url} target="_blank" rel="noreferrer">Source</a></li>)}
+          </ul>
+        ) : null}
       </section>
 
       <div className="idea-numbers idea-numbers-wide">
