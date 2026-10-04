@@ -70,14 +70,15 @@ sources → a Problem) or rejects (reason). Nothing is accepted, scored or concl
   fixed, GreenOnion 1,900–3,900 EUR, fraghugo bundled from 79 €/month, NIS2 Pilot 49.99 €, Fiverr
   $40–$200) but no named supplier who paid was found, and FitNIS2 offers it free (BMWE-funded).
 
-## 5. Next task: measure minutes per client for an MTD quarterly update
+## 5. Next task: get 2–3 UK practices to talk (MTD back office)
 
-Pricing is done (`docs/UK_MTD_BACK_OFFICE.md`): firms buy at £10–£35 per client per month; a
-Lisbon team only beats Indian outsourcers if software cuts each client-quarter to about 45 minutes
-or less. Nobody has measured that. The next step is a spike, not a product: take a realistic
-landlord's three months of bank transactions, categorise them for an MTD quarterly update with a
-small script plus a human check, and time it. Agree the test data with the owner first; never use a
-real person's bank data without their consent.
+Deep research is done: `reports/UK MTD back office for accountants.md` (plain summary at top). The
+idea survives only if real practices will try a paid batch before April 2027. The next step is the
+owner's outreach to 2–3 small UK practices; the agent drafts the message and three questions (how
+long a quarterly update takes now, what they would pay per client, what stops them outsourcing).
+Open legal questions (UK AML for a non-UK subcontractor, overseas agent services account, UK data
+adequacy for Portugal, Portuguese OCC rules, indemnity insurance) need a professional before money
+changes hands.
 
 Also open, smaller: Pursue creating a tracked problem; inbox proposals-first; companies table holds
 only seeds; `scripts/persistence.test.js` is not run by `pnpm test`.
@@ -96,5 +97,5 @@ loses its CSS. Stop it, `rm -rf .next`, restart.
 ## Copy-paste prompt
 
 ```text
-Continue oppie.lab: measure minutes per client for an MTD quarterly update (docs/CLAUDE_HANDOFF.md §5).
+Continue oppie.lab: draft outreach to 3 UK accountancy firms about MTD quarterly capacity.
 ```
