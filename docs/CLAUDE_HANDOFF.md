@@ -70,15 +70,14 @@ sources → a Problem) or rejects (reason). Nothing is accepted, scored or concl
   fixed, GreenOnion 1,900–3,900 EUR, fraghugo bundled from 79 €/month, NIS2 Pilot 49.99 €, Fiverr
   $40–$200) but no named supplier who paid was found, and FitNIS2 offers it free (BMWE-funded).
 
-## 5. Next task: price the MTD back office for UK accountancy firms
+## 5. Next task: measure minutes per client for an MTD quarterly update
 
-The strongest UK card is `uk-mtd-desk-for-accountants` (`lib/ideas.ts`). Its gaps, in order:
-1. What a UK practice pays, wholesale, per client for quarterly MTD updates — find published
-   white-label price lists from UK-facing providers (Advancetrack, QX, Acenteus,
-   digital-tax-service.co.uk, Aone, Corient).
-2. How those providers win practices (channels, minimum contracts, pilots).
-3. Cost side: a Lisbon team per client per quarter, against those prices.
-Record findings in `STATUS.md` and update the card. Only 2 pain quotes exist for this idea; say so.
+Pricing is done (`docs/UK_MTD_BACK_OFFICE.md`): firms buy at £10–£35 per client per month; a
+Lisbon team only beats Indian outsourcers if software cuts each client-quarter to about 45 minutes
+or less. Nobody has measured that. The next step is a spike, not a product: take a realistic
+landlord's three months of bank transactions, categorise them for an MTD quarterly update with a
+small script plus a human check, and time it. Agree the test data with the owner first; never use a
+real person's bank data without their consent.
 
 Also open, smaller: Pursue creating a tracked problem; inbox proposals-first; companies table holds
 only seeds; `scripts/persistence.test.js` is not run by `pnpm test`.
@@ -97,5 +96,5 @@ loses its CSS. Stop it, `rm -rf .next`, restart.
 ## Copy-paste prompt
 
 ```text
-Continue oppie.lab: price the MTD back office for UK accountancy firms (docs/CLAUDE_HANDOFF.md §5).
+Continue oppie.lab: measure minutes per client for an MTD quarterly update (docs/CLAUDE_HANDOFF.md §5).
 ```
