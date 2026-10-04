@@ -146,7 +146,13 @@ export function proposalsFromSplit(runId: string, report: SplitReport, newId: ()
 
 export type GatewayFetch = (url: string, init: { method: string; headers: Record<string, string>; body: string }) => Promise<{ ok: boolean; status: number; json: () => Promise<unknown>; text: () => Promise<string> }>;
 
-export const DEFAULT_SPLIT_MODEL = "anthropic/claude-sonnet-5.5";
+/**
+ * Free-tier model by default, so splitting costs nothing until someone opts in to paid credits.
+ * Checked 2026-10-04 on a real 36-source run: 3 pains kept; the checker dropped 3 misquoted
+ * passages and 13 wrongly attributed businesses. For finer splits set AI_GATEWAY_MODEL to a paid
+ * model such as `anthropic/claude-sonnet-5.5` (about $0.03 per run, needs AI Gateway credits).
+ */
+export const DEFAULT_SPLIT_MODEL = "google/gemini-2.5-flash";
 
 /** Asks the gateway for a split. Returns the raw suggestion; callers must run `checkSplit` on it. */
 export async function requestSplit(direction: string, sources: DiscoverySource[], token: string, fetchImpl: GatewayFetch, model = DEFAULT_SPLIT_MODEL): Promise<{ ok: true; value: SplitResponse } | { ok: false; error: string }> {

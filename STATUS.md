@@ -235,14 +235,15 @@ Precise version:
   pain evidence from the pain lane; businesses from the business lane; unquoted prices stripped;
   every drop counted), `proposalsFromSplit` (one waiting proposal per pain; repetition and "no
   business found" stated from the evidence, not the model).
-- `POST /api/discovery-runs/:id/split` calls AI Gateway (`anthropic/claude-sonnet-5.5`, override with
-  `AI_GATEWAY_MODEL`) over its OpenAI-compatible endpoint, no new package. Auth: `AI_GATEWAY_API_KEY`,
+- `POST /api/discovery-runs/:id/split` calls AI Gateway (`google/gemini-2.5-flash` on the free tier by default;
+  set `AI_GATEWAY_MODEL=anthropic/claude-sonnet-5.5` for finer splits, about $0.03 a run with paid credits) over its OpenAI-compatible endpoint, no new package. Auth: `AI_GATEWAY_API_KEY`,
   else the Vercel OIDC token.
 - Run discovery: collect → split; if the split fails it falls back to one combined proposal and
   says why on the page.
 - `pnpm discover:split <run> [--save] [--from file.json]`.
-- **Blocked:** AI Gateway refuses requests until the Vercel account has a credit card on file
-  (403). The 4 stored pains were split by Claude in the coding session and passed the same checker.
+- Free tier verified 2026-10-04 (card on file, no credits bought): Gemini 2.5 Flash split the invoice
+  run into 3 pains in ~58s; the checker dropped 3 misquotes and 13 wrong business citations. Claude
+  models need paid credits. The 4 stored pains were split by Claude in the coding session.
 
 ## What is not built
 
@@ -360,13 +361,12 @@ GET  /api/companies/:id
 
 ## Owner action
 
-1. Add a credit card to Vercel AI Gateway so the app can split runs itself:
-   <https://vercel.com/d?to=%2F%5Bteam%5D%2F%7E%2Fai%3Fmodal%3Dadd-credit-card>.
-2. Review the 4 real pains from "invoice chasing for small agencies" in `/inbox`. The two older
-   combined proposals can be rejected with a reason ("superseded by the split").
+1. Nothing to buy: splitting runs on the free tier. Buy AI Gateway credits only if you want the finer
+   Sonnet splits, then set `AI_GATEWAY_MODEL=anthropic/claude-sonnet-5.5` in Vercel.
+2. Review the invoice pains in `/inbox`; reject the two older combined proposals with a reason.
 
 ## Suggested next prompt
 
 ```text
-Continue oppie.lab: card is added, run discovery on 3 new directions and compare the pains.
+Continue oppie.lab: run discovery on 3 new directions and compare the pains.
 ```
