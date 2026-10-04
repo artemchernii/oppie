@@ -3,7 +3,7 @@ import { test, expect } from "@playwright/test";
 // The isolated server serves fixture numbers (lib/ideaRemote.ts, fixtureBoard / fixtureDetail).
 
 test("the home page is the Ideas board: numbers first, decided ideas last, blanks never zero", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/?region=all");
   await expect(page.getByRole("heading", { name: "Which idea is worth your time?" })).toBeVisible();
   const cards = page.getByTestId("idea-card");
   await expect(cards).toHaveCount(19);
@@ -25,7 +25,7 @@ test("the home page is the Ideas board: numbers first, decided ideas last, blank
 // The menu is drawn only for a signed-in person, which the isolated server never has; its links
 // are checked in source, and the page it points at here.
 test("ideas built on the owner's edge say which strength they use, and market facts link to a source", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/?region=all");
   const bookkeeping = page.getByTestId("idea-card").filter({ hasText: "Bookkeeping in Ukrainian and Russian" });
   await expect(bookkeeping).toContainText("Your edge");
   await bookkeeping.click();
@@ -34,10 +34,14 @@ test("ideas built on the owner's edge say which strength they use, and market fa
   await expect(facts.getByRole("link", { name: "Source" }).first()).toHaveAttribute("href", /^https:\/\//);
 });
 
-test("the UK filter keeps only UK ideas, and a web-sourced price links to its page", async ({ page }) => {
+test("the board opens on the UK ideas; All shows the rest; a web-sourced price links to its page", async ({ page }) => {
   await page.goto("/");
-  await page.getByRole("navigation", { name: "Region" }).getByRole("link", { name: /UK/ }).click();
-  await expect(page).toHaveURL(/region=UK/);
+  await expect(page.getByTestId("idea-card")).toHaveCount(6);
+  const region = page.getByRole("navigation", { name: "Region" });
+  await region.getByRole("link", { name: /All/ }).click();
+  await expect(page).toHaveURL(/region=all/);
+  await expect(page.getByTestId("idea-card")).toHaveCount(19);
+  await region.getByRole("link", { name: /UK/ }).click();
   await expect(page.getByTestId("idea-card")).toHaveCount(6);
   await expect(page.getByTestId("idea-card").filter({ hasText: "Right-to-work checks" })).toContainText("Blocked by law");
   await page.getByTestId("idea-card").filter({ hasText: "Making Tax Digital back office" }).click();
@@ -50,7 +54,7 @@ test("the old problem list lives at /problems as Tracked problems", async ({ pag
 });
 
 test("an idea opens to four boxes, and a decision needs a reason", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/?region=all");
   await page.getByTestId("idea-card").filter({ hasText: "Contract renewals" }).click();
   await expect(page).toHaveURL(/\/ideas\/contract-renewals$/);
   for (const label of ["1 · The answer in one line", "2 · Who already sells it", "3 · Proof people complain", "4 · Still unknown"]) {
