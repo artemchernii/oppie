@@ -1,8 +1,8 @@
 # oppie.lab — Claude handoff
 
 - Date: 2026-10-04
-- Branch: `master` at `c400a5c`; the buyer-side results are on `docs/nis2-buyer-side-demand`
-- Next task: **supplier-side paid-today test for NIS2 evidence** (section 5)
+- Branch: `master` at `45ef7d6`; the supplier-side results are on `docs/nis2-supplier-paid-today`
+- Next task: **owner decision on the NIS2 candidate** (section 5) — desk research is exhausted
 
 ## 1. Read first
 
@@ -41,7 +41,7 @@ sources → a Problem) or rejects (reason). Nothing is accepted, scored or concl
 
 ## 4. Data state (live Supabase, 2026-10-04)
 
-- 28 runs, 793 sources (all untriaged), 93 proposals waiting, 0 decided by the owner yet.
+- 30 runs, 829 sources (all untriaged), 95 proposals waiting, 0 decided by the owner yet.
 - The 4 buyer-side runs (2026-10-04) added 100 sources and 9 vendor-described pains; the buyer
   documents below came from direct searches and are recorded in `STATUS.md`, not stored as sources.
 - 5 waiting proposals are old-style combined ones ("Review repeated work around …") — superseded by
@@ -62,26 +62,25 @@ sources → a Problem) or rejects (reason). Nothing is accepted, scored or concl
   NIS2). The Netherlands has a model NIS2 purchase-terms addendum from Nevi + VNO-NCW. Germany has
   ~29,500 entities in scope (17,945 registered). No proof yet that a small supplier pays to answer;
   buyers often accept a free self-assessment instead — a kill-reason candidate.
+- Supplier side (2026-10-04): **paid-today test not passed.** Sellers price it (Wermescher 2,990 EUR
+  fixed, GreenOnion 1,900–3,900 EUR, fraghugo bundled from 79 €/month, NIS2 Pilot 49.99 €, Fiverr
+  $40–$200) but no named supplier who paid was found, and FitNIS2 offers it free (BMWE-funded).
 
-## 5. Next task: supplier-side paid-today test for NIS2 evidence
+## 5. Next task: owner decision on NIS2
 
-Question: does a small supplier **already pay** someone to answer a customer's NIS2 / security
-evidence request? Buyers demanding it is now shown (`STATUS.md`, "NIS2 buyer-side demand"); money
-moving on the supplier side is not.
+Desk research on NIS2 is done: buyers demand evidence (real, weak), sellers price help (2,990 EUR
+down to free), no proof any small supplier paid. The next evidence cannot come from search. The
+owner picks one:
 
-What counts as evidence (stronger first):
-1. A published price for answering customer security questionnaires or producing supplier
-   evidence for a small firm (MSPs, consultants, "Lieferantenfragebogen ausfüllen" services).
-2. Named customers or case studies of fixed-price packages (GreenOnion and similar).
-3. Freelance gigs (Upwork, Fiverr, Malt) for completing security questionnaires, with prices.
-4. Job posts at small suppliers for someone to handle customer security requirements.
+1. **Kill or park NIS2** with the reason "free and near-free fixes exist; no proof of payment" and
+   return to the inbox (95 proposals, 0 decided).
+2. **Real-world test**: ask 5–10 small suppliers to energy, health or industry customers whether
+   they received a NIS2 questionnaire and whether they paid anyone to answer it. The owner does the
+   outreach; the agent can draft the questions and a log in `docs/`.
+3. **Pricing test**: a one-page offer at a fixed price, measured by replies. Needs spend and a
+   `DECISIONS.md` entry before anything is built.
 
-Counter-evidence to look for with equal effort: buyers accepting free self-assessments
-(Baumann, Reinhausen, heyco) and suppliers saying they filled the form themselves.
-
-Suggested runs: `"security questionnaire completion service for small suppliers"`,
-`"Lieferantenfragebogen Informationssicherheit ausfüllen Dienstleister"`, plus direct Brave
-searches for Upwork/Malt gigs. Record in `STATUS.md` and say whether money is moving, with numbers.
+Until the owner decides, the agent should not start new NIS2 runs.
 
 ## 6. Owner preferences
 
@@ -94,5 +93,5 @@ searches for Upwork/Malt gigs. Record in `STATUS.md` and say whether money is mo
 ## Copy-paste prompt
 
 ```text
-Continue oppie.lab: NIS2 supplier-side paid-today test (docs/CLAUDE_HANDOFF.md §5).
+Continue oppie.lab: act on my NIS2 decision (docs/CLAUDE_HANDOFF.md §5).
 ```
