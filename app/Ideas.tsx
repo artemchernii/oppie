@@ -65,8 +65,8 @@ export default function Ideas({ board, region }: { board: IdeaBoard; region?: st
           {summary.waiting > 0 ? <> Start with the ones marked <span className="idea-badge verdict-real-budget">Real budget</span>.</> : null}
         </p>
         <nav className="ideas-filter" aria-label="Region">
-          <Link href="/" className={region === "UK" ? "" : "is-active"} aria-current={region === "UK" ? undefined : "page"}>All <b>{board.cards.length}</b></Link>
-          <Link href="/?region=UK" className={region === "UK" ? "is-active" : ""} aria-current={region === "UK" ? "page" : undefined}>UK <b>{ukCount}</b></Link>
+          <Link href="/" className={region === "UK" ? "is-active" : ""} aria-current={region === "UK" ? "page" : undefined}>UK <b>{ukCount}</b></Link>
+          <Link href="/?region=all" className={region === "UK" ? "" : "is-active"} aria-current={region === "UK" ? undefined : "page"}>All <b>{board.cards.length}</b></Link>
         </nav>
         <ul className="ideas-legend">
           <li><b>Complaints</b> sources where people describe the pain</li>

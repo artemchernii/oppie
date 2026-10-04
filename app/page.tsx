@@ -7,6 +7,7 @@ export const metadata = { title: "oppie.lab — ideas" };
 export const dynamic = "force-dynamic";
 
 export default async function Page({ searchParams }: { searchParams: { region?: string } }) {
-  const region = searchParams.region === "UK" ? "UK" : undefined;
+  // The owner is focusing on the UK (2026-10-04), so the board opens there; "all" shows the rest.
+  const region = searchParams.region === "all" ? undefined : "UK";
   return <Ideas board={await readIdeaBoard()} region={region} />;
 }
