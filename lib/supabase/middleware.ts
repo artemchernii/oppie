@@ -19,6 +19,12 @@ const isOpen = (pathname: string) =>
   OPEN_PATHS.some((path) => pathname === path || pathname.startsWith(path + "/"));
 
 export async function updateSession(request: NextRequest) {
+  // When Supabase does not recognise the requested redirect it falls back to its Site URL, so the
+  // one-time code can land on "/" instead of the callback. Hand it on rather than let the login
+  // redirect below drop it.
+  const stray = strayAuthCode(request);
+  if (stray) return NextResponse.redirect(stray);
+
   let response = NextResponse.next({ request });
 
   // Only the isolated local Playwright server may bypass OAuth. This is never enabled in a
@@ -62,4 +68,16 @@ export async function updateSession(request: NextRequest) {
   }
 
   return response;
+}
+
+/** The callback URL for an OAuth code that arrived anywhere other than the callback, else null. */
+export function strayAuthCode(request: NextRequest): URL | null {
+  const { pathname, searchParams } = request.nextUrl;
+  const code = searchParams.get("code");
+  if (!code || pathname.startsWith("/auth/")) return null;
+  const to = request.nextUrl.clone();
+  to.pathname = "/auth/callback";
+  to.search = "";
+  to.searchParams.set("code", code);
+  return to;
 }
