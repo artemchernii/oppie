@@ -258,6 +258,8 @@ Precise version:
 | supplier certificate and insurance tracking for small businesses in Europe | 33 (11) | 3 | same COI market, mostly US vendors plus UK Supplio (£599–£2,399/year); no fix found for supplier contracts in spreadsheets (2 sources) or EU GPSR for UK sellers (1 source) |
 | late invoice payment chasing for small agencies in Europe | 30 (6) | 5 | crowded with cheap tools (Trove £50/month, Chaser $233/month); a human chasing service sits between tools and $650/month bookkeeping |
 | manual KYC and AML checks for small fintechs in Europe | 28 (9) | 4 | verification is crowded ($0.10–$6 per check); outsourced compliance analysts (Complium) is the service angle; 1 source |
+| GPSR compliance for small online sellers shipping to the EU | 33 (6) | 5 | not a gap: EU Responsible Person services €195–€549/year, €400 one-time per product type, €199/month support; only "managing compliance data across thousands of listings" had no fix (1 source) |
+| supplier contract renewals tracked in spreadsheets by small businesses | 29 (14) | 1 | strongest repetition so far (11 sources); fixes priced for mid-market and enterprise ($450/month, CLM $15K+/year); a source says a spreadsheet is fine up to ~25 contracts, which is a possible kill reason for the small-business end |
 
 `pnpm discover:run` now splits into pains first, like the button, and falls back to one combined
 proposal only when the split cannot run. The five older combined proposals can be rejected in Inbox
@@ -389,5 +391,5 @@ GET  /api/companies/:id
 ## Suggested next prompt
 
 ```text
-Continue oppie.lab: run targeted discovery on the two gaps (EU GPSR compliance for small sellers, supplier contracts in spreadsheets).
+Continue oppie.lab: test whether small businesses pay for contract renewal tracking (find cheap tools and their pricing).
 ```
