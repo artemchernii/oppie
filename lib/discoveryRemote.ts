@@ -2,7 +2,7 @@
 
 import { supabaseForRoute } from "./supabase/server";
 import { supabaseConfig } from "./supabaseConfig";
-import { isNextControlFlow, messageOf, reason } from "./supabaseResult";
+import { idChunks, isNextControlFlow, messageOf, reason } from "./supabaseResult";
 import { canonicalDiscoveryUrl, discoveryProposalFromRow, discoveryRunFromRow, discoverySourceFromRow, discoveryUrlKey, newDiscoveryRun, validateDiscoverySource, acceptanceBlockedByRun, runStatusAfter, validateProposalAcceptance, validateProposalRejection, type RunEvent, type DiscoveryInput, type DiscoveryRun, type DiscoverySource, type DiscoverySourceInput } from "./discovery";
 import { redditSources } from "./ingestion";
 import { collect, type Lane, type Provider } from "./collectors";
@@ -16,6 +16,14 @@ import type { DiscoveryInboxData } from "./discoveryInbox";
 import type { AcceptedDecision } from "./problemTrail";
 
 export type DiscoveryResult<T> = { ok: true; value: T } | { ok: false; error: string };
+
+/** Source rows for any number of ids, read in short batches (see `idChunks`). */
+async function sourcesByIds(supabase: ReturnType<typeof supabaseForRoute>["supabase"], ids: string[]): Promise<DiscoveryResult<Record<string, unknown>[]>> {
+  const results = await Promise.all(idChunks(ids).map((chunk) => supabase.from("discovery_sources").select("*").in("id", chunk)));
+  const failed = results.find((result) => result.error);
+  if (failed?.error) return { ok: false, error: reason(failed.error) };
+  return { ok: true, value: results.flatMap((result) => (result.data ?? []) as Record<string, unknown>[]) };
+}
 
 export async function createDiscoveryRun(input: DiscoveryInput): Promise<DiscoveryResult<DiscoveryRun>> {
   try {
@@ -223,9 +231,9 @@ export async function readDiscoveryInbox(): Promise<DiscoveryResult<DiscoveryInb
     const citedIds = Array.from(new Set(waiting.flatMap((proposal) => proposal.sourceIds)));
     let cited: DiscoverySource[] = [];
     if (citedIds.length > 0) {
-      const citedResult = await supabase.from("discovery_sources").select("*").in("id", citedIds);
-      if (citedResult.error) return { ok: false, error: reason(citedResult.error) };
-      cited = citedResult.data.map((row) => discoverySourceFromRow(row as Record<string, unknown>));
+      const citedResult = await sourcesByIds(supabase, citedIds);
+      if (!citedResult.ok) return citedResult;
+      cited = citedResult.value.map((row) => discoverySourceFromRow(row));
     }
     return {
       ok: true,
@@ -258,12 +266,12 @@ export async function readProblemDiscoveryTrail(problemId: string): Promise<Disc
     const sourceIds = Array.from(new Set(accepted.flatMap((proposal) => proposal.sourceIds)));
     const [runs, sources] = await Promise.all([
       supabase.from("discovery_runs").select("id,direction").in("id", runIds),
-      sourceIds.length ? supabase.from("discovery_sources").select("*").in("id", sourceIds) : Promise.resolve({ data: [], error: null })
+      sourcesByIds(supabase, sourceIds)
     ]);
     if (runs.error) return { ok: false, error: reason(runs.error) };
-    if (sources.error) return { ok: false, error: reason(sources.error) };
+    if (!sources.ok) return sources;
     const directionById = new Map(runs.data.map((row) => [String(row.id), String(row.direction ?? "")]));
-    const sourceById = new Map(sources.data.map((row) => { const source = discoverySourceFromRow(row as Record<string, unknown>); return [source.id, source]; }));
+    const sourceById = new Map(sources.value.map((row) => { const source = discoverySourceFromRow(row); return [source.id, source]; }));
     return {
       ok: true,
       value: accepted.map((proposal) => ({
